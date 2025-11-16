@@ -7,6 +7,6 @@ export default function Home() {
   const router = useRouter();
 
   return (
-      <Button variant="primary" onClick={async() => router.push("/signUp")}>Sign Up</Button>
+      <Button onClick={async() => router.push("/signUp")}>Sign Up</Button>
   );
 }
