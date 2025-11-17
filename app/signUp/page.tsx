@@ -19,6 +19,10 @@ export default function Home() {
     return;
   }
 
+  async function handleContinueWithGoogle() {
+    return;
+  }
+
   return (
     <div>
       <form onSubmit={doNothing}>
@@ -65,7 +69,7 @@ export default function Home() {
         </label>
         <button type="submit"> SignUp </button>
         <button type="button" onClick={async() => router.push("/login")}> Login </button>
-        <button type="button" onClick={doNothing}> Continue with Google </button>
+        <button type="button" onClick={handleContinueWithGoogle}> Continue with Google </button>
         {errorMessage && <p>{errorMessage}</p>}
       </form>
     </div>

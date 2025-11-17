@@ -16,9 +16,17 @@ export default function Home() {
     return;
   }
 
+  async function handleSubmit() {
+    return;
+  }
+
+  async function handleContinueWithGoogle() {
+
+  }
+
   return (
-    <div>
-      <form onSubmit={doNothing}>
+    <div className={styles.container}>
+      <form onSubmit={handleSubmit}>
         <h2>Login</h2>
         <label>Email
           <input
@@ -38,8 +46,8 @@ export default function Home() {
         </label>
         <button type="submit"> Login </button>
         <button type="button" onClick={async() => router.push("/signUp")}> Create Account </button>
-        <button type="button" onClick={doNothing}> Continue with Google </button>
-        {errorMessage && <p>{errorMessage}</p>}
+        <button type="button" onClick={handleContinueWithGoogle}> Continue with Google </button>
+        {errorMessage && <p className={styles.error}>{errorMessage}</p>}
       </form>
     </div>
   );
