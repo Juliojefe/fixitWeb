@@ -2,7 +2,6 @@
 
 import React from "react";
 import axios from 'axios';
-// import { Button } from 'react-bootstrap';
 import { useRouter } from 'next/navigation';
 import styles from './Login.module.css';
 
@@ -11,7 +10,6 @@ export default function Home() {
   const router = useRouter();
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
-  const [confirmPassword, setConfirmPassword] = React.useState("");
   const [errorMessage, setErrorMessage] = React.useState("");
 
   async function doNothing() {
@@ -38,20 +36,11 @@ export default function Home() {
             onChange={doNothing}
           />
         </label>
-        <label>Confirm Password
-          <input
-            type="password"
-            value={confirmPassword}
-            required
-            onChange={doNothing}
-          />
-        </label>
         <button type="submit"> Login </button>
-        <button type="button" onClick={doNothing}> Create Account </button>
+        <button type="button" onClick={async() => router.push("/signUp")}> Create Account </button>
         <button type="button" onClick={doNothing}> Continue with Google </button>
         {errorMessage && <p>{errorMessage}</p>}
       </form>
     </div>
-      // <Button onClick={async() => router.push("/signUp")}>Sign Up</Button>
   );
 }
