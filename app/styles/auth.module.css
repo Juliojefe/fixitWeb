@@ -23,7 +23,7 @@
   margin-bottom: 1rem;
 }
 
-.formLabel {  /* Note: Fixed typo from .formLable */
+.formLabel {
   color: black;
   font-weight: 500; 
 }
@@ -41,9 +41,9 @@
 .primaryBtn {
   padding: 0.7rem;
   font-weight: bold;
-  background: #787673;
+  background: #949391;
   border: 2px solid black;
-  color: white;
+  color: black;
   font-size: 1rem;
   cursor: pointer;
   margin-top: 0.5rem;
@@ -52,6 +52,7 @@
 
 .primaryBtn:hover {
   background: #75252a;
+  color: white;
 }
 
 .secondaryBtn {
@@ -64,6 +65,11 @@
   cursor: pointer;
   margin-top: 0.5rem;
   transition: background 0.2s;
+}
+
+.secondaryBtn:hover {
+  background-color: #75252a;
+  color: white;
 }
 
 .googleBtn {
