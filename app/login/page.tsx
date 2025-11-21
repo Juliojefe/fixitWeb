@@ -3,10 +3,9 @@
 import React from "react";
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
-import styles from './Login.module.css';
+import authStyles from '../styles/auth.module.css';
 
-
-export default function Home() {
+export default function loginPage() {
   const router = useRouter();
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
@@ -48,42 +47,42 @@ export default function Home() {
   }
 
   return (
-    <div className={styles.container}>
-      <form className={styles.loginForm} onSubmit={handleSubmit}>
-        <h2 className={styles.formHeader}>Login</h2>
-        <label className={styles.formLable}>Email
+    <div className={authStyles.container}>
+      <form className={authStyles.authForm} onSubmit={handleSubmit}>
+        <h2 className={authStyles.formHeader}>Login</h2>
+        <label className={authStyles.formLabel}>Email
           <input
             type="email"
             value={email}
             required
-            className={styles.formInput}
+            className={authStyles.formInput}
             onChange={e => setEmail(e.target.value)}
           />
         </label>
-        <label className={styles.formLable}>Password
+        <label className={authStyles.formLabel}>Password
           <input
             type="password"
             value={password}
             required
-            className={styles.formInput}
+            className={authStyles.formInput}
             onChange={e => setPassword(e.target.value)}
           />
         </label>
-        <button className={styles.loginBtn} type="submit">Login</button>
-        <button className={styles.signUpBtn} type="button" onClick={async () => router.push("/signUp")}> Create Account </button>
+        <button className={authStyles.primaryBtn} type="submit">Login</button>
+        <button className={authStyles.secondaryBtn} type="button" onClick={async () => router.push("/signUp")}> Create Account </button>
         <button
-          className={styles.googleBtn}
+          className={authStyles.googleBtn}
           type="button"
           onClick={handleContinueWithGoogle}
         >
           <img
-            className={styles.googleIcon}
+            className={authStyles.googleIcon}
             src="/icons/googleLogo.png"
             alt="Google logo"
           />
           Continue with Google
         </button>        
-        {errorMessage && <p className={styles.error}>{errorMessage}</p>}
+        {errorMessage && <p className={authStyles.error}>{errorMessage}</p>}
       </form>
     </div>
   );
