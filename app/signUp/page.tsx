@@ -13,9 +13,34 @@ export default function signUpPage() {
   const [confirmPassword, setConfirmPassword] = React.useState("");
   const [errorMessage, setErrorMessage] = React.useState("");
 
-  async function handleSignUp() {
-    //  don nothing for now
-    return;
+  async function handleSignUp(e: React.FormEvent) {
+    e.preventDefault();
+    setErrorMessage("");
+    try {
+      const responseData = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/register`, {
+        name: name,
+        email: email,
+        password: password,
+        confirmPassword: confirmPassword
+      });
+      const authData = responseData.data;
+      if (authData.accessToken && authData.refreshToken) {
+        /**
+         * persist repsonse data for sessions
+         */
+        // router.push("/home");
+        alert("working");
+      } else {
+        setErrorMessage("Unexpected response from server.");
+      }
+    } catch (err) {
+      if (axios.isAxiosError(err) && err.response) {
+        setErrorMessage(err.response.data.message || "Sign up Failed");
+      } else {
+        setErrorMessage("Network error");
+      }
+    }
+
   }
 
   async function handleContinueWithGoogle() {
@@ -63,7 +88,7 @@ export default function signUpPage() {
           />
         </label>
         <button className={authStyles.primaryBtn} type="submit"> SignUp </button>
-        <button className={authStyles.secondaryBtn} type="button" onClick={async() => router.push("/login")}> Login </button>
+        <button className={authStyles.secondaryBtn} type="button" onClick={async () => router.push("/login")}> Login </button>
         <button
           className={authStyles.googleBtn}
           type="button"
@@ -75,7 +100,7 @@ export default function signUpPage() {
             alt="Google logo"
           />
           Continue with Google
-        </button>        
+        </button>
         {errorMessage && <p className={authStyles.error}>{errorMessage}</p>}
       </form>
     </div>
