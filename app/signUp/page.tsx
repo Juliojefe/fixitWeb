@@ -12,10 +12,10 @@ export default function Home() {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [confirmPassword, setConfirmPassword] = React.useState("");
-  const [pfp, setPfp] = React.useState("");
   const [errorMessage, setErrorMessage] = React.useState("");
 
-  async function doNothing() {
+  async function handleSignUp() {
+    //  don nothing for now
     return;
   }
 
@@ -24,53 +24,59 @@ export default function Home() {
   }
 
   return (
-    <div>
-      <form onSubmit={doNothing}>
-        <h2>Sign Up</h2>
-        <label>Full Name
+    <div className={styles.container}>
+      <form className={styles.signUpForm} onSubmit={handleSignUp}>
+        <h2 className={styles.formHeader}>Sign Up</h2>
+        <label className={styles.formLable}>Full Name
           <input
             type="text"
             value={name}
             required
-            onChange={doNothing}
+            className={styles.formInput}
+            onChange={e => setName(e.target.value)}
           />
         </label>
-        <label>Email
+        <label className={styles.formLable}>Email
           <input
             type="email"
             value={email}
             required
-            onChange={doNothing}
+            className={styles.formInput}
+            onChange={e => setEmail(e.target.value)}
           />
         </label>
-        <label>Password
+        <label className={styles.formLable}>Password
           <input
             type="password"
             value={password}
             required
-            onChange={doNothing}
+            className={styles.formInput}
+            onChange={e => setPassword(e.target.value)}
           />
         </label>
-        <label>Confirm Password
+        <label className={styles.formLable}>Confirm Password
           <input
             type="password"
             value={confirmPassword}
             required
-            onChange={doNothing}
+            className={styles.formInput}
+            onChange={e => setConfirmPassword(e.target.value)}
           />
         </label>
-        <label>Profile picture (optional)
-          <input
-            type="text"
-            value={pfp}
-            required
-            onChange={doNothing}
+        <button className={styles.signUpBtn} type="submit"> SignUp </button>
+        <button className={styles.loginBtn} type="button" onClick={async() => router.push("/login")}> Login </button>
+        <button
+          className={styles.googleBtn}
+          type="button"
+          onClick={handleContinueWithGoogle}
+        >
+          <img
+            className={styles.googleIcon}
+            src="/icons/googleLogo.png"
+            alt="Google logo"
           />
-        </label>
-        <button type="submit"> SignUp </button>
-        <button type="button" onClick={async() => router.push("/login")}> Login </button>
-        <button type="button" onClick={handleContinueWithGoogle}> Continue with Google </button>
-        {errorMessage && <p>{errorMessage}</p>}
+          Continue with Google
+        </button>        {errorMessage && <p>{errorMessage}</p>}
       </form>
     </div>
   );
