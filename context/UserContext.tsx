@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { User } from "@/types/user";
 
 interface UserContextType {
@@ -27,18 +27,18 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // Wrapper so we sync context + localStorage
-  const setUser = (userData: User | null) => {
+  const setUser = useCallback((userData: User | null) => {
     if (userData) {
       localStorage.setItem("user", JSON.stringify(userData));
     } else {
       localStorage.removeItem("user");
     }
     setUserState(userData);
-  };
+  }, []);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     setUser(null);
-  };
+  }, [setUser]);
 
   return (
     <UserContext.Provider value={{ user, setUser, logout }}>
