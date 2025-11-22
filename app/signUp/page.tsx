@@ -24,7 +24,7 @@ export default function signUpPage() {
         confirmPassword: confirmPassword
       });
       const authData = responseData.data;
-      if (authData.accessToken && authData.refreshToken) {
+      if (authData.accessToken) {
         /**
          * persist repsonse data for sessions
          */

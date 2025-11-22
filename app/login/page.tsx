@@ -11,9 +11,6 @@ export default function loginPage() {
   const [password, setPassword] = React.useState("");
   const [errorMessage, setErrorMessage] = React.useState("");
 
-  console.log("API:", process.env.NEXT_PUBLIC_API_URL);
-
-
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErrorMessage("");
@@ -23,7 +20,7 @@ export default function loginPage() {
         password: password
       });
       const authData = responseData.data;
-      if (authData.accessToken && authData.refreshToken) {
+      if (authData.accessToken) {
         /**
          * persist repsonse data for sessions
          */
