@@ -10,7 +10,7 @@ import GuestRoute from "@/components/GuestRoute";
 
 export default function loginPage() {
   const router = useRouter();
-  const { user, setUser } = useUser();
+  const { setUser } = useUser();
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [errorMessage, setErrorMessage] = React.useState("");

@@ -10,7 +10,7 @@ import GuestRoute from "@/components/GuestRoute";
 
 export default function signUpPage() {
   const router = useRouter();
-  const { user, setUser } = useUser();
+  const { setUser } = useUser();
   const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");

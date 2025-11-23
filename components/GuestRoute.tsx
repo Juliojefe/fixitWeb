@@ -16,7 +16,7 @@ export default function GuestRoute({ children }: GuestRouteProps) {
 
   useEffect(() => {
     if (user) {
-      router.replace("/"); // redirect logged-in users
+      router.replace("/home"); // redirect logged-in users
     } else {
       setChecking(false); // done checking, allow guests
     }
