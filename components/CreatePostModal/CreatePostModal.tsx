@@ -3,6 +3,7 @@ import styles from "./CreatePostModal.module.css";
 import axios from 'axios';
 import { useRouter } from "next/navigation";
 import { useUser } from "../../app/providers/UserProvider";
+import MustLoginModal from "../MustLoginModal/MustLoginModal";
 
 type CreatePostModalProps = {
   onClose: () => void;
@@ -121,13 +122,7 @@ export default function CreatePostModal({ onClose }: CreatePostModalProps) {
           </form>
         )
       ) : ( // guest user case
-        <div className={styles.modalForm} onClick={(e) => e.stopPropagation()}>
-          <h2 className={styles.formHeader}>You Must Be Signed In To Upload Posts</h2>
-          <h3 className={styles.formSubHeader}>Already have an account?</h3>
-          <button className={styles.primaryBtn} type="button" onClick={async () => router.push("/login")}> Login </button>
-          <h3 className={styles.formSubHeader}>New?</h3>
-          <button className={styles.secondaryBtn} type="button" onClick={async () => router.push("/signUp")}> Create Account </button>
-        </div>
+        <MustLoginModal/>
       )}
     </div >
   );

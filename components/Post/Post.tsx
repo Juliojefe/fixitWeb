@@ -26,6 +26,10 @@ export default function Post({ postData = null }: PostProps) {
     return;
   }
 
+  /*
+  Next I will fill in the TODOs down bellow
+  */
+
   function handleShowNextImage() {
     //  TODO
     return;
@@ -76,7 +80,6 @@ export default function Post({ postData = null }: PostProps) {
           {deletedAuthor ? "Deleted User" : postData.createdBy}
         </p>
       </div>
-
       {/* Image Section */}
       {hasImage ? (
         <div className={styles.imageSection}>
