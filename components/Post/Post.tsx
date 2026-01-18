@@ -6,6 +6,7 @@ import { useUser } from '@/app/providers/UserProvider';
 import { useRouter } from "next/navigation";
 import { DisplayPostType } from '@/types/displayPost';
 import styles from "./Post.module.css";
+import MustLoginModal from "../MustLoginModal/MustLoginModal";
 
 interface PostProps {
   postData?: DisplayPostType | null;
@@ -17,6 +18,7 @@ export default function Post({ postData = null }: PostProps) {
   const { user } = useUser();
   const hasImage = (postData?.imageUrls?.length ?? 0) > 0;  //  true if one image or more false otherwise
   const deletedAuthor = postData?.authorId == null; //  true if the user has been deleted
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   if (!postData) {
     return null;
@@ -26,23 +28,24 @@ export default function Post({ postData = null }: PostProps) {
     return;
   }
 
-  /*
-  Next I will fill in the TODOs down bellow
-  */
-
   function handleShowNextImage() {
-    //  TODO
-    return;
+    if (postData?.imageUrls && currImageIndex < postData?.imageUrls.length - 1) {
+      setCurrImageIndex((prev) => prev + 1);
+    }
   }
 
   function handleShowPrevImage() {
-    //  TODO
-    return;
+    if (currImageIndex > 0) {
+      setCurrImageIndex((prev) => prev - 1);
+    }
   }
 
   function handleLike() {
     //  TODO
-    return;
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
   }
 
   function handleComments() {
@@ -52,7 +55,10 @@ export default function Post({ postData = null }: PostProps) {
 
   function handleSave() {
     //  TODO
-    return;
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
   }
 
   return (

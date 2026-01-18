@@ -1,3 +1,14 @@
+.backdrop {
+  position: fixed;
+  inset: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #848c9dab;
+  z-index: 1000;
+}
+
 .modalForm {
   display: flex;
   flex-direction: column;

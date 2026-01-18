@@ -3,9 +3,10 @@ import styles from './MustLoginModal.module.css'
 
 interface MustLoginModalProps {
   message? : string;
+  onClose?: () => void;
 }
 
-export default function MustLoginModal({ message = "Log in to access this feature." } : MustLoginModalProps ) {
+export default function MustLoginModal({ message = "Log in to access this feature.", onClose } : MustLoginModalProps ) {
   const router = useRouter();
   return (
     <div className={styles.modalForm} onClick={(e) => e.stopPropagation()}>
