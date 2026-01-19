@@ -77,11 +77,11 @@ export default function loginPage() {
               onChange={e => setPassword(e.target.value)}
             />
           </label>
-          <h3 className={commonStyles.formSubHeader}>Already have an account?</h3>
+          <h3 className={authStyles.formSubHeader}>Already have an account?</h3>
           <button className={commonStyles.primaryBtn} type="submit">Login</button>
-          <h3 className={commonStyles.formSubHeader}>New?</h3>
+          <h3 className={authStyles.formSubHeader}>New?</h3>
           <button className={commonStyles.secondaryBtn} type="button" onClick={async () => router.push("/signUp")}> Create Account </button>
-          <h3 className={commonStyles.formSubHeader}>Or</h3>
+          <h3 className={authStyles.formSubHeader}>Or</h3>
           <button
             className={authStyles.googleBtn}
             type="button"
