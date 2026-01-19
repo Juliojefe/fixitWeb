@@ -6,6 +6,8 @@ import { useUser } from '@/app/providers/UserProvider';
 import { useRouter } from "next/navigation";
 import { DisplayPostType } from '@/types/displayPost';
 import styles from "./Post.module.css";
+import MustLoginModal from "../MustLoginModal/MustLoginModal";
+import { createPortal } from 'react-dom';
 
 interface PostProps {
   postData?: DisplayPostType | null;
@@ -17,6 +19,7 @@ export default function Post({ postData = null }: PostProps) {
   const { user } = useUser();
   const hasImage = (postData?.imageUrls?.length ?? 0) > 0;  //  true if one image or more false otherwise
   const deletedAuthor = postData?.authorId == null; //  true if the user has been deleted
+  const [showLoginModal, setShowLoginModal] = useState(false);
 
   if (!postData) {
     return null;
@@ -27,18 +30,23 @@ export default function Post({ postData = null }: PostProps) {
   }
 
   function handleShowNextImage() {
-    //  TODO
-    return;
+    if (postData?.imageUrls && currImageIndex < postData?.imageUrls.length - 1) {
+      setCurrImageIndex((prev) => prev + 1);
+    }
   }
 
   function handleShowPrevImage() {
-    //  TODO
-    return;
+    if (currImageIndex > 0) {
+      setCurrImageIndex((prev) => prev - 1);
+    }
   }
 
   function handleLike() {
     //  TODO
-    return;
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
   }
 
   function handleComments() {
@@ -48,77 +56,87 @@ export default function Post({ postData = null }: PostProps) {
 
   function handleSave() {
     //  TODO
-    return;
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
   }
 
   return (
-    <div className={styles.postContainer}>
-      {/* header section */}
-      <div
-        className={styles.headerSection}
-        onClick={
-          deletedAuthor
-            ? undefined
-            : () => handleGoToProfile(postData.authorId)
-        }
-        style={deletedAuthor ? { cursor: "default" } : undefined}
-      >
-        <img
-          className={styles.profilePic}
-          src={
+    <>
+
+      {showLoginModal &&
+        createPortal(
+          <MustLoginModal onClose={() => setShowLoginModal(false)} />,
+          document.body
+        )}
+
+      <div className={styles.postContainer}>
+        {/* header section */}
+        <div
+          className={styles.headerSection}
+          onClick={
             deletedAuthor
-              ? "/images/deletedUserPfp.png"
-              : postData.createdByProfilePicUrl
+              ? undefined
+              : () => handleGoToProfile(postData.authorId)
           }
-          alt="profile picture"
-        />
-        <p className={styles.userName}>
-          {deletedAuthor ? "Deleted User" : postData.createdBy}
-        </p>
-      </div>
-
-      {/* Image Section */}
-      {hasImage ? (
-        <div className={styles.imageSection}>
-          {postData.imageUrls?.[0] && (
-            <img
-              className={styles.postImage}
-              src={postData.imageUrls[currImageIndex]}
-              alt="post image"
-            />
-          )}
-          {postData.imageUrls.length > 1 && currImageIndex > 0 && (
-            <button className={styles.prevImageButton} onClick={handleShowPrevImage}>
-              <FaChevronLeft />
-            </button>
-          )}
-          {postData.imageUrls.length > 1 && currImageIndex < postData.imageUrls.length - 1 && (
-            <button className={styles.nextImageButton} onClick={handleShowNextImage}>
-              <FaChevronRight />
-            </button>
-          )}
+          style={deletedAuthor ? { cursor: "default" } : undefined}
+        >
+          <img
+            className={styles.profilePic}
+            src={
+              deletedAuthor
+                ? "/images/deletedUserPfp.png"
+                : postData.createdByProfilePicUrl
+            }
+            alt="profile picture"
+          />
+          <p className={styles.userName}>
+            {deletedAuthor ? "Deleted User" : postData.createdBy}
+          </p>
         </div>
-      ) : null}
-      {/* description section */}
-      <p className={styles.postDescription}>{postData.description || ""}</p>
-      {/* like count */}
-      <p className={styles.likeCount}>{postData.likeCount || 0} likes</p>
-      {/* like comment save icons */}
-      <div className={styles.actionIcons}>
-        <FaRegHeart
-          className={styles.icon}
-          onClick={() => handleLike()}
-        />
-        <FaRegComment
-          className={styles.icon}
-          onClick={() => handleComments()}
-        />
-        <FaRegBookmark
-          className={styles.icon}
-          onClick={() => handleSave()}
-        />
+        {/* Image Section */}
+        {hasImage ? (
+          <div className={styles.imageSection}>
+            {postData.imageUrls?.[0] && (
+              <img
+                className={styles.postImage}
+                src={postData.imageUrls[currImageIndex]}
+                alt="post image"
+              />
+            )}
+            {postData.imageUrls.length > 1 && currImageIndex > 0 && (
+              <button className={styles.prevImageButton} onClick={handleShowPrevImage}>
+                <FaChevronLeft />
+              </button>
+            )}
+            {postData.imageUrls.length > 1 && currImageIndex < postData.imageUrls.length - 1 && (
+              <button className={styles.nextImageButton} onClick={handleShowNextImage}>
+                <FaChevronRight />
+              </button>
+            )}
+          </div>
+        ) : null}
+        {/* description section */}
+        <p className={styles.postDescription}>{postData.description || ""}</p>
+        {/* like count */}
+        <p className={styles.likeCount}>{postData.likeCount || 0} likes</p>
+        {/* like comment save icons */}
+        <div className={styles.actionIcons}>
+          <FaRegHeart
+            className={styles.icon}
+            onClick={() => handleLike()}
+          />
+          <FaRegComment
+            className={styles.icon}
+            onClick={() => handleComments()}
+          />
+          <FaRegBookmark
+            className={styles.icon}
+            onClick={() => handleSave()}
+          />
+        </div>
       </div>
-    </div>
-
+    </>
   )
 }

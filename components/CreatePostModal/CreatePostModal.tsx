@@ -3,6 +3,7 @@ import styles from "./CreatePostModal.module.css";
 import axios from 'axios';
 import { useRouter } from "next/navigation";
 import { useUser } from "../../app/providers/UserProvider";
+import MustLoginModal from "../MustLoginModal/MustLoginModal";
 
 type CreatePostModalProps = {
   onClose: () => void;
@@ -67,68 +68,128 @@ export default function CreatePostModal({ onClose }: CreatePostModalProps) {
     }
   }
 
+  // return (
+  //   <div
+  //     className={styles.backdrop}
+  //     onClick={user === undefined ? undefined : onClose}  // prevent closing modal while it is still loading
+  //   >
+  //     {user === undefined ? ( //  loading user info case
+  //       <div className={styles.modalForm}>
+  //         <h3 className={styles.loadingUser}>Getting things ready<span className={styles.dots}></span></h3>
+  //       </div>
+  //     ) : user ? (
+  //       successfulUpload ? (
+  //         <div className={styles.modalForm}>
+  //           <h2 className={styles.successMessage}>{successMessage}</h2>
+  //         </div>
+  //       ) : (
+  //         <form className={styles.modalForm} onSubmit={handleSubmit} onClick={(e) => e.stopPropagation()}>
+  //           <h2 className={styles.formHeader}>Create Post</h2>
+
+  //           <textarea
+  //             name="description"
+  //             placeholder="Write a description..."
+  //             value={description}
+  //             onChange={(e) => setDescription(e.target.value)}
+  //             required
+  //             disabled={uploading}
+  //           />
+
+  //           <input
+  //             type="file"
+  //             name="images"
+  //             accept="image/*"
+  //             multiple
+  //             onChange={(e) => setImages(Array.from(e.target.files ?? []))}
+  //             disabled={uploading}
+  //           />
+
+  //           <button
+  //             className={styles.primaryBtn}
+  //             type="submit"
+  //             disabled={uploading}
+  //           >
+  //             {uploading ? (
+  //               <>Uploading<span className={styles.dots}></span></>
+  //             ) : (
+  //               'Upload'
+  //             )}
+  //           </button>
+
+  //           {errorMessage && (
+  //             <p className={styles.error}>{errorMessage}</p>
+  //           )}
+  //         </form>
+  //       )
+  //     </div >
+  //     ) : ( // guest user case
+  //       <MustLoginModal/>
+  //     )}
+  // );
   return (
-    <div
-      className={styles.backdrop}
-      onClick={user === undefined ? undefined : onClose}  // prevent closing modal while it is still loading
-    >
-      {user === undefined ? ( //  loading user info case
-        <div className={styles.modalForm}>
-          <h3 className={styles.loadingUser}>Getting things ready<span className={styles.dots}></span></h3>
-        </div>
-      ) : user ? (
-        successfulUpload ? (
-          <div className={styles.modalForm}>
-            <h2 className={styles.successMessage}>{successMessage}</h2>
-          </div>
-        ) : (
-          <form className={styles.modalForm} onSubmit={handleSubmit} onClick={(e) => e.stopPropagation()}>
-            <h2 className={styles.formHeader}>Create Post</h2>
+    <>
+      {/* CREATE POST MODAL */}
+      {(user === undefined || user) && (
+        <div
+          className={styles.backdrop}
+          onClick={user === undefined ? undefined : onClose}
+        >
+          {user === undefined ? (
+            <div className={styles.modalForm}>
+              <h3 className={styles.loadingUser}>
+                Getting things ready<span className={styles.dots}></span>
+              </h3>
+            </div>
+          ) : successfulUpload ? (
+            <div className={styles.modalForm}>
+              <h2 className={styles.successMessage}>{successMessage}</h2>
+            </div>
+          ) : (
+            <form className={styles.modalForm} onSubmit={handleSubmit} onClick={(e) => e.stopPropagation()}>
+              <h2 className={styles.formHeader}>Create Post</h2>
 
-            <textarea
-              name="description"
-              placeholder="Write a description..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              required
-              disabled={uploading}
-            />
+              <textarea
+                name="description"
+                placeholder="Write a description..."
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                required
+                disabled={uploading}
+              />
 
-            <input
-              type="file"
-              name="images"
-              accept="image/*"
-              multiple
-              onChange={(e) => setImages(Array.from(e.target.files ?? []))}
-              disabled={uploading}
-            />
+              <input
+                type="file"
+                name="images"
+                accept="image/*"
+                multiple
+                onChange={(e) => setImages(Array.from(e.target.files ?? []))}
+                disabled={uploading}
+              />
 
-            <button
-              className={styles.primaryBtn}
-              type="submit"
-              disabled={uploading}
-            >
-              {uploading ? (
-                <>Uploading<span className={styles.dots}></span></>
-              ) : (
-                'Upload'
+              <button
+                className={styles.primaryBtn}
+                type="submit"
+                disabled={uploading}
+              >
+                {uploading ? (
+                  <>Uploading<span className={styles.dots}></span></>
+                ) : (
+                  'Upload'
+                )}
+              </button>
+
+              {errorMessage && (
+                <p className={styles.error}>{errorMessage}</p>
               )}
-            </button>
-
-            {errorMessage && (
-              <p className={styles.error}>{errorMessage}</p>
-            )}
-          </form>
-        )
-      ) : ( // guest user case
-        <div className={styles.modalForm} onClick={(e) => e.stopPropagation()}>
-          <h2 className={styles.formHeader}>You Must Be Signed In To Upload Posts</h2>
-          <h3 className={styles.formSubHeader}>Already have an account?</h3>
-          <button className={styles.primaryBtn} type="button" onClick={async () => router.push("/login")}> Login </button>
-          <h3 className={styles.formSubHeader}>New?</h3>
-          <button className={styles.secondaryBtn} type="button" onClick={async () => router.push("/signUp")}> Create Account </button>
+            </form>
+          )}
         </div>
       )}
-    </div >
+      {/* GUEST MODAL — SEPARATE */}
+      {!user && user !== undefined && (
+        <MustLoginModal onClose={onClose} />
+      )}
+    </>
   );
+
 }
