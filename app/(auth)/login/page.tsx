@@ -3,9 +3,10 @@
 import React, { useEffect } from "react";
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
-import authStyles from '../../styles/auth.module.css';
 import { useUser } from "../../providers/UserProvider";
 import GuestRoute from "@/components/GuestRoute/GuestRoute";
+import authStyles from '../../styles/auth.module.css';
+import commonStyles from '../../styles/common.module.css';  // New import
 
 
 export default function loginPage() {
@@ -56,30 +57,30 @@ export default function loginPage() {
   return (
     <GuestRoute>
       <div className={authStyles.container}>
-        <form className={authStyles.authForm} onSubmit={handleSubmit}>
-          <h2 className={authStyles.formHeader}>Login</h2>
-          <label className={authStyles.formLabel}>Email
+        <form className={commonStyles.formContainer} onSubmit={handleSubmit}>
+          <h2 className={commonStyles.formHeader}>Login</h2>
+          <label className={commonStyles.label}>Email
             <input
               type="email"
               value={email}
               required
-              className={authStyles.formInput}
+              className={commonStyles.input}
               onChange={e => setEmail(e.target.value)}
             />
           </label>
-          <label className={authStyles.formLabel}>Password
+          <label className={commonStyles.label}>Password
             <input
               type="password"
               value={password}
               required
-              className={authStyles.formInput}
+              className={commonStyles.input}
               onChange={e => setPassword(e.target.value)}
             />
           </label>
           <h3 className={authStyles.formSubHeader}>Already have an account?</h3>
-          <button className={authStyles.primaryBtn} type="submit">Login</button>
+          <button className={commonStyles.primaryBtn} type="submit">Login</button>
           <h3 className={authStyles.formSubHeader}>New?</h3>
-          <button className={authStyles.secondaryBtn} type="button" onClick={async () => router.push("/signUp")}> Create Account </button>
+          <button className={commonStyles.secondaryBtn} type="button" onClick={async () => router.push("/signUp")}> Create Account </button>
           <h3 className={authStyles.formSubHeader}>Or</h3>
           <button
             className={authStyles.googleBtn}
@@ -93,7 +94,7 @@ export default function loginPage() {
             />
             Continue with Google
           </button>
-          {errorMessage && <p className={authStyles.error}>{errorMessage}</p>}
+          {errorMessage && <p className={commonStyles.error}>{errorMessage}</p>}
         </form>
       </div>
     </GuestRoute>

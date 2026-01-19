@@ -4,6 +4,7 @@ import React, { useEffect } from "react";
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import authStyles from '../../styles/auth.module.css';
+import commonStyles from '../../styles/common.module.css';
 import { useUser } from "../../providers/UserProvider";
 import GuestRoute from "@/components/GuestRoute/GuestRoute";
 
@@ -63,57 +64,57 @@ export default function signUpPage() {
   return (
     <GuestRoute>
       <div className={authStyles.container}>
-        <form className={authStyles.authForm} onSubmit={handleSignUp}>
-          <h2 className={authStyles.formHeader}>Sign Up</h2>
-          <label className={authStyles.formLabel}>Full Name
+        <form className={commonStyles.formContainer} onSubmit={handleSignUp}>
+          <h2 className={commonStyles.formHeader}>Sign Up</h2>
+          <label className={commonStyles.label}>Full Name
             <input
               type="text"
               value={name}
               required
-              className={authStyles.formInput}
+              className={commonStyles.input}
               onChange={e => setName(e.target.value)}
             />
           </label>
-          <label className={authStyles.formLabel}>Email
+          <label className={commonStyles.label}>Email
             <input
               type="email"
               value={email}
               required
-              className={authStyles.formInput}
+              className={commonStyles.input}
               onChange={e => setEmail(e.target.value)}
             />
           </label>
-          <label className={authStyles.formLabel}>Biography
+          <label className={commonStyles.label}>Biography
             <textarea
               name="biography"
               placeholder="Write a bio (optional) ..."
               value={biography}
               onChange={(e) => setBiography(e.target.value)}
-              className={authStyles.formTextArea}
+              className={commonStyles.input}
             />
           </label>
-          <label className={authStyles.formLabel}>Password
+          <label className={commonStyles.label}>Password
             <input
               type="password"
               value={password}
               required
-              className={authStyles.formInput}
+              className={commonStyles.input}
               onChange={e => setPassword(e.target.value)}
             />
           </label>
-          <label className={authStyles.formLabel}>Confirm Password
+          <label className={commonStyles.label}>Confirm Password
             <input
               type="password"
               value={confirmPassword}
               required
-              className={authStyles.formInput}
+              className={commonStyles.input}
               onChange={e => setConfirmPassword(e.target.value)}
             />
           </label>
           <h3 className={authStyles.formSubHeader}>New?</h3>
-          <button className={authStyles.primaryBtn} type="submit"> SignUp </button>
+          <button className={commonStyles.primaryBtn} type="submit"> SignUp </button>
           <h3 className={authStyles.formSubHeader}>Already have an account?</h3>
-          <button className={authStyles.secondaryBtn} type="button" onClick={async () => router.push("/login")}> Login </button>
+          <button className={commonStyles.secondaryBtn} type="button" onClick={async () => router.push("/login")}> Login </button>
           <h3 className={authStyles.formSubHeader}>Or</h3>
           <button
             className={authStyles.googleBtn}
@@ -127,7 +128,7 @@ export default function signUpPage() {
             />
             Continue with Google
           </button>
-          {errorMessage && <p className={authStyles.error}>{errorMessage}</p>}
+          {errorMessage && <p className={commonStyles.error}>{errorMessage}</p>}
         </form>
       </div>
     </GuestRoute>
