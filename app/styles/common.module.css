@@ -75,3 +75,15 @@
   66% { content: ".."; }
   100% { content: "..."; }
 }
+.label {
+  color: black;
+  font-weight: 500;
+}
+.input {
+  background: white;
+  color: black;
+  font-size: 1rem;
+  width: 100%;
+  padding: 0.6rem;
+  border: 2px solid black;
+}
