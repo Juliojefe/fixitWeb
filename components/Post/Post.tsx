@@ -9,7 +9,6 @@ import styles from "./Post.module.css";
 import MustLoginModal from "../MustLoginModal/MustLoginModal";
 import { createPortal } from 'react-dom';
 
-
 interface PostProps {
   postData?: DisplayPostType | null;
 }
@@ -65,9 +64,12 @@ export default function Post({ postData = null }: PostProps) {
 
   return (
     <>
-      {showLoginModal && (
-        <MustLoginModal onClose={() => setShowLoginModal(false)} />
-      )}
+
+      {showLoginModal &&
+        createPortal(
+          <MustLoginModal onClose={() => setShowLoginModal(false)} />,
+          document.body
+        )}
 
       <div className={styles.postContainer}>
         {/* header section */}

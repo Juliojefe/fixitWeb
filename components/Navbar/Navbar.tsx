@@ -3,19 +3,28 @@
 import { FaHome, FaCompass, FaPlusSquare, FaBell, FaUser } from "react-icons/fa";
 import styles from "./navbar.module.css";
 import CreatePostModal from '../CreatePostModal/CreatePostModal';
+import MustLoginModal from "../MustLoginModal/MustLoginModal";
 import { useRouter, usePathname } from 'next/navigation';
 import { useState, useEffect } from "react";
+import { useUser } from '@/app/providers/UserProvider';
 import { createPortal } from 'react-dom';
 
 export default function Navbar() {
   const [isCreatePostModalOpen, setIsCreatePostModalOpen] = useState(false);
-  const [isClient, setIsClient] = useState(false);
+  const [isMustLoginModalOpen, setIsMustLoginModalOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
+  const { user } = useUser();
 
-  useEffect(() => {
-    setIsClient(true);
-  }, []);
+
+  function handleGoToMyProfile() {
+    if (!user) {
+      setIsMustLoginModalOpen(true);
+      return;
+    } else {
+      router.push("myProfile");
+    }
+  }
 
   function doNothing() {
     return;
@@ -33,7 +42,7 @@ export default function Navbar() {
 
       <div
         className={`${styles.iconWrapper} ${pathname === '/myProfile' ? styles.active : ''}`}
-        onClick={() => router.push("/myProfile")}
+        onClick={handleGoToMyProfile}
       >
         <FaUser className={styles.icon} />
         <p>Profile</p>
@@ -60,11 +69,19 @@ export default function Navbar() {
         <p>Notifs</p>
       </div>
 
-      {/* Render modal via portal if open and on client */}
-      {isClient && isCreatePostModalOpen && createPortal(
-        <CreatePostModal onClose={() => setIsCreatePostModalOpen(false)} />,
-        document.body  // Appends directly to <body>
+      {isCreatePostModalOpen &&
+        createPortal(
+          <CreatePostModal onClose={() => setIsCreatePostModalOpen(false)} />,
+          document.body
+        )}
+
+      { /* Guest user case*/}
+      {isMustLoginModalOpen && 
+        createPortal(
+        <MustLoginModal onClose={() => setIsMustLoginModalOpen(false)} />,
+        document.body
       )}
+
     </nav>
   );
 }
