@@ -8,7 +8,7 @@ import { useState, useEffect } from "react";
 import { createPortal } from 'react-dom';
 
 export default function Navbar() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isCreatePostModalOpen, setIsCreatePostModalOpen] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
@@ -23,7 +23,6 @@ export default function Navbar() {
 
   return (
     <nav className={styles.navbar}>
-
       <div
         className={`${styles.iconWrapper} ${pathname === '/home' ? styles.active : ''}`}
         onClick={() => router.push("/home")}
@@ -50,7 +49,7 @@ export default function Navbar() {
 
       <div
         className={styles.iconWrapper}
-        onClick={() => setIsModalOpen(true)}
+        onClick={() => setIsCreatePostModalOpen(true)}
       >
         <FaPlusSquare className={styles.icon} />
         <p>Create</p>
@@ -62,8 +61,8 @@ export default function Navbar() {
       </div>
 
       {/* Render modal via portal if open and on client */}
-      {isClient && isModalOpen && createPortal(
-        <CreatePostModal onClose={() => setIsModalOpen(false)} />,
+      {isClient && isCreatePostModalOpen && createPortal(
+        <CreatePostModal onClose={() => setIsCreatePostModalOpen(false)} />,
         document.body  // Appends directly to <body>
       )}
     </nav>

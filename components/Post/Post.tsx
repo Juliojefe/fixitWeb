@@ -7,6 +7,8 @@ import { useRouter } from "next/navigation";
 import { DisplayPostType } from '@/types/displayPost';
 import styles from "./Post.module.css";
 import MustLoginModal from "../MustLoginModal/MustLoginModal";
+import { createPortal } from 'react-dom';
+
 
 interface PostProps {
   postData?: DisplayPostType | null;
@@ -128,6 +130,5 @@ export default function Post({ postData = null }: PostProps) {
         />
       </div>
     </div>
-
   )
 }
