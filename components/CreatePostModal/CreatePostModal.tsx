@@ -1,5 +1,6 @@
 import React, { ReactNode, useEffect, useState } from "react";
 import styles from "./CreatePostModal.module.css";
+import commonStyles from "../../app/styles/common.module.css";
 import axios from 'axios';
 import { useRouter } from "next/navigation";
 import { useUser } from "../../app/providers/UserProvider";
@@ -73,22 +74,22 @@ export default function CreatePostModal({ onClose }: CreatePostModalProps) {
       {/* CREATE POST MODAL */}
       {(user === undefined || user) && (
         <div
-          className={styles.backdrop}
+          className={commonStyles.modalBackdrop}
           onClick={user === undefined ? undefined : onClose}
         >
           {user === undefined ? (
-            <div className={styles.modalForm}>
+            <div className={commonStyles.formContainer}>
               <h3 className={styles.loadingUser}>
                 Getting things ready<span className={styles.dots}></span>
               </h3>
             </div>
           ) : successfulUpload ? (
-            <div className={styles.modalForm}>
+            <div className={commonStyles.formContainer}>
               <h2 className={styles.successMessage}>{successMessage}</h2>
             </div>
           ) : (
-            <form className={styles.modalForm} onSubmit={handleSubmit} onClick={(e) => e.stopPropagation()}>
-              <h2 className={styles.formHeader}>Create Post</h2>
+            <form className={commonStyles.formContainer} onSubmit={handleSubmit} onClick={(e) => e.stopPropagation()}>
+              <h2 className={commonStyles.formHeader}>Create Post</h2>
 
               <textarea
                 name="description"
@@ -109,19 +110,19 @@ export default function CreatePostModal({ onClose }: CreatePostModalProps) {
               />
 
               <button
-                className={styles.primaryBtn}
+                className={commonStyles.primaryBtn}
                 type="submit"
                 disabled={uploading}
               >
                 {uploading ? (
-                  <>Uploading<span className={styles.dots}></span></>
+                  <>Uploading<span className={commonStyles.dots}></span></>
                 ) : (
                   'Upload'
                 )}
               </button>
 
               {errorMessage && (
-                <p className={styles.error}>{errorMessage}</p>
+                <p className={commonStyles.error}>{errorMessage}</p>
               )}
             </form>
           )}
