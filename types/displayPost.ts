@@ -6,10 +6,8 @@ export interface DisplayPostType {
   createdBy: string;
   createdByProfilePicUrl: string;
   createdAt: string; // ISO date string
-  likeIds: number[];
   likeCount: number;
-  commentIds: number[];
-  commentCount: number;
   imageUrls: string[];
-  savedIds: number[];
+  hasLiked: boolean;
+  hasSaved: boolean;
 }
