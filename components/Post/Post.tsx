@@ -81,8 +81,15 @@ export default function Post({ postData = null }: PostProps) {
   }
 
   function handleComments() {
-    //  TODO
+    //  TODO modal pop up
     return;
+  }
+
+  function handleWhoLiked() {
+    //  TODO modal pop up
+    console.log("wholiked")
+    return;
+
   }
 
   async function handleLike() {
@@ -179,7 +186,7 @@ export default function Post({ postData = null }: PostProps) {
         {/* description section */}
         <p className={styles.postDescription}>{postData.description || ""}</p>
         {/* like count */}
-        <p className={styles.likeCount}>{likeCount || 0} likes</p>
+        <p onClick={handleWhoLiked} className={styles.likeCount}>{likeCount || 0} likes</p>
         {/* like comment save icons */}
         <div className={styles.actionIcons}>
 
