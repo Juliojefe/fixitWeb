@@ -45,11 +45,38 @@ export default function Post({ postData = null }: PostProps) {
     }
   }
 
-  function handleSave() {
-    //  TODO
+  async function handleSave() {
     if (!user) {
       setShowLoginModal(true);
       return;
+    }
+    try {
+      const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/post/${postData?.postId}/save`;
+      if (!hasSaved) {
+        setHasSaved(true);
+        try {
+          await axios.post(
+            endpoint,
+            {},
+            {
+              headers: { Authorization: `Bearer ${user.accessToken}` },
+            }
+          );
+        } catch (err) {
+          console.error("Failed to save post", err);
+        }
+      } else {
+        setHasSaved(false);
+        try {
+          await axios.delete(endpoint, {
+            headers: { Authorization: `Bearer ${user.accessToken}` },
+          });
+        } catch (err) {
+          console.error("Failed to unsave post", err);
+        }
+      }
+    } catch (err) {
+      console.error("Unexpected error in handleSave", err);
     }
   }
 
@@ -59,8 +86,6 @@ export default function Post({ postData = null }: PostProps) {
   }
 
   async function handleLike() {
-    console.log("hit");
-    //  TODO
     if (!user) {
       setShowLoginModal(true);
       return;
@@ -93,10 +118,8 @@ export default function Post({ postData = null }: PostProps) {
         }
       }
     } catch (err) {
-      console.error("Unexpected error in handleSave", err);
+      console.error("Unexpected error in handleLike", err);
     }
-    console.log("complete");
-
   }
 
   return (
@@ -139,7 +162,6 @@ export default function Post({ postData = null }: PostProps) {
               <img
                 className={styles.postImage}
                 src={postData.imageUrls[currImageIndex]}
-                alt="post image"
               />
             )}
             {postData.imageUrls.length > 1 && currImageIndex > 0 && (
@@ -163,7 +185,7 @@ export default function Post({ postData = null }: PostProps) {
 
           {hasLiked ? (
             <FaHeart
-              className={`${styles.icon} ${styles.active}`}
+              className={styles.likeIconActive}
               onClick={handleLike}
             />
           ) : (
