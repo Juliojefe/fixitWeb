@@ -89,8 +89,11 @@
   transition: 0.2s ease;
 }
 
-.icon:hover {
-  color: black;
+.likeIconActive {
+  font-size: small;
+  cursor: pointer;
+  transition: 0.2s ease;
+  color: red;
 }
 
 .postDescription {
