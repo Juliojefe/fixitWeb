@@ -93,6 +93,10 @@
   color: black;
 }
 
+.active {
+  color: red;
+}
+
 .postDescription {
   font-size: small;
   margin-left: 10px;
