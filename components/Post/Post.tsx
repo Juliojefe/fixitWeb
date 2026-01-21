@@ -180,7 +180,7 @@ export default function Post({ postData = null }: PostProps) {
 
           {hasSaved ? (
             <FaBookmark
-              className={`${styles.icon} ${styles.active}`}
+              className={styles.icon}
               onClick={handleSave}
             />
           ) : (
