@@ -15,15 +15,22 @@ interface PostProps {
 }
 
 export default function Post({ postData = null }: PostProps) {
+  //  basic needs
   const router = useRouter();
-  const [currImageIndex, setCurrImageIndex] = useState(0);
   const { user } = useUser();
-  const hasImage = (postData?.imageUrls?.length ?? 0) > 0;  //  true if one image or more false otherwise
-  const deletedAuthor = postData?.authorId == null; //  true if the user has been deleted
-  const [showLoginModal, setShowLoginModal] = useState(false);
+
+  //  post specific features
   const [hasLiked, setHasLiked] = useState(postData?.hasLiked);
   const [hasSaved, setHasSaved] = useState(postData?.hasSaved);
   const [likeCount, setLikeCount] = useState<number>(postData?.likeCount ?? 0);
+  const hasImage = (postData?.imageUrls?.length ?? 0) > 0;  //  true if one image or more false otherwise
+  const deletedAuthor = postData?.authorId == null; //  true if the user has been deleted
+  const [currImageIndex, setCurrImageIndex] = useState(0);
+
+  // used for modal rendition
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showCommentsModal, setShowCommentsModal] = useState(false);
+  const [showWhoLikedModal, setShowWhoLikedModal] = useState(false);
 
   if (!postData) {
     return null;
@@ -78,18 +85,6 @@ export default function Post({ postData = null }: PostProps) {
     } catch (err) {
       console.error("Unexpected error in handleSave", err);
     }
-  }
-
-  function handleComments() {
-    //  TODO modal pop up
-    return;
-  }
-
-  function handleWhoLiked() {
-    //  TODO modal pop up
-    console.log("wholiked")
-    return;
-
   }
 
   async function handleLike() {
@@ -186,7 +181,7 @@ export default function Post({ postData = null }: PostProps) {
         {/* description section */}
         <p className={styles.postDescription}>{postData.description || ""}</p>
         {/* like count */}
-        <p onClick={handleWhoLiked} className={styles.likeCount}>{likeCount || 0} likes</p>
+        <p onClick={() => setShowWhoLikedModal(true)} className={styles.likeCount}>{likeCount || 0} likes</p>
         {/* like comment save icons */}
         <div className={styles.actionIcons}>
 
@@ -204,7 +199,7 @@ export default function Post({ postData = null }: PostProps) {
 
           <FaRegComment
             className={styles.icon}
-            onClick={handleComments}
+            onClick={ () => setShowCommentsModal(true)}
           />
 
           {hasSaved ? (
