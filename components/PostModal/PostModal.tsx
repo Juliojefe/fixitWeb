@@ -24,6 +24,7 @@ interface PostProps {
   onNextImage: () => void;
   onPrevImage: () => void;
   onClose?: () => void;
+  onGoToProfile: () => void;
 }
 
 export default function PostModal({
@@ -36,7 +37,8 @@ export default function PostModal({
   onSave,
   onNextImage,
   onPrevImage,
-  onClose
+  onClose,
+  onGoToProfile
 }: PostProps) {
 
   //  basic needs
@@ -60,7 +62,6 @@ export default function PostModal({
     //  Fetch comments by postId
     setLoadingComments(false);
   }
-
 
   return (
     <div className={styles.modalBackdrop} onClick={onClose}>
@@ -86,9 +87,31 @@ export default function PostModal({
             )}
           </div>
         ) : null}
-
-
-        {/* Description and comments section */}
+        <div className={styles.commentsSection}>
+          {/* header section */}
+          <div
+            className={styles.headerSection}
+            onClick={
+              deletedAuthor
+                ? undefined
+                : () => onGoToProfile()
+            }
+            style={deletedAuthor ? { cursor: "default" } : undefined}
+          >
+            <img
+              className={styles.profilePic}
+              src={
+                deletedAuthor
+                  ? "/images/deletedUserPfp.png"
+                  : postData.createdByProfilePicUrl
+              }
+              alt="profile picture"
+            />
+            <p className={styles.userName}>
+              {deletedAuthor ? "Deleted User" : postData.createdBy}
+            </p>
+          </div>
+        </div>
       </div>
 
     </div>

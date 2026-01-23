@@ -38,6 +38,7 @@ export default function Post({ postData = null }: PostProps) {
   }
 
   async function handleGoToProfile(authorId: number) {
+    console.log("go to profile with id " + authorId)
     return;
   }
 
@@ -141,6 +142,7 @@ export default function Post({ postData = null }: PostProps) {
             onNextImage={handleShowNextImage}
             onPrevImage={handleShowPrevImage}
             onClose={() => setShowPostModal(false)}
+            onGoToProfile={() => handleGoToProfile(postData!.authorId)}
           />,
           document.body
         )}
