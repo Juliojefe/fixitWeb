@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { DisplayPostType } from '@/types/displayPost';
 import styles from "./Post.module.css";
 import MustLoginModal from "../MustLoginModal/MustLoginModal";
+import PostModal from "../PostModal/PostModal";
 import { createPortal } from 'react-dom';
 import axios from 'axios';
 
@@ -126,6 +127,23 @@ export default function Post({ postData = null }: PostProps) {
 
   return (
     <>
+
+      {showCommentsModal && 
+        createPortal(
+          <PostModal
+            postData={postData}
+            hasLiked={hasLiked}
+            hasSaved={hasSaved}
+            likeCount={likeCount}
+            currImageIndex={currImageIndex}
+            onLike={handleLike}
+            onSave={handleSave}
+            onNextImage={handleShowNextImage}
+            onPrevImage={handleShowPrevImage}
+            onClose={() => setShowCommentsModal(false)}
+          />,
+          document.body
+        )}
 
       {showLoginModal &&
         createPortal(
