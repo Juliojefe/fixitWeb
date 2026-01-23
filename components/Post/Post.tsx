@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { DisplayPostType } from '@/types/displayPost';
 import styles from "./Post.module.css";
 import MustLoginModal from "../MustLoginModal/MustLoginModal";
+import PostModal from "../PostModal/PostModal";
 import { createPortal } from 'react-dom';
 import axios from 'axios';
 
@@ -15,15 +16,22 @@ interface PostProps {
 }
 
 export default function Post({ postData = null }: PostProps) {
+  //  basic needs
   const router = useRouter();
-  const [currImageIndex, setCurrImageIndex] = useState(0);
   const { user } = useUser();
-  const hasImage = (postData?.imageUrls?.length ?? 0) > 0;  //  true if one image or more false otherwise
-  const deletedAuthor = postData?.authorId == null; //  true if the user has been deleted
-  const [showLoginModal, setShowLoginModal] = useState(false);
+
+  //  post specific features
   const [hasLiked, setHasLiked] = useState(postData?.hasLiked);
   const [hasSaved, setHasSaved] = useState(postData?.hasSaved);
   const [likeCount, setLikeCount] = useState<number>(postData?.likeCount ?? 0);
+  const hasImage = (postData?.imageUrls?.length ?? 0) > 0;  //  true if one image or more false otherwise
+  const deletedAuthor = postData?.authorId == null; //  true if the user has been deleted
+  const [currImageIndex, setCurrImageIndex] = useState(0);
+
+  // used for modal rendition
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showPostModal, setShowPostModal] = useState(false);
+  const [showWhoLikedModal, setShowWhoLikedModal] = useState(false);
 
   if (!postData) {
     return null;
@@ -80,11 +88,6 @@ export default function Post({ postData = null }: PostProps) {
     }
   }
 
-  function handleComments() {
-    //  TODO
-    return;
-  }
-
   async function handleLike() {
     if (!user) {
       setShowLoginModal(true);
@@ -124,6 +127,23 @@ export default function Post({ postData = null }: PostProps) {
 
   return (
     <>
+
+      {showPostModal && 
+        createPortal(
+          <PostModal
+            postData={postData}
+            hasLiked={hasLiked}
+            hasSaved={hasSaved}
+            likeCount={likeCount}
+            currImageIndex={currImageIndex}
+            onLike={handleLike}
+            onSave={handleSave}
+            onNextImage={handleShowNextImage}
+            onPrevImage={handleShowPrevImage}
+            onClose={() => setShowPostModal(false)}
+          />,
+          document.body
+        )}
 
       {showLoginModal &&
         createPortal(
@@ -179,7 +199,7 @@ export default function Post({ postData = null }: PostProps) {
         {/* description section */}
         <p className={styles.postDescription}>{postData.description || ""}</p>
         {/* like count */}
-        <p className={styles.likeCount}>{likeCount || 0} likes</p>
+        <p onClick={() => setShowWhoLikedModal(true)} className={styles.likeCount}>{likeCount || 0} likes</p>
         {/* like comment save icons */}
         <div className={styles.actionIcons}>
 
@@ -197,7 +217,7 @@ export default function Post({ postData = null }: PostProps) {
 
           <FaRegComment
             className={styles.icon}
-            onClick={handleComments}
+            onClick={ () => setShowPostModal(true)}
           />
 
           {hasSaved ? (
