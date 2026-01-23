@@ -63,7 +63,6 @@ export default function PostModal({
     setLoadingComments(false);
   }
 
-
   return (
     <div className={styles.modalBackdrop} onClick={onClose}>
       <div className={styles.postModalContainer} onClick={(e) => e.stopPropagation()}>

@@ -21,11 +21,12 @@
 
 .postModalImageSection {
   position: relative;
-  max-height: 500px;
+  max-height: 700px;
   border-right: 4px solid black;
   display: flex;
   align-items: center;
   justify-content: center;
+  background-color: black;
 }
 
 .commentsSection {
