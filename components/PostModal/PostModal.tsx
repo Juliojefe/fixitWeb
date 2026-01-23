@@ -63,11 +63,11 @@ export default function PostModal({
 
 
   return (
-    <div className={commonStyles.modalBackdrop} onClick={onClose}>
+    <div className={styles.modalBackdrop} onClick={onClose}>
       <div className={styles.postModalContainer} onClick={(e) => e.stopPropagation()}>
         {/* Image Section */}
         {hasImage ? (
-          <div className={styles.imageSection}>
+          <div className={styles.postModalImageSection}>
             {postData?.imageUrls?.[0] && (
               <img
                 className={styles.postImage}
