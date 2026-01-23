@@ -21,13 +21,16 @@
 
 .postModalImageSection {
   position: relative;
-  max-height: 700px;
+  height: 500px;
+  width: 500px;
   border-right: 4px solid black;
   display: flex;
   align-items: center;
   justify-content: center;
-  background-color: black;
+  background-color: #2b2d2f;
+  overflow: hidden;
 }
+
 
 .commentsSection {
   width: 500px;
@@ -38,10 +41,10 @@
 }
 
 .postImage {
-  max-height: 500px;
-  max-width: 500px;
-  min-width: 300px;
-  min-height: 300px;
+  max-height: 100%;
+  max-width: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 .headerSection {
