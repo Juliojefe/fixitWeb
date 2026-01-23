@@ -30,7 +30,7 @@ export default function Post({ postData = null }: PostProps) {
 
   // used for modal rendition
   const [showLoginModal, setShowLoginModal] = useState(false);
-  const [showCommentsModal, setShowCommentsModal] = useState(false);
+  const [showPostModal, setShowPostModal] = useState(false);
   const [showWhoLikedModal, setShowWhoLikedModal] = useState(false);
 
   if (!postData) {
@@ -128,7 +128,7 @@ export default function Post({ postData = null }: PostProps) {
   return (
     <>
 
-      {showCommentsModal && 
+      {showPostModal && 
         createPortal(
           <PostModal
             postData={postData}
@@ -140,7 +140,7 @@ export default function Post({ postData = null }: PostProps) {
             onSave={handleSave}
             onNextImage={handleShowNextImage}
             onPrevImage={handleShowPrevImage}
-            onClose={() => setShowCommentsModal(false)}
+            onClose={() => setShowPostModal(false)}
           />,
           document.body
         )}
@@ -217,7 +217,7 @@ export default function Post({ postData = null }: PostProps) {
 
           <FaRegComment
             className={styles.icon}
-            onClick={ () => setShowCommentsModal(true)}
+            onClick={ () => setShowPostModal(true)}
           />
 
           {hasSaved ? (
