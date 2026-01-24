@@ -52,14 +52,31 @@ export default function PostModal({
   //  comments section 
   const [loadingComments, setLoadingComments] = useState(true);
   const [comments, setComments] = useState<comment[] | null>(null);
+  const [last, setLast] = useState(false);
+  const [currPage, setCurrPage] = useState(0);
+  const PAGE_SIZE = 10;
 
   if (!postData) {
     return null;
   }
 
+  async function fetchComments() {
+    if (last || loadingComments) {
+      return;
+    }
+    try {
+        const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/comment/post/${postData?.postId}?page=${currPage}&size=${PAGE_SIZE}`;
+        const res = await axios.get(endpoint);
+        const page = res.data;
+        setComments(prev => [...prev, ...page.content]);
+
+    } catch (err) {
+      console.error("Failed to fetch comments", err);
+    }
+  }
+
   if (loadingComments) {
-    //  TODO
-    //  Fetch comments by postId
+    fetchComments();
     setLoadingComments(false);
   }
 
