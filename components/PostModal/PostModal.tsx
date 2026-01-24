@@ -6,11 +6,10 @@ import { useUser } from '@/app/providers/UserProvider';
 import { useRouter } from "next/navigation";
 import { DisplayPostType } from '@/types/displayPost';
 import { comment } from "@/types/comment";
+import { formatDistanceToNow } from "date-fns";
 import AuthLoading from "../AuthLoading/AuthLoading";
 import styles from "./PostModal.module.css";
 import commonStyles from "../../app/styles/common.module.css"
-import MustLoginModal from "../MustLoginModal/MustLoginModal";
-import { createPortal } from 'react-dom';
 import axios from 'axios';
 
 interface PostProps {
@@ -68,13 +67,14 @@ export default function PostModal({
     return null;
   }
 
-  useEffect(() => {
-    if (loadingComments && !last) {
-      fetchComments();
-    }
-  }, [loadingComments, currPage, last]);
+  if(loadingComments) {
+    fetchComments();
+    setLoadingComments(false);
+  }
+
 
   async function fetchComments() {
+  if (last) return;
     try {
       const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/comment/post/${postData?.postId}?page=${currPage}&size=${PAGE_SIZE}`;
       const res = await axios.get(endpoint);
@@ -234,7 +234,9 @@ export default function PostModal({
                         ))}
                       </div>
                     )}
-                    <p className={styles.commentTime}>{new Date(comment.createdAt).toLocaleString()}</p> {/* adjust format */}
+                    <p className={styles.commentTime}>
+                      {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
+                    </p>
                   </div>
                 </div>
               ))
