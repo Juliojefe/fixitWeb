@@ -18,6 +18,8 @@ export default function AuthCallback() {
     }
 
     const name = decodeURIComponent(searchParams.get("name") || "");
+    const userIdParam = searchParams.get("userId");
+    const userId = Number(userIdParam);
     const email = decodeURIComponent(searchParams.get("email") || "");
     const profilePic = decodeURIComponent(searchParams.get("profilePic") || "");
     const isGoogle = searchParams.get("isGoogle") === "true";
@@ -30,6 +32,7 @@ export default function AuthCallback() {
     if (name && email && accessToken && refreshToken) {
       const userData = {
         name,
+        userId,
         email,
         profilePic,
         isGoogle,

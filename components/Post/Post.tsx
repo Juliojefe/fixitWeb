@@ -142,7 +142,7 @@ export default function Post({ postData = null }: PostProps) {
             onNextImage={handleShowNextImage}
             onPrevImage={handleShowPrevImage}
             onClose={() => setShowPostModal(false)}
-            onGoToProfile={() => handleGoToProfile(postData!.authorId)}
+            onGoToProfile={(id: number) => handleGoToProfile(id)}
           />,
           document.body
         )}
