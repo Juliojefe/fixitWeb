@@ -5,4 +5,5 @@ export interface comment {
   createdByProfilePicUrl: string;
   content: string;
   imageUrls: string[];
+  createdAt: string; // ISO date string
 }

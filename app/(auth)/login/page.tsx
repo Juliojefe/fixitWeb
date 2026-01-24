@@ -28,6 +28,7 @@ export default function loginPage() {
       if (authData.accessToken) {
         setUser({
           name: authData.name,
+          userId: authData.userId,
           email: authData.email,
           profilePic: authData.profilePic,
           isGoogle: authData.isGoogle,
