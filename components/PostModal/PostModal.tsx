@@ -7,7 +7,6 @@ import { useRouter } from "next/navigation";
 import { DisplayPostType } from '@/types/displayPost';
 import { comment } from "@/types/comment";
 import { formatDistanceToNow } from "date-fns";
-import AuthLoading from "../AuthLoading/AuthLoading";
 import styles from "./PostModal.module.css";
 import commonStyles from "../../app/styles/common.module.css"
 import axios from 'axios';
@@ -54,6 +53,7 @@ export default function PostModal({
   const [last, setLast] = useState(false);
   const [currPage, setCurrPage] = useState(0);
   const PAGE_SIZE = 10;
+  const isFetching = useRef(false);
 
   // for adding comment
   const [commentContent, setCommentContent] = useState('');
@@ -67,14 +67,17 @@ export default function PostModal({
     return null;
   }
 
-  if(loadingComments) {
+  if (loadingComments && !isFetching.current) {
+    isFetching.current = true;
     fetchComments();
-    setLoadingComments(false);
   }
 
-
   async function fetchComments() {
-  if (last) return;
+    if (last) {
+      setLoadingComments(false);
+      isFetching.current = false;
+      return;
+    }
     try {
       const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/comment/post/${postData?.postId}?page=${currPage}&size=${PAGE_SIZE}`;
       const res = await axios.get(endpoint);
@@ -93,6 +96,7 @@ export default function PostModal({
       console.error("Failed to fetch comments", err);
     } finally {
       setLoadingComments(false);
+      isFetching.current = false;
     }
   }
 
@@ -241,11 +245,8 @@ export default function PostModal({
                 </div>
               ))
             )}
-            {loadingComments && comments.length === 0 && (
-              <div className={styles.spinnerCenter}>Loading...</div>
-            )}
-            {loadingComments && comments.length > 0 && (
-              <div className={styles.spinnerBottom}>Loading more...</div>
+            {loadingComments && (
+              <div className={comments.length === 0 ? styles.spinnerCenter : styles.spinnerBottom}>Loading...</div>
             )}
             {!last && !loadingComments && (
               <button className={styles.loadMore} onClick={handleLoadMore}>
