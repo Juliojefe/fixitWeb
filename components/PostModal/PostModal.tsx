@@ -1,14 +1,16 @@
 'use client'
 
 import React, { useState, useEffect, useRef } from "react";
-import { FaHeart, FaRegHeart, FaRegComment, FaRegBookmark, FaBookmark, FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { FaHeart, FaRegHeart, FaRegComment, FaRegBookmark, FaBookmark, FaChevronLeft, FaChevronRight, FaPaperPlane, FaCamera } from "react-icons/fa";
 import { useUser } from '@/app/providers/UserProvider';
 import { useRouter } from "next/navigation";
 import { DisplayPostType } from '@/types/displayPost';
 import { comment } from "@/types/comment";
+import AuthLoading from "../AuthLoading/AuthLoading";
 import styles from "./PostModal.module.css";
-import { formatDistanceToNow } from "date-fns";
 import commonStyles from "../../app/styles/common.module.css"
+import MustLoginModal from "../MustLoginModal/MustLoginModal";
+import { createPortal } from 'react-dom';
 import axios from 'axios';
 
 interface PostProps {
@@ -66,15 +68,11 @@ export default function PostModal({
     return null;
   }
 
-  // useEffect(() => {
-  //   if (loadingComments && !last) {
-  //     fetchComments();
-  //   }
-  // }, [loadingComments, currPage, last]);
-
+  useEffect(() => {
     if (loadingComments && !last) {
       fetchComments();
     }
+  }, [loadingComments, currPage, last]);
 
   async function fetchComments() {
     try {
@@ -120,7 +118,6 @@ export default function PostModal({
       selectedImages.forEach(file => formData.append('images', file));
 
       const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/comment`;
-      console.log(dto);
       const res = await axios.post(endpoint, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
@@ -237,9 +234,7 @@ export default function PostModal({
                         ))}
                       </div>
                     )}
-                    <p className={styles.commentTime}>
-                      {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
-                    </p>
+                    <p className={styles.commentTime}>{new Date(comment.createdAt).toLocaleString()}</p> {/* adjust format */}
                   </div>
                 </div>
               ))
@@ -266,7 +261,7 @@ export default function PostModal({
                 ) : (
                   <FaRegHeart className={styles.icon} onClick={onLike} />
                 )}
-                <FaRegComment className={styles.icon} />
+                <FaRegComment className={styles.icon} /> {/* perhaps focus input */}
                 {hasSaved ? (
                   <FaBookmark className={styles.icon} onClick={onSave} />
                 ) : (
@@ -274,19 +269,31 @@ export default function PostModal({
                 )}
               </div>
               <div className={styles.addComment}>
-                <textarea
-                  value={commentContent}
-                  onChange={(e) => setCommentContent(e.target.value)}
-                  placeholder="Add a comment..."
-                  className={styles.commentInput}
-                />
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  className={styles.imageUpload}
-                />
+                <div className={styles.inputRow}>
+                  <label className={styles.uploadIcon}>
+                    <FaCamera />
+                    <input
+                      type="file"
+                      multiple
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      className={styles.imageUpload}
+                    />
+                  </label>
+                  <textarea
+                    value={commentContent}
+                    onChange={(e) => setCommentContent(e.target.value)}
+                    placeholder="Add a comment..."
+                    className={styles.commentInput}
+                  />
+                  <button 
+                    onClick={handlePostComment} 
+                    disabled={postingComment || !commentContent.trim()} 
+                    className={styles.postButton}
+                  >
+                    <FaPaperPlane />
+                  </button>
+                </div>
                 {selectedImages.length > 0 && (
                   <div className={styles.previewImages}>
                     {selectedImages.map((file, idx) => (
@@ -299,9 +306,6 @@ export default function PostModal({
                     ))}
                   </div>
                 )}
-                <button onClick={handlePostComment} disabled={postingComment || !commentContent.trim()}>
-                  Post
-                </button>
               </div>
             </>
           )}

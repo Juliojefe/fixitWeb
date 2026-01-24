@@ -38,6 +38,7 @@
   flex-direction: column;
   padding: 0;
   margin: 0;
+  position: relative;
 }
 
 .postImage {
@@ -195,24 +196,51 @@
 }
 
 .addComment {
-  display: flex;
-  flex-direction: column;
   padding: 10px;
   border-top: 1px solid #ddd;
   background-color: white;
 }
 
+.inputRow {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.uploadIcon {
+  font-size: 20px;
+  cursor: pointer;
+  margin-right: 10px;
+  color: #0095f6;
+  display: flex;
+  align-items: center;
+}
+
+.imageUpload {
+  display: none;
+}
+
 .commentInput {
-  width: 100%;
+  flex: 1;
   min-height: 40px;
   border: 1px solid #ddd;
   border-radius: 5px;
   padding: 5px;
-  margin-bottom: 10px;
+  resize: none;
 }
 
-.imageUpload {
-  margin-bottom: 10px;
+.postButton {
+  margin-left: 10px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #0095f6;
+  cursor: pointer;
+}
+
+.postButton:disabled {
+  color: gray;
+  cursor: not-allowed;
 }
 
 .previewImages {
