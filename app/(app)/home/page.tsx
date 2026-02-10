@@ -8,9 +8,6 @@ import { useUser } from '../../providers/UserProvider';
 export default function Home() {
   const router = useRouter();
   const { user, logout } = useUser();
-
-  console.log(user);
-
   async function handleLogout() {
     logout();
     router.push("/login");
