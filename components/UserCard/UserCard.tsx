@@ -10,7 +10,7 @@ import { useState } from 'react';
 
 interface UserCardProps {
   followingAuthor: boolean;
-  authorId: number;
+  authorId: number | null;  //  null if the user has been deleted
   createdBy: string;
   createdByProfilePicUrl: string;
 }

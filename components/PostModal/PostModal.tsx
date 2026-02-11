@@ -23,6 +23,7 @@ interface PostProps {
   onNextImage: () => void;
   onPrevImage: () => void;
   onClose?: () => void;
+  header: React.ReactNode;
 }
 
 export default function PostModal({
@@ -35,7 +36,8 @@ export default function PostModal({
   onSave,
   onNextImage,
   onPrevImage,
-  onClose
+  onClose,
+  header
 }: PostProps) {
 
   // basic needs
@@ -189,12 +191,7 @@ export default function PostModal({
         ) : null}
         <div className={styles.commentsSection}>
           {/* header section */}
-          <UserCard
-            followingAuthor={postData.followingAuthor}
-            authorId={postData.authorId}
-            createdBy={postData.createdBy}
-            createdByProfilePicUrl={postData.createdByProfilePicUrl}
-          />
+          {header}  {/* pre-rendered component inherited from Post parent component */}
           {/* description section */}
           <p className={styles.postDescription}>{postData.description || ""}</p>
 
