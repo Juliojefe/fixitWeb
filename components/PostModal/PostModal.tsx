@@ -10,6 +10,7 @@ import { formatDistanceToNow } from "date-fns";
 import styles from "./PostModal.module.css";
 import commonStyles from "../../app/styles/common.module.css"
 import axios from 'axios';
+import UserCard from "../UserCard/UserCard";
 
 interface PostProps {
   postData?: DisplayPostType | null;
@@ -22,7 +23,6 @@ interface PostProps {
   onNextImage: () => void;
   onPrevImage: () => void;
   onClose?: () => void;
-  onGoToProfile: (id: number) => void;
 }
 
 export default function PostModal({
@@ -35,8 +35,7 @@ export default function PostModal({
   onSave,
   onNextImage,
   onPrevImage,
-  onClose,
-  onGoToProfile
+  onClose
 }: PostProps) {
 
   // basic needs
@@ -70,6 +69,12 @@ export default function PostModal({
   if (loadingComments && !isFetching.current) {
     isFetching.current = true;
     fetchComments();
+  }
+
+  async function onGoToCommentorProfile(authorId: number) {
+    //  TODO
+    console.log("go to profile with id " + authorId);
+    return;
   }
 
   async function fetchComments() {
@@ -184,28 +189,14 @@ export default function PostModal({
         ) : null}
         <div className={styles.commentsSection}>
           {/* header section */}
-          <div
-            className={styles.headerSection}
-            onClick={
-              deletedAuthor
-                ? undefined
-                : () => onGoToProfile(postData.authorId!)
-            }
-            style={deletedAuthor ? { cursor: "default" } : undefined}
-          >
-            <img
-              className={styles.profilePic}
-              src={
-                deletedAuthor
-                  ? "/images/deletedUserPfp.png"
-                  : postData.createdByProfilePicUrl
-              }
-              alt="profile picture"
-            />
-            <p className={styles.userName}>
-              {deletedAuthor ? "Deleted User" : postData.createdBy}
-            </p>
-          </div>
+          <UserCard
+            followingAuthor={postData.followingAuthor}
+            authorId={postData.authorId}
+            createdBy={postData.createdBy}
+            createdByProfilePicUrl={postData.createdByProfilePicUrl}
+          />
+          {/* description section */}
+          <p className={styles.postDescription}>{postData.description || ""}</p>
 
           {/* comments list */}
           <div className={styles.commentsList}>
@@ -218,10 +209,10 @@ export default function PostModal({
                     className={styles.commentProfilePic}
                     src={comment.createdByProfilePicUrl}
                     alt="comment author"
-                    onClick={() => onGoToProfile(comment.authorId)}
+                    onClick={() => onGoToCommentorProfile(comment.authorId)}
                   />
                   <div className={styles.commentContent}>
-                    <p className={styles.commentAuthor} onClick={() => onGoToProfile(comment.authorId)}>
+                    <p className={styles.commentAuthor} onClick={() => onGoToCommentorProfile(comment.authorId)}>
                       {comment.createdBy}
                     </p>
                     <p className={styles.commentText}>{comment.content}</p>

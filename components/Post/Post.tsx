@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { DisplayPostType } from '@/types/displayPost';
 import styles from "./Post.module.css";
 import MustLoginModal from "../MustLoginModal/MustLoginModal";
+import UserCard from "../UserCard/UserCard";
 import PostModal from "../PostModal/PostModal";
 import { createPortal } from 'react-dom';
 import axios from 'axios';
@@ -25,7 +26,6 @@ export default function Post({ postData = null }: PostProps) {
   const [hasSaved, setHasSaved] = useState(postData?.hasSaved);
   const [likeCount, setLikeCount] = useState<number>(postData?.likeCount ?? 0);
   const hasImage = (postData?.imageUrls?.length ?? 0) > 0;  //  true if one image or more false otherwise
-  const deletedAuthor = postData?.authorId == null; //  true if the user has been deleted
   const [currImageIndex, setCurrImageIndex] = useState(0);
 
   // used for modal rendition
@@ -35,11 +35,6 @@ export default function Post({ postData = null }: PostProps) {
 
   if (!postData) {
     return null;
-  }
-
-  async function handleGoToProfile(authorId: number) {
-    console.log("go to profile with id " + authorId)
-    return;
   }
 
   function handleShowNextImage() {
@@ -142,7 +137,6 @@ export default function Post({ postData = null }: PostProps) {
             onNextImage={handleShowNextImage}
             onPrevImage={handleShowPrevImage}
             onClose={() => setShowPostModal(false)}
-            onGoToProfile={(id: number) => handleGoToProfile(id)}
           />,
           document.body
         )}
@@ -155,28 +149,12 @@ export default function Post({ postData = null }: PostProps) {
 
       <div className={styles.postContainer}>
         {/* header section */}
-        <div
-          className={styles.headerSection}
-          onClick={
-            deletedAuthor
-              ? undefined
-              : () => handleGoToProfile(postData.authorId)
-          }
-          style={deletedAuthor ? { cursor: "default" } : undefined}
-        >
-          <img
-            className={styles.profilePic}
-            src={
-              deletedAuthor
-                ? "/images/deletedUserPfp.png"
-                : postData.createdByProfilePicUrl
-            }
-            alt="profile picture"
-          />
-          <p className={styles.userName}>
-            {deletedAuthor ? "Deleted User" : postData.createdBy}
-          </p>
-        </div>
+        <UserCard
+          followingAuthor={postData.followingAuthor}
+          authorId={postData.authorId}
+          createdBy={postData.createdBy}
+          createdByProfilePicUrl={postData.createdByProfilePicUrl}
+        />
         {/* Image Section */}
         {hasImage ? (
           <div className={styles.imageSection}>
