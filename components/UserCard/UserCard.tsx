@@ -36,42 +36,51 @@ export default function UserCard({ followingAuthor, authorId, createdBy, created
   }
 
   async function handleFollowToggle() {
-    setIsFollowing((prev) => !prev);  //  testing only, api logic needs to be implemented still
     if (!user) {
       setShowLoginModal(true);
       return;
     }
+    setIsFollowing((prev) => !prev);  //  testing only, api logic needs to be implemented still
   }
 
   return (
-    <div
-      className={styles.headerSection}
-      onClick={
-        deletedAuthor
-          ? undefined
-          : () => handleGoToProfile()
-      }
-      style={deletedAuthor ? { cursor: "default" } : undefined}
-    >
-      <img
-        className={styles.profilePic}
-        src={
+    <>
+      {showLoginModal &&
+        createPortal(
+          <MustLoginModal onClose={() => setShowLoginModal(false)} />,
+          document.body
+        )}
+
+
+      <div
+        className={styles.headerSection}
+        onClick={
           deletedAuthor
-            ? "/images/deletedUserPfp.png"
-            : createdByProfilePicUrl
+            ? undefined
+            : () => handleGoToProfile()
         }
-        alt="profile picture"
-      />
-      <p className={styles.userName}>
-        {deletedAuthor ? "Deleted User" : createdBy}
-      </p>
-      <button
-        className={`${styles.followButton} ${isFollowing ? styles.following : ""}`}
-        onClick={handleFollowToggle}
+        style={deletedAuthor ? { cursor: "default" } : undefined}
       >
-        {isFollowing ? "Following" : "Follow"}
-      </button>
-    </div>
+        <img
+          className={styles.profilePic}
+          src={
+            deletedAuthor
+              ? "/images/deletedUserPfp.png"
+              : createdByProfilePicUrl
+          }
+          alt="profile picture"
+        />
+        <p className={styles.userName}>
+          {deletedAuthor ? "Deleted User" : createdBy}
+        </p>
+        <button
+          className={`${styles.followButton} ${isFollowing ? styles.following : ""}`}
+          onClick={handleFollowToggle}
+        >
+          {isFollowing ? "Following" : "Follow"}
+        </button>
+      </div>
+    </>
   )
 
 }
