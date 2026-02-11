@@ -10,4 +10,5 @@ export interface DisplayPostType {
   imageUrls: string[];
   hasLiked: boolean;
   hasSaved: boolean;
+  followingAuthor: boolean;
 }
