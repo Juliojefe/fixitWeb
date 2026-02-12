@@ -1,7 +1,6 @@
 /**
  * TODO:
  * 1. handle follow/unfollow API logic in handleFollowToggle function
- * 2. handle the case when authorId and user.userId are the same
  */
 
 'use client';
@@ -29,6 +28,7 @@ export default function UserCard({ followingAuthor, authorId, createdBy, created
 
   // rendering needs
   const deletedAuthor = authorId == null; // true if the user has been deleted
+  const ownsPost = user?.userId === authorId; // true if the current user is the author of the post
 
   // used for modal rendition
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -84,6 +84,7 @@ export default function UserCard({ followingAuthor, authorId, createdBy, created
         <p className={styles.userName}>
           {deletedAuthor ? "Deleted User" : createdBy}
         </p>
+        {!ownsPost ? (
         <button
           className={`${styles.followButton} ${followingAuthor ? styles.following : ""}`}
           onClick={(e) => {
@@ -93,6 +94,7 @@ export default function UserCard({ followingAuthor, authorId, createdBy, created
         >
           {followingAuthor ? "Following" : "Follow"}
         </button>
+        ) : null}
       </div>
     </>
   )
