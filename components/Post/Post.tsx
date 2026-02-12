@@ -17,15 +17,15 @@ interface PostProps {
 }
 
 export default function Post({ postData = null }: PostProps) {
-  //  basic needs
+  // basic needs
   const router = useRouter();
   const { user } = useUser();
 
-  //  post specific features
+  // post specific features
   const [hasLiked, setHasLiked] = useState(postData?.hasLiked);
   const [hasSaved, setHasSaved] = useState(postData?.hasSaved);
   const [likeCount, setLikeCount] = useState<number>(postData?.likeCount ?? 0);
-  const hasImage = (postData?.imageUrls?.length ?? 0) > 0;  //  true if one image or more false otherwise
+  const hasImage = (postData?.imageUrls?.length ?? 0) > 0;  // true if one image or more false otherwise
   const [currImageIndex, setCurrImageIndex] = useState(0);
   const [followingAuthor, setFollowingAuthor] = useState(postData?.followingAuthor || false);
 
@@ -33,17 +33,6 @@ export default function Post({ postData = null }: PostProps) {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showPostModal, setShowPostModal] = useState(false);
   const [showWhoLikedModal, setShowWhoLikedModal] = useState(false);
-
-
-  //  used for header
-  const userCard = (
-    <UserCard
-      followingAuthor={followingAuthor}
-      authorId={postData?.authorId || null}
-      createdBy={postData?.createdBy || "Deleted User"}
-      createdByProfilePicUrl={postData?.createdByProfilePicUrl || "/images/deletedUserPfp.png"}
-    />
-  );
 
   if (!postData) {
     return null;
@@ -132,6 +121,21 @@ export default function Post({ postData = null }: PostProps) {
       console.error("Unexpected error in handleLike", err);
     }
   }
+
+  async function handleToggleFollow() {
+    setFollowingAuthor((prev) => !prev);
+  }
+
+  // used for header
+  const userCard = (
+    <UserCard
+      followingAuthor={followingAuthor}
+      authorId={postData?.authorId || null}
+      createdBy={postData?.createdBy || "Deleted User"}
+      createdByProfilePicUrl={postData?.createdByProfilePicUrl || "/images/deletedUserPfp.png"}
+      onToggleFollow={handleToggleFollow}
+    />
+  );
 
   return (
     <>

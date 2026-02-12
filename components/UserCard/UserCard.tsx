@@ -10,19 +10,19 @@ import { useState } from 'react';
 
 interface UserCardProps {
   followingAuthor: boolean;
-  authorId: number | null;  //  null if the user has been deleted
+  authorId: number | null;  // null if the user has been deleted
   createdBy: string;
   createdByProfilePicUrl: string;
+  onToggleFollow: () => void;
 }
 
-export default function UserCard({ followingAuthor, authorId, createdBy, createdByProfilePicUrl }: UserCardProps) {
-  //  basic needs
+export default function UserCard({ followingAuthor, authorId, createdBy, createdByProfilePicUrl, onToggleFollow }: UserCardProps) {
+  // basic needs
   const router = useRouter();
   const { user } = useUser();
 
-  //  redering needs
-  const deletedAuthor = authorId == null; //  true if the user has been deleted
-  const [isFollowing, setIsFollowing] = useState(followingAuthor);
+  // rendering needs
+  const deletedAuthor = authorId == null; // true if the user has been deleted
 
   // used for modal rendition
   const [showLoginModal, setShowLoginModal] = useState(false);
@@ -40,7 +40,7 @@ export default function UserCard({ followingAuthor, authorId, createdBy, created
       setShowLoginModal(true);
       return;
     }
-    setIsFollowing((prev) => !prev);  //  testing only, api logic needs to be implemented still
+    onToggleFollow();
   }
 
   return (
@@ -74,10 +74,10 @@ export default function UserCard({ followingAuthor, authorId, createdBy, created
           {deletedAuthor ? "Deleted User" : createdBy}
         </p>
         <button
-          className={`${styles.followButton} ${isFollowing ? styles.following : ""}`}
+          className={`${styles.followButton} ${followingAuthor ? styles.following : ""}`}
           onClick={handleFollowToggle}
         >
-          {isFollowing ? "Following" : "Follow"}
+          {followingAuthor ? "Following" : "Follow"}
         </button>
       </div>
     </>
