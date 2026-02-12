@@ -1,3 +1,13 @@
+/**
+ * TODO:
+ * 1. handle follow/unfollow API logic in handleFollowToggle function
+ * 2. prevent click events on the UserCard from propagating to the PostModal 
+ * (which would trigger the go to profile logic in PostModal) 
+ * this can be done by adding e.stopPropagation() in the onClick handler of the UserCard
+ *  but I need to make sure it doesn't interfere with the follow/unfollow logic
+ * 3. handle the case when authorId and user.userId are the same
+ */
+
 'use client';
 
 import { useUser } from '@/app/providers/UserProvider';
