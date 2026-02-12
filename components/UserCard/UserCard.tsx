@@ -13,10 +13,10 @@ interface UserCardProps {
   authorId: number | null;  // null if the user has been deleted
   createdBy: string;
   createdByProfilePicUrl: string;
-  onToggleFollow: () => void;
+  onFollowChange?: (newFollowing: boolean) => void;
 }
 
-export default function UserCard({ followingAuthor, authorId, createdBy, createdByProfilePicUrl, onToggleFollow }: UserCardProps) {
+export default function UserCard({ followingAuthor, authorId, createdBy, createdByProfilePicUrl, onFollowChange }: UserCardProps) {
   // basic needs
   const router = useRouter();
   const { user } = useUser();
@@ -36,11 +36,16 @@ export default function UserCard({ followingAuthor, authorId, createdBy, created
   }
 
   async function handleFollowToggle() {
+    if (deletedAuthor) {
+      return;
+    }
     if (!user) {
       setShowLoginModal(true);
       return;
     }
-    onToggleFollow();
+    const newFollowing = !followingAuthor;
+    onFollowChange?.(newFollowing); //  let the parent component know about the change in follow status
+    //  API logic bellow
   }
 
   return (

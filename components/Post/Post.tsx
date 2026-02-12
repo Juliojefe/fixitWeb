@@ -50,6 +50,10 @@ export default function Post({ postData = null }: PostProps) {
     }
   }
 
+  function handleFollowChange(newFollowing: boolean) {
+    setFollowingAuthor(newFollowing);
+  }
+
   async function handleSave() {
     if (!user) {
       setShowLoginModal(true);
@@ -122,10 +126,6 @@ export default function Post({ postData = null }: PostProps) {
     }
   }
 
-  async function handleToggleFollow() {
-    setFollowingAuthor((prev) => !prev);
-  }
-
   // used for header
   const userCard = (
     <UserCard
@@ -133,7 +133,7 @@ export default function Post({ postData = null }: PostProps) {
       authorId={postData?.authorId || null}
       createdBy={postData?.createdBy || "Deleted User"}
       createdByProfilePicUrl={postData?.createdByProfilePicUrl || "/images/deletedUserPfp.png"}
-      onToggleFollow={handleToggleFollow}
+      onFollowChange={handleFollowChange}
     />
   );
 
