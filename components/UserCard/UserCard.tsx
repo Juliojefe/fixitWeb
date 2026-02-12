@@ -1,8 +1,3 @@
-/**
- * TODO:
- * 1. handle follow/unfollow API logic in handleFollowToggle function
- */
-
 'use client';
 
 import { useUser } from '@/app/providers/UserProvider';
@@ -49,8 +44,35 @@ export default function UserCard({ followingAuthor, authorId, createdBy, created
       setShowLoginModal(true);
       return;
     }
+
     const newFollowing = !followingAuthor;
     onFollowChange?.(newFollowing); //  let the parent component know about the change in follow status
+    const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/follow/${authorId}`;
+    try {
+      if (followingAuthor) {
+        // currently following, so unfollow
+        await axios.delete(
+          endpoint,
+          {
+            headers: { Authorization: `Bearer ${user.accessToken}` },
+          }
+        );
+      } else {
+        // currently not following, so follow
+        await axios.post(
+          endpoint,
+          {},
+          {
+            headers: { Authorization: `Bearer ${user.accessToken}` },
+          }
+        );
+      }
+    } catch (error) {
+      console.error("Error toggling follow status:", error);
+      // undo follow status change in case of error
+      onFollowChange?.(followingAuthor); // revert to previous state
+    }
+
     //  API logic bellow
   }
 
