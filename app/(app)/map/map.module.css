@@ -1,0 +1,13 @@
+.container {
+    padding: 16px;
+}
+
+.title {
+    margin-bottom: 10px;
+}
+
+.mapWrapper {
+    height: calc(100vh - 160px);
+    width: 100%;
+    border: 1px solid #000;
+}
