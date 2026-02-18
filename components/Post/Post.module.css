@@ -18,7 +18,7 @@
 }
 
 .userName {
-  font-size: small;
+  font-size: large;
 }
 
 .profilePic {
@@ -71,9 +71,10 @@
 }
 
 .likeCount {
-  font-size: small;
+  font-size: medium;
   margin-left: 10px;
   margin-top: 10px;
+  margin-bottom: 10px;
   cursor: pointer;
 }
 
@@ -85,20 +86,20 @@
 }
 
 .icon {
-  font-size: small;
+  font-size: large;
   cursor: pointer;
   transition: 0.2s ease;
 }
 
 .likeIconActive {
-  font-size: small;
+  font-size: large;
   cursor: pointer;
   transition: 0.2s ease;
   color: red;
 }
 
 .postDescription {
-  font-size: small;
+  font-size: medium;
   margin-left: 10px;
   margin-top: 10px;
 }

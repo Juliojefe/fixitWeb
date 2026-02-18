@@ -34,6 +34,10 @@ export default function Post({ postData = null }: PostProps) {
   const [showPostModal, setShowPostModal] = useState(false);
   const [showWhoLikedModal, setShowWhoLikedModal] = useState(false);
 
+  // used to prevent double-clicking during request
+  const [likeLoading, setLikeLoading] = useState(false);
+  const [saveLoading, setSaveLoading] = useState(false);
+
   if (!postData) {
     return null;
   }
@@ -55,12 +59,15 @@ export default function Post({ postData = null }: PostProps) {
   }
 
   async function handleSave() {
-    if (!user) {
-      setShowLoginModal(true);
+    if (saveLoading || !user) {
+      if (!user) {
+        setShowLoginModal(true);
+      }
       return;
     }
+    setSaveLoading(true);
+    const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/post/${postData?.postId}/save`;
     try {
-      const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/post/${postData?.postId}/save`;
       if (!hasSaved) {
         setHasSaved(true);
         try {
@@ -73,6 +80,7 @@ export default function Post({ postData = null }: PostProps) {
           );
         } catch (err) {
           console.error("Failed to save post", err);
+          setHasSaved(false);
         }
       } else {
         setHasSaved(false);
@@ -82,20 +90,26 @@ export default function Post({ postData = null }: PostProps) {
           });
         } catch (err) {
           console.error("Failed to unsave post", err);
+          setHasSaved(true);
         }
       }
     } catch (err) {
       console.error("Unexpected error in handleSave", err);
+    } finally {
+      setSaveLoading(false);
     }
   }
 
   async function handleLike() {
-    if (!user) {
-      setShowLoginModal(true);
+    if (likeLoading || !user) {
+      if (!user) {
+        setShowLoginModal(true);
+      }
       return;
     }
+    setLikeLoading(true);
+    const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/post/${postData?.postId}/like`;
     try {
-      const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/post/${postData?.postId}/like`;
       if (!hasLiked) {
         setHasLiked(true);
         setLikeCount(prev => prev + 1);
@@ -109,6 +123,8 @@ export default function Post({ postData = null }: PostProps) {
           );
         } catch (err) {
           console.error("Failed to like post", err);
+          setHasLiked(false);
+          setLikeCount(prev => Math.max(0, prev - 1));
         }
       } else {
         setHasLiked(false);
@@ -119,10 +135,14 @@ export default function Post({ postData = null }: PostProps) {
           });
         } catch (err) {
           console.error("Failed to unlike post", err);
+          setHasLiked(true);
+          setLikeCount(prev => prev + 1);
         }
       }
     } catch (err) {
       console.error("Unexpected error in handleLike", err);
+    } finally {
+      setLikeLoading(false);
     }
   }
 
