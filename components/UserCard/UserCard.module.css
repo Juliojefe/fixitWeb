@@ -34,3 +34,8 @@
 .following {
   background-color: #6c757d;
 }
+
+.loading {
+  background-color: #6c757d;
+  cursor: not-allowed;
+}

@@ -28,6 +28,9 @@ export default function UserCard({ followingAuthor, authorId, createdBy, created
   // used for modal rendition
   const [showLoginModal, setShowLoginModal] = useState(false);
 
+  // used to prevent double-clicking during request
+  const [isLoading, setIsLoading] = useState(false);
+
   async function handleGoToProfile() {
     if (deletedAuthor) {
       return;
@@ -37,7 +40,7 @@ export default function UserCard({ followingAuthor, authorId, createdBy, created
   }
 
   async function handleFollowToggle() {
-    if (deletedAuthor) {
+    if (deletedAuthor || isLoading) {
       return;
     }
     if (!user) {
@@ -45,8 +48,9 @@ export default function UserCard({ followingAuthor, authorId, createdBy, created
       return;
     }
 
+    setIsLoading(true);
     const newFollowing = !followingAuthor;
-    onFollowChange?.(newFollowing); //  let the parent component know about the change in follow status
+    onFollowChange?.(newFollowing); // let the parent component know about the change in follow status
     const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/follow/${authorId}`;
     try {
       if (followingAuthor) {
@@ -71,9 +75,9 @@ export default function UserCard({ followingAuthor, authorId, createdBy, created
       console.error("Error toggling follow status:", error);
       // undo follow status change in case of error
       onFollowChange?.(followingAuthor); // revert to previous state
+    } finally {
+      setIsLoading(false);
     }
-
-    //  API logic bellow
   }
 
   return (
@@ -108,13 +112,14 @@ export default function UserCard({ followingAuthor, authorId, createdBy, created
         </p>
         {!ownsPost ? (
         <button
-          className={`${styles.followButton} ${followingAuthor ? styles.following : ""}`}
+          className={`${styles.followButton} ${followingAuthor ? styles.following : ""} ${isLoading ? styles.loading : ""}`}
           onClick={(e) => {
             e.stopPropagation();
             handleFollowToggle();
           }}
+          disabled={isLoading}
         >
-          {followingAuthor ? "Following" : "Follow"}
+          {isLoading ? "Loading..." : (followingAuthor ? "Following" : "Follow")}
         </button>
         ) : null}
       </div>
