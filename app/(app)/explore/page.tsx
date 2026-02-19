@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import styles from "./explore.module.css";
-import { useUser } from '../../providers/UserProvider';
+import { useUser } from '@/app/providers/UserProvider';
 import { DisplayPostType } from '@/types/displayPost';
 import { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
@@ -10,29 +10,17 @@ import PostList from '@/components/PostList/PostList';
 
 export default function explore() {
   const router = useRouter();
-  const { user, logout } = useUser();
+  const { user } = useUser();
   const [postData, setPostData] = useState<DisplayPostType[]>([]);
   const [currPage, setCurrPage] = useState(0);
   const [first, setFirst] = useState(false);
   const [last, setLast] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [userLoaded, setUserLoaded] = useState(false);
   const pageSize = 5;
   const loaderRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (user !== undefined) {
-      setUserLoaded(true);
-    }
-  }, [user]);
-
-  async function handleLogout() { //  no current use but there will be one in the future
-    logout();
-    router.push("/login");
-  }
-
-  useEffect(() => {
-    if (!loaderRef.current || !userLoaded) return;
+    if (!loaderRef.current) return;
     const observer = new IntersectionObserver(entries => {
       if (entries[0].isIntersecting && !loading && !last) {
         fetchPosts();
@@ -40,7 +28,7 @@ export default function explore() {
     });
     observer.observe(loaderRef.current);
     return () => observer.disconnect();
-  }, [loading, last, userLoaded]);
+  }, [loading, last]);
 
   async function fetchPosts() {
     if (loading || last) return;
@@ -80,10 +68,6 @@ export default function explore() {
     } finally {
       setLoading(false);
     }
-  }
-
-  if (!userLoaded) {
-    return <div>Loading...</div>; //  Stylize in the future
   }
 
   return (
