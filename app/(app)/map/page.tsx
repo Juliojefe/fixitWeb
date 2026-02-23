@@ -38,7 +38,7 @@ function toNumber(s: unknown): number | null {
 }
 
 export default function MapPage() {
-    const API_BASE = "http://localhost:8080";
+    const API_BASE = process.env.NEXT_PUBLIC_API_URL;
 
     const [query, setQuery] = useState("");
     const [suggestions, setSuggestions] = useState<LocationIQPlace[]>([]);
