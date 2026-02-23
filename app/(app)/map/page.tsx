@@ -233,7 +233,7 @@ export default function MapPage() {
 
                             return (
                                 <button
-                                    key={`${s.place_id ?? idx}`}
+                                    key={`${s.place_id ?? "na"}-${s.lat ?? "na"}-${s.lon ?? "na"}-${idx}`}
                                     className={styles.suggestionItem}
                                     type="button"
                                     onClick={() => selectPlace(s)}
