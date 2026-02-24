@@ -8,9 +8,7 @@ import { DisplayPostType } from '@/types/displayPost';
 import { comment } from "@/types/comment";
 import { formatDistanceToNow } from "date-fns";
 import styles from "./PostModal.module.css";
-import commonStyles from "../../app/styles/common.module.css"
 import axios from 'axios';
-import UserCard from "../UserCard/UserCard";
 
 interface PostProps {
   postData?: DisplayPostType | null;

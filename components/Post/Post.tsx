@@ -153,6 +153,7 @@ export default function Post({ postData = null }: PostProps) {
       authorId={postData?.authorId || null}
       createdBy={postData?.createdBy || "Deleted User"}
       createdByProfilePicUrl={postData?.createdByProfilePicUrl || "/images/deletedUserPfp.png"}
+      authorIsMechanic={postData?.authorIsMechanic || false}
       onFollowChange={handleFollowChange}
     />
   );
