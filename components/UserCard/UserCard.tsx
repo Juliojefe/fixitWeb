@@ -13,10 +13,11 @@ interface UserCardProps {
   authorId: number | null;  // null if the user has been deleted
   createdBy: string;
   createdByProfilePicUrl: string;
+  authorIsMechanic: boolean;
   onFollowChange?: (newFollowing: boolean) => void;
 }
 
-export default function UserCard({ followingAuthor, authorId, createdBy, createdByProfilePicUrl, onFollowChange }: UserCardProps) {
+export default function UserCard({ followingAuthor, authorId, createdBy, createdByProfilePicUrl, authorIsMechanic, onFollowChange }: UserCardProps) {
   // basic needs
   const router = useRouter();
   const { user } = useUser();
@@ -107,20 +108,23 @@ export default function UserCard({ followingAuthor, authorId, createdBy, created
           }
           alt="profile picture"
         />
-        <p className={styles.userName}>
-          {deletedAuthor ? "Deleted User" : createdBy}
-        </p>
+        <div className={styles.nameContainer}>
+          <p className={styles.userName}>
+            {deletedAuthor ? "Deleted User" : createdBy}
+          </p>
+          {authorIsMechanic && <img className={styles.mechanicBadge} src="/icons/wrench.png" />}
+        </div>
         {!ownsPost ? (
-        <button
-          className={`${styles.followButton} ${followingAuthor ? styles.following : ""} ${isLoading ? styles.loading : ""}`}
-          onClick={(e) => {
-            e.stopPropagation();
-            handleFollowToggle();
-          }}
-          disabled={isLoading}
-        >
-          {isLoading ? "Loading..." : (followingAuthor ? "Following" : "Follow")}
-        </button>
+          <button
+            className={`${styles.followButton} ${followingAuthor ? styles.following : ""} ${isLoading ? styles.loading : ""}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleFollowToggle();
+            }}
+            disabled={isLoading}
+          >
+            {isLoading ? "Loading..." : (followingAuthor ? "Following" : "Follow")}
+          </button>
         ) : null}
       </div>
     </>

@@ -11,4 +11,5 @@ export interface DisplayPostType {
   hasLiked: boolean;
   hasSaved: boolean;
   followingAuthor: boolean;
+  authorIsMechanic: boolean;
 }

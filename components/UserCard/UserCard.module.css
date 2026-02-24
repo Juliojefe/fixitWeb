@@ -10,6 +10,7 @@
 
 .userName {
   font-size: medium;
+  margin:0;
 }
 
 .profilePic {
@@ -38,4 +39,17 @@
 .loading {
   background-color: #6c757d;
   cursor: not-allowed;
+}
+
+.mechanicBadge {
+  width: 20px;
+  height: 20px;
+  display: block;
+  margin-bottom: 2px;
+}
+
+.nameContainer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
