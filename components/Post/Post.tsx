@@ -121,7 +121,6 @@ export default function Post({ postData = null }: PostProps) {
       }
     } catch (err) {
       console.error("Failed to toggle like", err);
-
       setHasLiked((prev) => !prev);
       setLikeCount((prev) => (hasLiked ? prev + 1 : Math.max(0, prev - 1)));
     } finally {
