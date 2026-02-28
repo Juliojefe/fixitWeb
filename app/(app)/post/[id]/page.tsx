@@ -16,6 +16,7 @@ export default function PostPage() {
   const [postData, setPostData] = useState<DisplayPostType | null>(null);
   const [loadingPost, setLoadingPost] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [postExists, setPostExists] = useState(true);
 
   useEffect(() => {
     if (!Number.isFinite(id)) return;
@@ -37,6 +38,9 @@ export default function PostPage() {
       try {
         const res = await axios.get<DisplayPostType>(endpoint, config);
         if (!cancelled) setPostData(res.data);
+        if (res.data.postId === 0) {
+          setPostExists(false);
+        }
       } catch (err) {
         console.error(err);
         if (!cancelled) setError("Failed to load post.");
@@ -64,7 +68,7 @@ export default function PostPage() {
     </div>
   );
 
-  if (!postData) return (
+  if (!postData || !postExists) return (
     <div className={styles.container}>
       <h2 className={styles.header}>No post found.</h2>
     </div>
