@@ -59,10 +59,9 @@ export default function Post({ postData = null }: PostProps) {
   }
 
   async function handleSave() {
-    if (saveLoading || !user) {
-      if (!user) {
-        setShowLoginModal(true);
-      }
+    if (saveLoading) return;
+    if (!user?.accessToken) {
+      setShowLoginModal(true);
       return;
     }
     setSaveLoading(true);
@@ -70,77 +69,60 @@ export default function Post({ postData = null }: PostProps) {
     try {
       if (!hasSaved) {
         setHasSaved(true);
-        try {
-          await axios.post(
-            endpoint,
-            {},
-            {
-              headers: { Authorization: `Bearer ${user.accessToken}` },
-            }
-          );
-        } catch (err) {
-          console.error("Failed to save post", err);
-          setHasSaved(false);
-        }
+        await axios.post(
+          endpoint,
+          {},
+          {
+            headers: { Authorization: `Bearer ${user.accessToken}` },
+          }
+        );
       } else {
         setHasSaved(false);
-        try {
-          await axios.delete(endpoint, {
-            headers: { Authorization: `Bearer ${user.accessToken}` },
-          });
-        } catch (err) {
-          console.error("Failed to unsave post", err);
-          setHasSaved(true);
-        }
+        await axios.delete(endpoint, {
+          headers: { Authorization: `Bearer ${user.accessToken}` },
+        });
       }
     } catch (err) {
       console.error("Unexpected error in handleSave", err);
+      setHasSaved((prev) => !prev);
     } finally {
       setSaveLoading(false);
     }
   }
 
   async function handleLike() {
-    if (likeLoading || !user) {
-      if (!user) {
-        setShowLoginModal(true);
-      }
+    if (likeLoading) return;
+
+    if (!user?.accessToken) {
+      setShowLoginModal(true);
       return;
     }
-    setLikeLoading(true);
+
     const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/post/${postData?.postId}/like`;
+    setLikeLoading(true);
+
     try {
       if (!hasLiked) {
         setHasLiked(true);
-        setLikeCount(prev => prev + 1);
-        try {
-          await axios.post(
-            endpoint,
-            {},
-            {
-              headers: { Authorization: `Bearer ${user.accessToken}` },
-            }
-          );
-        } catch (err) {
-          console.error("Failed to like post", err);
-          setHasLiked(false);
-          setLikeCount(prev => Math.max(0, prev - 1));
-        }
+        setLikeCount((prev) => prev + 1);
+
+        await axios.post(
+          endpoint,
+          {}, // body
+          { headers: { Authorization: `Bearer ${user.accessToken}` } }
+        );
       } else {
         setHasLiked(false);
-        setLikeCount(prev => Math.max(0, prev - 1));
-        try {
-          await axios.delete(endpoint, {
-            headers: { Authorization: `Bearer ${user.accessToken}` },
-          });
-        } catch (err) {
-          console.error("Failed to unlike post", err);
-          setHasLiked(true);
-          setLikeCount(prev => prev + 1);
-        }
+        setLikeCount((prev) => Math.max(0, prev - 1));
+
+        await axios.delete(endpoint, {
+          headers: { Authorization: `Bearer ${user.accessToken}` },
+        });
       }
     } catch (err) {
-      console.error("Unexpected error in handleLike", err);
+      console.error("Failed to toggle like", err);
+      setHasLiked((prev) => !prev);
+      setLikeCount((prev) => (hasLiked ? prev + 1 : Math.max(0, prev - 1)));
     } finally {
       setLikeLoading(false);
     }
