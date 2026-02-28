@@ -71,7 +71,7 @@ export default function explore() {
   return (
     <div className={styles.container}>
       <div className={styles.postContentContainer}>
-        <h2>My Explore Page</h2>
+        <h2 className={styles.header}>My Explore Page</h2>
         <PostList postDataArray={postData} />
         {!last && <div ref={loaderRef} />}
       </div>
