@@ -32,39 +32,37 @@ export default function explore() {
 
   async function fetchPosts() {
     if (loading || last) return;
+
     setLoading(true);
+
     try {
-      if (user) {
+      let endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/explore?page=${currPage}&size=${pageSize}`;
+      let config = {};
+
+      if (user?.accessToken) {
         console.log(`Fetching posts for user: ${user.name} on page: ${currPage}`);
-        const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/explore?page=${currPage}&size=${pageSize}`;
-        try {
-          const res = await axios.get(endpoint, {
-            headers: { Authorization: `Bearer ${user.accessToken}` },
-          });
-          const page = res.data;
-          setFirst(page.first);
-          setLast(page.last);
-          setCurrPage(page.number + 1);
-          setPostData(prev => [...prev, ...page.content]);
-        } catch (err) {
-          console.error("Failed to fetch posts (authenticated user)", err);
-        }
+
+        config = {
+          headers: {
+            Authorization: `Bearer ${user.accessToken}`,
+          },
+        };
       } else {
         console.log(`Fetching posts for guest on page: ${currPage}`);
-        const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/explore/guest?page=${currPage}&size=${pageSize}`;
-        try {
-          const res = await axios.get(endpoint);
-          const page = res.data;
-          setFirst(page.first);
-          setLast(page.last);
-          setCurrPage(page.number + 1);
-          setPostData(prev => [...prev, ...page.content]);
-        } catch (err) {
-          console.error("Failed to fetch posts (guest)", err);
-        }
+
+        endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/explore/guest?page=${currPage}&size=${pageSize}`;
       }
+
+      const res = await axios.get(endpoint, config);
+      const page = res.data;
+
+      setFirst(page.first);
+      setLast(page.last);
+      setCurrPage(page.number + 1);
+      setPostData((prev) => [...prev, ...page.content]);
+
     } catch (err) {
-      console.error("Unexpected error in fetchPosts", err);
+      console.error("Failed to fetch posts", err);
     } finally {
       setLoading(false);
     }
