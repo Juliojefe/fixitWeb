@@ -8,6 +8,7 @@ import { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import PostList from '@/components/PostList/PostList';
 
+
 export default function explore() {
   const router = useRouter();
   const { user } = useUser();
@@ -41,7 +42,6 @@ export default function explore() {
 
       if (user?.accessToken) {
         console.log(`Fetching posts for user: ${user.name} on page: ${currPage}`);
-
         config = {
           headers: {
             Authorization: `Bearer ${user.accessToken}`,
@@ -49,7 +49,6 @@ export default function explore() {
         };
       } else {
         console.log(`Fetching posts for guest on page: ${currPage}`);
-
         endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/explore/guest?page=${currPage}&size=${pageSize}`;
       }
 
