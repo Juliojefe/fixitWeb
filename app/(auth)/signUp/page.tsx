@@ -42,7 +42,9 @@ export default function signUpPage() {
           refreshToken: authData.refreshToken,
           isAdmin: authData.isAdmin,
           isMechanic: authData.isMechanic,
-          biography: authData.biography
+          biography: authData.biography,
+          accessTokenExpiresAt: new Date(authData.accessTokenExpiresAt),
+          refreshTokenExpiresAt: new Date(authData.refreshTokenExpiresAt)
         });
         router.push("/home");
       } else {
