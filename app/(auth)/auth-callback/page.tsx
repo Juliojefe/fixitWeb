@@ -28,8 +28,12 @@ export default function AuthCallback() {
     const isAdmin = searchParams.get("isAdmin") === "true";
     const isMechanic = searchParams.get("isMechanic") === "true";
     const biography = searchParams.get("biography") || "";
+    const accessTokenExpiresAtParam = searchParams.get("accessTokenExpiresAt");
+    const refreshTokenExpiresAtParam = searchParams.get("refreshTokenExpiresAt");
+    const accessTokenExpiresAt = accessTokenExpiresAtParam ? new Date(Number(accessTokenExpiresAtParam)) : null;
+    const refreshTokenExpiresAt = refreshTokenExpiresAtParam ? new Date(Number(refreshTokenExpiresAtParam)) : null;
 
-    if (name && email && accessToken && refreshToken) {
+    if (name && email && accessToken && refreshToken && accessTokenExpiresAt && refreshTokenExpiresAt) {
       const userData = {
         name,
         userId,
@@ -40,7 +44,9 @@ export default function AuthCallback() {
         refreshToken,
         isAdmin,
         isMechanic,
-        biography
+        biography,
+        accessTokenExpiresAt,
+        refreshTokenExpiresAt
       };
       setUser(userData);
       router.push("/home");

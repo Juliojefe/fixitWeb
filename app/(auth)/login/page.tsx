@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useUser } from "../../providers/UserProvider";
 import GuestRoute from "@/components/GuestRoute/GuestRoute";
 import authStyles from '../../styles/auth.module.css';
-import commonStyles from '../../styles/common.module.css';  // New import
+import commonStyles from '../../styles/common.module.css';
 
 
 export default function loginPage() {
@@ -36,7 +36,9 @@ export default function loginPage() {
           refreshToken: authData.refreshToken,
           isAdmin: authData.isAdmin,
           isMechanic: authData.isMechanic,
-          biography: authData.biography
+          biography: authData.biography,
+          accessTokenExpiresAt: new Date(authData.accessTokenExpiresAt),
+          refreshTokenExpiresAt: new Date(authData.refreshTokenExpiresAt)
         });
         router.push("/home");
       } else {
