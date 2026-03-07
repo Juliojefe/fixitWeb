@@ -66,15 +66,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       const accessPayload = decodeJwt(userData.accessToken);
       const refreshPayload = decodeJwt(userData.refreshToken);
       if (accessPayload?.exp && refreshPayload?.exp) {
-        // For production/testing - uncomment one buffer below (time before actual exp to consider "expired")
-        // Short buffer for quick testing
-        const bufferMs = 20000; // 10 seconds before actual
-
-        // Medium buffer for testing
-        // const bufferMs = 30000; // 30 seconds before actual
-
-        // Long buffer for testing
-        // const bufferMs = 60000; // 1 minute before actual
+        const bufferMs = 60000; // 1 minute before actual
 
         finalData = {
           ...userData,
@@ -106,13 +98,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       return;
     }
     try {
-      const accessPayload = decodeJwt(user.accessToken); // Redecode for safety
-      const actualAccessExp = accessPayload?.exp ? accessPayload.exp * 1000 : 0;
-
       const headers: Record<string, string> = { "Content-Type": "application/json" };
-      if (Date.now() < actualAccessExp) {
-        headers["Authorization"] = `Bearer ${user.accessToken}`;
-      }
 
       const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/refresh`, { refreshToken: user.refreshToken }, { headers });
 
