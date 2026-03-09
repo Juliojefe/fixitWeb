@@ -1,4 +1,396 @@
 .container {
+  min-height: 100vh;
   background: #d2def9;
   color: black;
+  padding: 18px;
+}
+
+.page {
+  max-width: 1120px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.shell {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.sectionOutline {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 14px;
+  background: transparent;
+}
+
+.card {
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  border-radius: 14px;
+  padding: 16px;
+}
+
+.h2 {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.h3 {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.muted {
+  margin: 8px 0 0;
+  color: rgba(0, 0, 0, 0.62);
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.error {
+  margin: 10px 0 0;
+  color: #b42318;
+  font-size: 13px;
+}
+
+/* Header */
+.headerCard {
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+
+.cover {
+  height: 115px;
+  background: linear-gradient(90deg, rgba(0, 0, 0, 0.12), rgba(0, 0, 0, 0.04));
+}
+
+.headerBody {
+  position: relative;
+  padding: 18px;
+  padding-top: 46px;
+  display: flex;
+  gap: 16px;
+}
+
+.avatar {
+  width: 96px;
+  height: 96px;
+  border-radius: 999px;
+  border: 4px solid white;
+  background: white;
+  object-fit: cover;
+  position: absolute;
+  top: -48px;
+  left: 18px;
+}
+
+.headerText {
+  width: 100%;
+  padding-left: 112px;
+}
+
+.nameRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.name {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 900;
+}
+
+.badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.badge {
+  font-size: 12px;
+  font-weight: 800;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.headline {
+  margin: 8px 0 0;
+  color: rgba(0, 0, 0, 0.7);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.statsRow {
+  margin-top: 12px;
+  display: flex;
+  gap: 14px;
+}
+
+.stat {
+  display: flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 6px 10px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.04);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+}
+
+.statNumber {
+  font-weight: 900;
+  font-size: 14px;
+}
+
+.statLabel {
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.65);
+}
+
+.headerActions {
+  margin-top: 12px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.primaryBtn,
+.secondaryBtn {
+  border-radius: 10px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 900;
+  cursor: pointer;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+}
+
+.primaryBtn {
+  background: white;
+}
+
+.secondaryBtn {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+/* Layout grid */
+.grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 14px;
+}
+
+@media (max-width: 980px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.mainCol {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sideCol {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Composer */
+.composerCard {
+  padding: 12px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.composerAvatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: white;
+}
+
+.composerButton {
+  flex: 1;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  background: rgba(0, 0, 0, 0.03);
+  cursor: pointer;
+  font-weight: 800;
+  color: rgba(0, 0, 0, 0.8);
+}
+
+/* Tabs */
+.tabsCard {
+  padding: 10px;
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.tabBtn {
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  background: rgba(0, 0, 0, 0.03);
+  cursor: pointer;
+  font-weight: 900;
+  font-size: 13px;
+  display: inline-flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.tabActive {
+  background: white;
+  border-color: rgba(0, 0, 0, 0.22);
+}
+
+.tabCount {
+  font-size: 12px;
+  font-weight: 900;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+/* Feed */
+.feedCard {
+  padding: 12px;
+}
+
+.emptyState {
+  padding: 18px 6px;
+}
+
+.emptyTitle {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+/* Side cards */
+.sideCard {
+  padding: 12px;
+}
+
+.sideHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 10px;
+}
+
+.sideCount {
+  font-weight: 900;
+  font-size: 12px;
+  color: rgba(0, 0, 0, 0.62);
+}
+
+.userList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.userRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.userAvatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: white;
+}
+
+.userName {
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.linkBtn {
+  margin-top: 10px;
+  background: transparent;
+  border: none;
+  padding: 0;
+  color: rgba(0, 0, 0, 0.75);
+  font-weight: 900;
+  cursor: pointer;
+  text-align: left;
+}
+
+/* Modals */
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 9999;
+}
+
+.modalCard {
+  width: 100%;
+  max-width: 520px;
+  background: rgba(255, 255, 255, 0.97);
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  border-radius: 14px;
+  padding: 14px;
+}
+
+.modalTitle {
+  font-weight: 900;
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+.input,
+.textarea {
+  width: 100%;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  padding: 10px 12px;
+  font-size: 13px;
+  background: white;
+  outline: none;
+}
+
+.textarea {
+  resize: vertical;
+  line-height: 1.4;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+:global(img[class*="UserCard-module"][class*="profilePic"]) {
+  width: 30px;
+  height: 30px;
+  border-radius: 999px;
+  object-fit: cover;
+  display: block;
 }
