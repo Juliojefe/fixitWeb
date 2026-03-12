@@ -3,9 +3,11 @@
   flex-direction: column;
   width: 500px;
   max-height: 800px;
-  border: solid 2px black;
-  background-color: rgb(232, 232, 232);
+  border: solid 0.5px gray;
+  border-radius: 2%;
+  background-color: white;
   padding-bottom: 10px;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
 }
 
 .headerSection {
@@ -30,14 +32,21 @@
 }
 
 .imageSection {
-  position: relative; /* required for next/prev buttons */
-  max-width: 600px;
-  max-height: 900px;
+  position: relative;
+  width: 100%;
+  max-height: 600px;
+  border-bottom: 0.5px solid black;
+  overflow: hidden;
 }
 
 .postImage {
-  width: fit-content;
-  height: fit-content;
+  display: block;
+  max-width: 100%;
+  max-height: 100%;
+  width: auto;
+  height: auto;
+  margin: 0 auto;
+  object-fit: contain;
 }
 
 .nextImageButton,
