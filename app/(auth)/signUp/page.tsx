@@ -73,83 +73,107 @@ export default function signUpPage() {
     window.location.href = `${process.env.NEXT_PUBLIC_API_URL}/oauth2/authorization/google`;
   }
 
-  return (
-    <GuestRoute>
-      <div className={authStyles.container}>
-        <form className={commonStyles.formContainer} onSubmit={handleSignUp}>
-          <h2 className={commonStyles.formHeader}>Sign Up</h2>
-          <label className={commonStyles.label}>Full Name
-            <input
-              type="text"
-              value={name}
-              required
-              className={commonStyles.input}
-              onChange={e => setName(e.target.value)}
-            />
+return (
+  <GuestRoute>
+    <div className={authStyles.container}>
+      <form className={authStyles.card} onSubmit={handleSignUp}>
+
+        {/* Avatar upload — front and center */}
+        <div className={authStyles.avatarSection}>
+          <label className={authStyles.avatarLabel} htmlFor="avatarUpload">
+            {profilePicFile ? (
+              <img
+                className={authStyles.avatarPreview}
+                src={URL.createObjectURL(profilePicFile)}
+                alt="Profile preview"
+              />
+            ) : (
+              <div className={authStyles.avatarPlaceholder}>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <circle cx="12" cy="8" r="4" />
+                  <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+                </svg>
+              </div>
+            )}
+            <div className={authStyles.avatarBadge}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                <path d="M12 5v14M5 12h14" />
+              </svg>
+            </div>
           </label>
-          <label className={commonStyles.label}>Email
-            <input
-              type="email"
-              value={email}
-              required
-              className={commonStyles.input}
-              onChange={e => setEmail(e.target.value)}
-            />
+          <input
+            id="avatarUpload"
+            type="file"
+            accept="image/*"
+            style={{ display: 'none' }}
+            onChange={e => setProfilePicFile(e.target.files ? e.target.files[0] : null)}
+          />
+          <p className={authStyles.avatarHint}>
+            {profilePicFile ? profilePicFile.name : 'Add a profile photo'}
+          </p>
+        </div>
+
+        <h2 className={authStyles.heading}>Create account</h2>
+
+        {/* Fields */}
+        <div className={authStyles.fields}>
+          <label className={authStyles.fieldLabel}>
+            Full Name
+            <input type="text" value={name} required className={authStyles.input}
+              onChange={e => setName(e.target.value)} />
           </label>
-          <label className={commonStyles.label}>Profile Picture (optional)
-            <input
-              type="file"
-              accept="image/*"
-              className={commonStyles.input}
-              onChange={e => setProfilePicFile(e.target.files ? e.target.files[0] : null)}
-            />
+
+          <label className={authStyles.fieldLabel}>
+            Email
+            <input type="email" value={email} required className={authStyles.input}
+              onChange={e => setEmail(e.target.value)} />
           </label>
-          <label className={commonStyles.label}>Biography
+
+          <label className={authStyles.fieldLabel}>
+            Bio <span className={authStyles.optional}>optional</span>
             <textarea
-              name="biography"
-              placeholder="Write a bio (optional) ..."
+              placeholder="Tell people a little about yourself..."
               value={biography}
-              onChange={(e) => setBiography(e.target.value)}
-              className={commonStyles.input}
+              onChange={e => setBiography(e.target.value)}
+              className={authStyles.input}
+              rows={3}
             />
           </label>
-          <label className={commonStyles.label}>Password
-            <input
-              type="password"
-              value={password}
-              required
-              className={commonStyles.input}
-              onChange={e => setPassword(e.target.value)}
-            />
-          </label>
-          <label className={commonStyles.label}>Confirm Password
-            <input
-              type="password"
-              value={confirmPassword}
-              required
-              className={commonStyles.input}
-              onChange={e => setConfirmPassword(e.target.value)}
-            />
-          </label>
-          <button className={commonStyles.primaryBtn} type="submit"> SignUp </button>
-          <h3 className={authStyles.divider}>Already have an account?</h3>
-          <button className={commonStyles.secondaryBtn} type="button" onClick={async () => router.push("/login")}> Login </button>
-          <h3 className={authStyles.divider}>Or</h3>
-          <button
-            className={authStyles.googleBtn}
-            type="button"
-            onClick={handleContinueWithGoogle}
-          >
-            <img
-              className={authStyles.googleIcon}
-              src="/icons/googleLogo.png"
-              alt="Google logo"
-            />
-            Continue with Google
+
+          <div className={authStyles.row}>
+            <label className={authStyles.fieldLabel}>
+              Password
+              <input type="password" value={password} required className={authStyles.input}
+                onChange={e => setPassword(e.target.value)} />
+            </label>
+            <label className={authStyles.fieldLabel}>
+              Confirm Password
+              <input type="password" value={confirmPassword} required className={authStyles.input}
+                onChange={e => setConfirmPassword(e.target.value)} />
+            </label>
+          </div>
+        </div>
+
+        {errorMessage && <p className={authStyles.error}>{errorMessage}</p>}
+
+        <button className={authStyles.primaryBtn} type="submit">Create Account</button>
+
+        <div className={authStyles.divider}><span>or</span></div>
+
+        <button className={authStyles.googleBtn} type="button" onClick={handleContinueWithGoogle}>
+          <img className={authStyles.googleIcon} src="/icons/googleLogo.png" alt="Google logo" />
+          Continue with Google
+        </button>
+
+        <p className={authStyles.loginPrompt}>
+          Already have an account?{' '}
+          <button type="button" className={authStyles.linkBtn} onClick={() => router.push('/login')}>
+            Log in
           </button>
-          {errorMessage && <p className={commonStyles.error}>{errorMessage}</p>}
-        </form>
-      </div>
-    </GuestRoute>
-  );
+        </p>
+
+      </form>
+    </div>
+  </GuestRoute>
+);
 }

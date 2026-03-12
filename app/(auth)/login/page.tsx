@@ -81,8 +81,8 @@ export default function loginPage() {
             />
           </label>
           <button className={commonStyles.primaryBtn} type="submit">Login</button>
-          <h3 className={authStyles.divider}>New?</h3>
-          <button className={commonStyles.secondaryBtn} type="button" onClick={async () => router.push("/signUp")}> Create Account </button>
+          {/* <h3 className={authStyles.divider}>New?</h3>
+          <button className={commonStyles.secondaryBtn} type="button" onClick={async () => router.push("/signUp")}> Create Account </button> */}
           <h3 className={authStyles.divider}>Or</h3>
           <button
             className={authStyles.googleBtn}
@@ -97,6 +97,13 @@ export default function loginPage() {
             Continue with Google
           </button>
           {errorMessage && <p className={commonStyles.error}>{errorMessage}</p>}
+
+          <p className={authStyles.loginPrompt}>
+            New?{' '}
+            <button type="button" className={authStyles.linkBtn} onClick={() => router.push('/signUp')}>
+              Sign up
+            </button>
+          </p>
         </form>
       </div>
     </GuestRoute>
