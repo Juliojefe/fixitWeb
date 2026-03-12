@@ -17,18 +17,27 @@ export default function signUpPage() {
   const [biography, setBiography] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [confirmPassword, setConfirmPassword] = React.useState("");
+  const [profilePicFile, setProfilePicFile] = React.useState<File | null>(null);
   const [errorMessage, setErrorMessage] = React.useState("");
 
   async function handleSignUp(e: React.FormEvent) {
     e.preventDefault();
     setErrorMessage("");
     try {
-      const responseData = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/register`, {
-        name: name,
-        email: email,
-        password: password,
-        confirmPassword: confirmPassword,
-        biography: biography
+      const formData = new FormData();
+      formData.append('name', name);
+      formData.append('email', email);
+      formData.append('password', password);
+      formData.append('confirmPassword', confirmPassword);
+      formData.append('biography', biography);
+      if (profilePicFile) {
+        formData.append('profilePic', profilePicFile);
+      }
+
+      const responseData = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/register`, formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
       });
       const authData = responseData.data;
       if (authData.accessToken) {
@@ -85,6 +94,14 @@ export default function signUpPage() {
               required
               className={commonStyles.input}
               onChange={e => setEmail(e.target.value)}
+            />
+          </label>
+          <label className={commonStyles.label}>Profile Picture (optional)
+            <input
+              type="file"
+              accept="image/*"
+              className={commonStyles.input}
+              onChange={e => setProfilePicFile(e.target.files ? e.target.files[0] : null)}
             />
           </label>
           <label className={commonStyles.label}>Biography
