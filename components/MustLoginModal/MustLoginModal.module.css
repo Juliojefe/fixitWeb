@@ -1,12 +1,28 @@
-.backdrop {
-  position: fixed;
-  inset: 0;
-  min-height: 100vh;
+.heading {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #111;
+  letter-spacing: -0.03em;
+  margin: 0;
+  text-align: center;
+}
+
+.divider {
+  width: 100%;
   display: flex;
   align-items: center;
-  justify-content: center;
-  background: #848c9dab;
-  z-index: 1000;
+  gap: 0.75rem;
+  color: black;
+  font-size: 0.8rem;
+  margin: -0.1rem 0;
+}
+
+.divider::before,
+.divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(0,0,0,0.09);
 }
 
 .modalForm {
