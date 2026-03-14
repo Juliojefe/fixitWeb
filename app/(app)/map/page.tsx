@@ -259,9 +259,7 @@ export default function MapPage() {
                     zoom={12}
                     scrollWheelZoom
                     style={{ height: "100%", width: "100%" }}
-                    whenReady={(e: any) => {
-                        mapRef.current = e?.target ?? mapRef.current;
-                    }}
+                    ref={mapRef}
                 >
                     <TileLayer
                         attribution="&copy; OpenStreetMap contributors"
