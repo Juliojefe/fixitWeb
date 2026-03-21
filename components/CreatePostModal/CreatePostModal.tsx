@@ -1,4 +1,4 @@
-import React, { ReactNode, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import styles from "./CreatePostModal.module.css";
 import commonStyles from "../../app/styles/common.module.css";
 import axios from 'axios';
@@ -12,36 +12,64 @@ type CreatePostModalProps = {
 
 export default function CreatePostModal({ onClose }: CreatePostModalProps) {
   const { user } = useUser();
-  const router = useRouter();
-  const [errorMessage, setErrorMessage] = React.useState("");
-  const [successMessage, setSuccessMessage] = React.useState("");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
   const [description, setDescription] = useState<string>('');
   const [images, setImages] = useState<File[]>([]);
+  const [tags, setTags] = useState<string[]>([]);
+  const [newTagInput, setNewTagInput] = useState('');
   const [uploading, setUploading] = useState(false);
   const [successfulUpload, setSuccessfulUpload] = useState(false);
 
   useEffect(() => {
     if (successfulUpload) {
-      const timer = setTimeout(() => {
-        onClose();
-      }, 2000);
-
+      const timer = setTimeout(() => onClose(), 2000);
       return () => clearTimeout(timer);
     }
   }, [successfulUpload, onClose]);
 
+  const addTag = () => {
+    const trimmed = newTagInput.trim().toLowerCase().replace(/^#/, '');
+    if (!trimmed || tags.includes(trimmed)) {
+      setNewTagInput('');
+      return;
+    }
+    setTags([...tags, trimmed]);
+    setNewTagInput('');
+  };
+
+  const removeTag = (tagToRemove: string) => {
+    setTags(tags.filter(tag => tag !== tagToRemove));
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addTag();
+    }
+  };
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErrorMessage("");
+
+    if (!description.trim()) {
+      setErrorMessage("Description is required");
+      return;
+    }
+
     try {
       setUploading(true);
       const formData = new FormData();
-      formData.append("description", description);
+      formData.append("description", description.trim());
       formData.append("createdAt", new Date().toISOString());
-      for (let i = 0; i < images.length; i++) {
-        formData.append("requestImages", images[i]);
-      }
+
+      // Images
+      images.forEach(img => formData.append("requestImages", img));
+
+      // Tags
+      tags.forEach(tag => formData.append("tags", tag));
+
       const rawResponse = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/api/post/create/images`,
         formData,
@@ -51,12 +79,13 @@ export default function CreatePostModal({ onClose }: CreatePostModalProps) {
           },
         }
       );
-      const cookedData = rawResponse.data;
-      setSuccessfulUpload(cookedData.success);
-      if (!cookedData.success) {
-        setErrorMessage(cookedData.message ?? "Upload failed");
+
+      const data = rawResponse.data;
+      setSuccessfulUpload(data.success);
+      if (!data.success) {
+        setErrorMessage(data.message ?? "Upload failed");
       } else {
-        setSuccessMessage(cookedData.message);
+        setSuccessMessage(data.message);
       }
     } catch (err) {
       if (axios.isAxiosError(err) && err.response) {
@@ -71,12 +100,8 @@ export default function CreatePostModal({ onClose }: CreatePostModalProps) {
 
   return (
     <>
-      {/* CREATE POST MODAL */}
       {(user === undefined || user) && (
-        <div
-          className={commonStyles.modalBackdrop}
-          onClick={user === undefined ? undefined : onClose}
-        >
+        <div className={commonStyles.modalBackdrop} onClick={user === undefined ? undefined : onClose}>
           {user === undefined ? (
             <div className={commonStyles.formContainer}>
               <h3 className={styles.loadingUser}>
@@ -88,51 +113,98 @@ export default function CreatePostModal({ onClose }: CreatePostModalProps) {
               <h2 className={styles.successMessage}>{successMessage}</h2>
             </div>
           ) : (
-            <form className={commonStyles.formContainer} onSubmit={handleSubmit} onClick={(e) => e.stopPropagation()}>
-              <h2 className={commonStyles.formHeader}>Create Post</h2>
+            <form
+              className={commonStyles.formContainer}
+              onSubmit={handleSubmit}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h2 className={commonStyles.formHeader}>Create New Post</h2>
 
               <textarea
-                name="description"
-                placeholder="Write a description..."
+                placeholder="What’s on your mind? (max 3000 chars)"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                required
+                maxLength={3000}
                 disabled={uploading}
+                className={styles.textarea}
               />
+              <div className={styles.charCount}>
+                {description.length} / 3000
+              </div>
 
-              <input
-                type="file"
-                name="images"
-                accept="image/*"
-                multiple
-                onChange={(e) => setImages(Array.from(e.target.files ?? []))}
-                disabled={uploading}
-              />
+              <div className={styles.section}>
+                <label className={styles.label}>Upload Images</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={(e) => setImages(Array.from(e.target.files ?? []))}
+                  disabled={uploading}
+                  className={styles.fileInput}
+                />
+                {images.length > 0 && (
+                  <p className={styles.fileCount}>{images.length} image(s) selected</p>
+                )}
+              </div>
+
+              <div className={styles.section}>
+                <label className={styles.label}>Add Tags (optional)</label>
+                <div className={styles.tagInputRow}>
+                  <input
+                    type="text"
+                    placeholder="e.g. brakes, oilchange"
+                    value={newTagInput}
+                    onChange={(e) => setNewTagInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    disabled={uploading}
+                    className={styles.tagInput}
+                  />
+                  <button
+                    type="button"
+                    onClick={addTag}
+                    disabled={!newTagInput.trim() || uploading}
+                    className={styles.addTagBtn}
+                  >
+                    Add
+                  </button>
+                </div>
+
+                {tags.length > 0 && (
+                  <div className={styles.tagsContainer}>
+                    {tags.map((tag, index) => (
+                      <div key={index} className={styles.tagChip}>
+                        #{tag}
+                        <span
+                          className={styles.removeTag}
+                          onClick={() => removeTag(tag)}
+                        >
+                          ✕
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               <button
                 className={commonStyles.primaryBtn}
                 type="submit"
-                disabled={uploading}
+                disabled={uploading || !description.trim()}
               >
                 {uploading ? (
                   <>Uploading<span className={commonStyles.dots}></span></>
                 ) : (
-                  'Upload'
+                  'Post Now'
                 )}
               </button>
 
-              {errorMessage && (
-                <p className={commonStyles.error}>{errorMessage}</p>
-              )}
+              {errorMessage && <p className={commonStyles.error}>{errorMessage}</p>}
             </form>
           )}
         </div>
       )}
-      {/* GUEST MODAL — SEPARATE */}
-      {!user && user !== undefined && (
-        <MustLoginModal onClose={onClose} />
-      )}
+
+      {!user && user !== undefined && <MustLoginModal onClose={onClose} />}
     </>
   );
-
 }
