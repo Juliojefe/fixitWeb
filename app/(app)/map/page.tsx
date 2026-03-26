@@ -52,7 +52,7 @@ export default function MapPage() {
     const abortRef = useRef<AbortController | null>(null);
     const debounceRef = useRef<number | null>(null);
 
-    const mapRef = useRef<L.Map | null>(null);
+    const mapRef = useRef<any>(null);
 
     const canAutocomplete = useMemo(() => query.trim().length >= 2, [query]);
 

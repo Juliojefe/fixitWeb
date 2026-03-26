@@ -169,7 +169,7 @@ export default function MyProfilePage() {
     const businessAutocompleteAbortRef = useRef<AbortController | null>(null);
     const businessAutocompleteDebounceRef = useRef<number | null>(null);
     const businessSearchBlockRef = useRef<HTMLDivElement | null>(null);
-    const businessMapRef = useRef<L.Map | null>(null);
+    const businessMapRef = useRef<any>(null);
 
     // Small caches so we don't refetch the same things repeatedly
     const postCacheRef = useRef<Map<number, DisplayPost>>(new Map());
@@ -493,7 +493,7 @@ export default function MyProfilePage() {
             }
 
             setShowEditBio(false);
-            fetchProfile(userId);
+            void fetchProfile(userId);
         } catch (err: any) {
             console.error(err);
             setBioError(err?.response?.status ? `Failed (${err.response.status})` : 'Failed to update bio.');
@@ -561,7 +561,7 @@ export default function MyProfilePage() {
     // Load profile when the user is available
     useEffect(() => {
         if (!userId) return;
-        fetchProfile(userId);
+        void fetchProfile(userId);
     }, [userId]);
 
     useEffect(() => {
@@ -610,13 +610,13 @@ export default function MyProfilePage() {
     // Load follower/following mini lists
     useEffect(() => {
         if (!profile) return;
-        loadMiniLists(followersExpanded, followingExpanded);
+        void loadMiniLists(followersExpanded, followingExpanded);
     }, [profile, followersExpanded, followingExpanded]);
 
     // Load posts when tab changes
     useEffect(() => {
         if (!profile) return;
-        loadPostsForTab(activeTab);
+        void loadPostsForTab(activeTab);
     }, [activeTab, profile]);
 
     // Fill the bio draft when opening the modal
@@ -663,7 +663,7 @@ export default function MyProfilePage() {
         }
 
         businessAutocompleteDebounceRef.current = window.setTimeout(() => {
-            fetchBusinessAutocomplete(q);
+            void fetchBusinessAutocomplete(q);
         }, 250);
 
         return () => {
@@ -818,7 +818,7 @@ export default function MyProfilePage() {
                                                     const q = businessAddressInput.trim();
                                                     if (!q) return;
                                                     setBusinessSuggestionsOpen(false);
-                                                    searchBusinessLocation(q);
+                                                    void searchBusinessLocation(q);
                                                 }}
                                             >
                                                 <input
@@ -874,7 +874,7 @@ export default function MyProfilePage() {
                                             <div className={styles.businessMapCard}>
                                                 <div className={styles.businessMapMeta}>
                                                     <span className={styles.businessMapLabel}>Current address</span>
-                                                    <p className={styles.businessMapAddress}>{businessLocation.address}</p>
+                                                    <p className={styles.businessMapAddress}>{businessLocation?.address ?? ''}</p>
                                                 </div>
                                                 <div className={styles.businessMapWrapper}>
                                                     <MapContainer
@@ -897,8 +897,8 @@ export default function MyProfilePage() {
                                                         />
 
                                                         {businessMarker && (
-                                                            <Marker position={[businessMarker.lat, businessMarker.lon]}>
-                                                                <Popup>{businessMarker.label}</Popup>
+                                                            <Marker position={[businessMarker!.lat, businessMarker!.lon]}>
+                                                                <Popup>{businessMarker!.label}</Popup>
                                                             </Marker>
                                                         )}
                                                     </MapContainer>
@@ -1071,7 +1071,7 @@ export default function MyProfilePage() {
                 <CreatePostModal
                     onClose={() => {
                         setShowCreateModal(false);
-                        if (userId) fetchProfile(userId);
+                        if (userId) void fetchProfile(userId);
                     }}
                 />
             )}
@@ -1121,7 +1121,7 @@ export default function MyProfilePage() {
                                     const q = businessAddressInput.trim();
                                     if (!q) return;
                                     setBusinessSuggestionsOpen(false);
-                                    searchBusinessLocation(q);
+                                    void searchBusinessLocation(q);
                                 }}
                             >
                                 <input
@@ -1171,7 +1171,7 @@ export default function MyProfilePage() {
                                         const q = businessAddressInput.trim();
                                         if (!q) return;
                                         setBusinessSuggestionsOpen(false);
-                                        searchBusinessLocation(q);
+                                        void searchBusinessLocation(q);
                                     }}
                                     disabled={!businessAddressInput.trim() || businessMapLoading}
                                 >
