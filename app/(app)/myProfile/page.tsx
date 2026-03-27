@@ -50,6 +50,9 @@ type ProfilePublic = {
     mechanic?: boolean;
 
     biography?: string;
+    businessAddress?: string;
+    businessLat?: number;
+    businessLon?: number;
 };
 
 type ProfilePrivate = ProfilePublic & {
@@ -101,6 +104,18 @@ function toNumber(v: unknown): number | null {
     if (typeof v !== 'string' && typeof v !== 'number') return null;
     const n = Number(v);
     return Number.isFinite(n) ? n : null;
+}
+
+function normalizeBusinessLocation(source: ProfilePrivate | ProfilePublic | null): SavedBusinessLocation | null {
+    const address = (source as any)?.businessAddress?.trim?.() ?? '';
+    const lat = toNumber((source as any)?.businessLat);
+    const lon = toNumber((source as any)?.businessLon);
+
+    if (!address || lat == null || lon == null) {
+        return null;
+    }
+
+    return { address, lat, lon };
 }
 
 export default function MyProfilePage() {
@@ -162,7 +177,9 @@ export default function MyProfilePage() {
     const [businessSuggestions, setBusinessSuggestions] = useState<LocationIQPlace[]>([]);
     const [businessSuggestionsOpen, setBusinessSuggestionsOpen] = useState(false);
     const [businessMapLoading, setBusinessMapLoading] = useState(false);
+    const [businessLocationSaving, setBusinessLocationSaving] = useState(false);
     const [businessMapError, setBusinessMapError] = useState<string | null>(null);
+    const [businessDraftLocation, setBusinessDraftLocation] = useState<SavedBusinessLocation | null>(null);
     const [businessMapCenter, setBusinessMapCenter] = useState<[number, number]>([36.6777, -121.6555]);
     const [businessMarker, setBusinessMarker] = useState<{ lat: number; lon: number; label: string } | null>(null);
     const businessSearchAbortRef = useRef<AbortController | null>(null);
@@ -205,7 +222,6 @@ export default function MyProfilePage() {
 
     const MAX_POSTS_PER_TAB = 25;
     const MINI_LIST_LIMIT = 10;
-    const businessLocationStorageKey = userId ? `revly:business-location:${userId}` : null;
 
     // Loads private profile first then falls back to public profile if needed
     async function fetchProfile(uid: number) {
@@ -359,15 +375,17 @@ export default function MyProfilePage() {
         }
     }
 
-    function saveBusinessLocationToStorage(nextLocation: SavedBusinessLocation | null) {
-        if (!businessLocationStorageKey || typeof window === 'undefined') return;
+    function syncBusinessLocationState(nextLocation: SavedBusinessLocation | null) {
+        setBusinessLocation(nextLocation);
 
         if (!nextLocation) {
-            window.localStorage.removeItem(businessLocationStorageKey);
+            setBusinessMapCenter([36.6777, -121.6555]);
+            setBusinessMarker(null);
             return;
         }
 
-        window.localStorage.setItem(businessLocationStorageKey, JSON.stringify(nextLocation));
+        setBusinessMapCenter([nextLocation.lat, nextLocation.lon]);
+        setBusinessMarker({ lat: nextLocation.lat, lon: nextLocation.lon, label: nextLocation.address });
     }
 
     function selectBusinessPlace(place: LocationIQPlace) {
@@ -381,18 +399,11 @@ export default function MyProfilePage() {
         }
 
         const nextLocation: SavedBusinessLocation = { address, lat, lon };
-        setBusinessLocation(nextLocation);
+        setBusinessDraftLocation(nextLocation);
         setBusinessAddressInput(address);
-        setBusinessMapCenter([lat, lon]);
-        setBusinessMarker({ lat, lon, label: address });
         setBusinessSuggestions([]);
         setBusinessSuggestionsOpen(false);
         setBusinessMapError(null);
-        saveBusinessLocationToStorage(nextLocation);
-
-        if (businessMapRef.current) {
-            businessMapRef.current.flyTo([lat, lon], 16, { animate: true, duration: 0.7 });
-        }
     }
 
     async function fetchBusinessAutocomplete(q: string) {
@@ -465,15 +476,56 @@ export default function MyProfilePage() {
         }
     }
 
-    function clearBusinessLocation() {
-        setBusinessLocation(null);
+    async function saveBusinessLocation() {
+        if (!user?.accessToken) return;
+
+        setBusinessLocationSaving(true);
+        setBusinessMapError(null);
+
+        const payload = businessDraftLocation
+            ? {
+                address: businessDraftLocation.address,
+                lat: businessDraftLocation.lat,
+                lon: businessDraftLocation.lon,
+            }
+            : {
+                address: null,
+                lat: null,
+                lon: null,
+            };
+
+        try {
+            await axios.patch(`${API_BASE}/api/user/business-location`, payload, {
+                headers: authHeaders ?? {},
+            });
+
+            syncBusinessLocationState(businessDraftLocation);
+            setProfile((prev: any) => prev ? ({
+                ...prev,
+                businessAddress: businessDraftLocation?.address ?? null,
+                businessLat: businessDraftLocation?.lat ?? null,
+                businessLon: businessDraftLocation?.lon ?? null,
+            }) : prev);
+            setShowEditAddress(false);
+            setBusinessSuggestionsOpen(false);
+        } catch (err: any) {
+            console.error(err);
+            setBusinessMapError(
+                err?.response?.status
+                    ? `Failed to save address (${err.response.status})`
+                    : 'Failed to save address.'
+            );
+        } finally {
+            setBusinessLocationSaving(false);
+        }
+    }
+
+    function clearBusinessLocationDraft() {
+        setBusinessDraftLocation(null);
         setBusinessAddressInput('');
-        setBusinessMapCenter([36.6777, -121.6555]);
-        setBusinessMarker(null);
         setBusinessSuggestions([]);
         setBusinessSuggestionsOpen(false);
         setBusinessMapError(null);
-        saveBusinessLocationToStorage(null);
     }
 
     // Saves bio to backend and updates local state
@@ -565,47 +617,8 @@ export default function MyProfilePage() {
     }, [userId]);
 
     useEffect(() => {
-        if (!businessLocationStorageKey || typeof window === 'undefined') {
-            setBusinessLocation(null);
-            setBusinessAddressInput('');
-            setBusinessMapCenter([36.6777, -121.6555]);
-            setBusinessMarker(null);
-            return;
-        }
-
-        const raw = window.localStorage.getItem(businessLocationStorageKey);
-        if (!raw) {
-            setBusinessLocation(null);
-            setBusinessAddressInput('');
-            setBusinessMapCenter([36.6777, -121.6555]);
-            setBusinessMarker(null);
-            return;
-        }
-
-        try {
-            const parsed = JSON.parse(raw) as SavedBusinessLocation;
-            if (
-                typeof parsed?.address === 'string' &&
-                typeof parsed?.lat === 'number' &&
-                typeof parsed?.lon === 'number'
-            ) {
-                setBusinessLocation(parsed);
-                setBusinessAddressInput(parsed.address);
-                setBusinessMapCenter([parsed.lat, parsed.lon]);
-                setBusinessMarker({ lat: parsed.lat, lon: parsed.lon, label: parsed.address });
-            } else {
-                setBusinessLocation(null);
-                setBusinessAddressInput('');
-                setBusinessMapCenter([36.6777, -121.6555]);
-                setBusinessMarker(null);
-            }
-        } catch {
-            setBusinessLocation(null);
-            setBusinessAddressInput('');
-            setBusinessMapCenter([36.6777, -121.6555]);
-            setBusinessMarker(null);
-        }
-    }, [businessLocationStorageKey]);
+        syncBusinessLocationState(normalizeBusinessLocation(profile));
+    }, [profile]);
 
     // Load follower/following mini lists
     useEffect(() => {
@@ -642,6 +655,7 @@ export default function MyProfilePage() {
     useEffect(() => {
         if (showEditAddress) {
             setBusinessAddressInput(businessLocation?.address ?? '');
+            setBusinessDraftLocation(businessLocation);
             setBusinessMapError(null);
             setBusinessSuggestions([]);
             setBusinessSuggestionsOpen(false);
@@ -845,8 +859,8 @@ export default function MyProfilePage() {
                                                 >
                                                     {businessMapLoading ? 'Searching...' : 'Show map'}
                                                 </button>
-                                                {businessLocation && (
-                                                    <button className={styles.secondaryBtn} type="button" onClick={clearBusinessLocation}>
+                                                {(businessDraftLocation || businessLocation) && (
+                                                    <button className={styles.secondaryBtn} type="button" onClick={clearBusinessLocationDraft}>
                                                         Clear
                                                     </button>
                                                 )}
@@ -1111,7 +1125,7 @@ export default function MyProfilePage() {
                 >
                     <div className={styles.modalCard} onMouseDown={(e) => e.stopPropagation()}>
                         <div className={styles.modalTitle}>Edit address</div>
-                        <p className={styles.muted}>Search for a shop address, then select a result to update the map.</p>
+                        <p className={styles.muted}>Search for a shop address, then select a result and save it to your profile.</p>
 
                         <div ref={businessSearchBlockRef} className={styles.businessSearchBlock}>
                             <form
@@ -1179,20 +1193,18 @@ export default function MyProfilePage() {
                                 </button>
                             </div>
                             <div className={styles.modalActionsRight}>
-                                {businessLocation && (
-                                    <button className={styles.secondaryBtn} type="button" onClick={clearBusinessLocation}>
+                                {(businessDraftLocation || businessLocation) && (
+                                    <button className={styles.secondaryBtn} type="button" onClick={clearBusinessLocationDraft} disabled={businessLocationSaving}>
                                         Clear
                                     </button>
                                 )}
                                 <button
-                                    className={styles.secondaryBtn}
+                                    className={styles.primaryBtn}
                                     type="button"
-                                    onClick={() => {
-                                        setShowEditAddress(false);
-                                        setBusinessSuggestionsOpen(false);
-                                    }}
+                                    onClick={() => void saveBusinessLocation()}
+                                    disabled={businessMapLoading || businessLocationSaving}
                                 >
-                                    Done
+                                    {businessLocationSaving ? 'Saving...' : 'Save'}
                                 </button>
                             </div>
                         </div>
