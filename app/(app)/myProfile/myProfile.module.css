@@ -380,6 +380,12 @@
   border: 1px solid rgba(0, 0, 0, 0.12);
   background: rgba(0, 0, 0, 0.03);
   box-shadow: none;
+  cursor: pointer;
+}
+
+.businessMapWrapper:focus-visible {
+  outline: 3px solid rgba(23, 64, 139, 0.28);
+  outline-offset: 2px;
 }
 
 .businessMap {
@@ -387,10 +393,26 @@
   width: 100%;
 }
 
-.mapSettingsButton {
+.mapNavigateBadge {
   position: absolute;
   right: 12px;
   bottom: 12px;
+  padding: 9px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid rgba(23, 64, 139, 0.16);
+  box-shadow: 0 8px 18px rgba(23, 64, 139, 0.14);
+  color: #12336f;
+  font-size: 12px;
+  font-weight: 900;
+  z-index: 450;
+  pointer-events: none;
+}
+
+.mapSettingsButton {
+  position: absolute;
+  right: 12px;
+  top: 12px;
   width: 40px;
   height: 40px;
   border: 1px solid rgba(23, 64, 139, 0.18);

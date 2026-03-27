@@ -528,6 +528,14 @@ export default function MyProfilePage() {
         setBusinessMapError(null);
     }
 
+    function openBusinessLocationInGoogleMaps() {
+        if (!businessLocation) return;
+
+        const destination = `${businessLocation.lat},${businessLocation.lon}`;
+        const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}&travelmode=driving`;
+        window.open(url, '_blank', 'noopener,noreferrer');
+    }
+
     // Saves bio to backend and updates local state
     async function saveBio() {
         if (!userId) return;
@@ -956,7 +964,19 @@ export default function MyProfilePage() {
                                                 <>
                                                     <span className={styles.businessMapLabel}>Business Location</span>
                                                     <p className={styles.businessMapAddress}>{businessLocation.address}</p>
-                                                    <div className={styles.businessMapWrapper}>
+                                                    <div
+                                                        className={styles.businessMapWrapper}
+                                                        onClick={openBusinessLocationInGoogleMaps}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter' || e.key === ' ') {
+                                                                e.preventDefault();
+                                                                openBusinessLocationInGoogleMaps();
+                                                            }
+                                                        }}
+                                                        role="link"
+                                                        tabIndex={0}
+                                                        aria-label="Open this address in Google Maps"
+                                                    >
                                                         <MapContainer
                                                             center={businessMapCenter}
                                                             zoom={16}
@@ -983,13 +1003,20 @@ export default function MyProfilePage() {
                                                             )}
                                                         </MapContainer>
 
+                                                        <div className={styles.mapNavigateBadge}>
+                                                            Get Directions
+                                                        </div>
+
                                                         <button
                                                             className={styles.mapSettingsButton}
                                                             type="button"
-                                                            onClick={() => setShowEditAddress(true)}
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setShowEditAddress(true);
+                                                            }}
                                                             aria-label="Edit address"
                                                         >
-                                                            ⚙
+                                                            ⚙️
                                                         </button>
                                                     </div>
                                                 </>
