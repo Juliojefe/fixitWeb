@@ -35,24 +35,19 @@ export default function Explore() {
   const [searchPostPage, setSearchPostPage] = useState(0);
   const [searchPostLast, setSearchPostLast] = useState(false);
   const [searchPostLoading, setSearchPostLoading] = useState(false);
-
   const [searchUsers, setSearchUsers] = useState<UserSearchResult[]>([]);
   const [searchUserPage, setSearchUserPage] = useState(0);
   const [searchUserLast, setSearchUserLast] = useState(false);
   const [searchUserLoading, setSearchUserLoading] = useState(false);
-
   const loaderRef = useRef<HTMLDivElement>(null);
   const hasInitialFetched = useRef(false);
 
-  // ==================== original fetch (with dedupe) ====================
   async function fetchPosts() {
     if (loading || last) return;
     setLoading(true);
-
     try {
       let endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/explore?page=${currPage}&size=${pageSize}`;
       let config = {};
-
       if (user?.accessToken) {
         console.log(`Fetching posts for user: ${user.name} on page: ${currPage}`);
         config = { headers: { Authorization: `Bearer ${user.accessToken}` } };
@@ -60,13 +55,10 @@ export default function Explore() {
         console.log(`Fetching posts for guest on page: ${currPage}`);
         endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/explore/guest?page=${currPage}&size=${pageSize}`;
       }
-
       const res = await axios.get(endpoint, config);
       const page = res.data;
-
       setLast(page.last);
       setCurrPage(page.number + 1);
-
       setPostData(prev => {
         const existingIds = new Set(prev.map((p: DisplayPostType) => p.postId));
         const uniquePosts = page.content.filter((p: DisplayPostType) => !existingIds.has(p.postId));
@@ -79,28 +71,23 @@ export default function Explore() {
     }
   }
 
-  // ==================== search fetches ====================
   async function fetchSearchPosts(reset = false) {
     if (!searchQuery.trim() || searchPostLoading) return;
     const pageNum = reset ? 0 : searchPostPage;
     if (!reset && searchPostLast) return;
-
     setSearchPostLoading(true);
     console.log(`[Search Posts] Fetching page ${pageNum} for "${searchQuery}"`);
-
     try {
       const res = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL}/api/search/posts/text?query=${encodeURIComponent(searchQuery)}&page=${pageNum}&size=${pageSize}`
       );
       const data = res.data;
-
       if (reset) setSearchPosts(data.content);
       else {
         const existingIds = new Set(searchPosts.map((p: DisplayPostType) => p.postId));
         const uniquePosts = data.content.filter((p: DisplayPostType) => !existingIds.has(p.postId));
         setSearchPosts(prev => [...prev, ...uniquePosts]);
       }
-
       setSearchPostPage(data.number + 1);
       setSearchPostLast(data.last);
     } catch (err) {
@@ -114,19 +101,15 @@ export default function Explore() {
     if (!searchQuery.trim() || searchUserLoading) return;
     const pageNum = reset ? 0 : searchUserPage;
     if (!reset && searchUserLast) return;
-
     setSearchUserLoading(true);
     console.log(`[Search Users] Fetching page ${pageNum} for "${searchQuery}"`);
-
     try {
       const res = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL}/api/search/users?query=${encodeURIComponent(searchQuery)}&page=${pageNum}&size=${pageSize}`
       );
       const data = res.data;
-
       if (reset) setSearchUsers(data.content);
       else setSearchUsers(prev => [...prev, ...data.content]);
-
       setSearchUserPage(data.number + 1);
       setSearchUserLast(data.last);
     } catch (err) {
@@ -147,10 +130,8 @@ export default function Explore() {
   // infinite scroll
   useEffect(() => {
     if (!loaderRef.current) return;
-
     const observer = new IntersectionObserver(entries => {
       if (!entries[0].isIntersecting) return;
-
       if (activeTab === 'posts') {
         if (searchQuery) {
           if (searchPostLoading || searchPostLast) return;
@@ -164,16 +145,14 @@ export default function Explore() {
         fetchSearchUsers();
       }
     });
-
     observer.observe(loaderRef.current);
     return () => observer.disconnect();
   }, [activeTab, searchQuery, loading, searchPostLoading, searchUserLoading, last, searchPostLast, searchUserLast]);
 
-  // ==================== search only on enter or button click ====================
+  //  search only on enter or button click
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
-
     // stay on current tab and search the correct thing
     if (activeTab === 'posts') {
       setSearchPosts([]);
@@ -187,7 +166,7 @@ export default function Explore() {
       fetchSearchUsers(true);
     }
   };
-
+  
   const clearSearch = () => {
     setSearchQuery('');
     setSearchPosts([]);
