@@ -20,76 +20,81 @@ export default function Explore() {
   const router = useRouter();
   const { user } = useUser();
 
-  const [activeTab, setActiveTab] = useState<'explore' | 'posts' | 'people'>('explore');
+  const [activeTab, setActiveTab] = useState<'posts' | 'people'>('posts');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Explore feed
-  const [explorePosts, setExplorePosts] = useState<DisplayPostType[]>([]);
-  const [explorePage, setExplorePage] = useState(0);
-  const [exploreLast, setExploreLast] = useState(false);
-  const [exploreLoading, setExploreLoading] = useState(false);
+  // explore
+  const [postData, setPostData] = useState<DisplayPostType[]>([]);
+  const [currPage, setCurrPage] = useState(0);
+  const [last, setLast] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const pageSize = 5;
 
-  // Search posts
+  // search results
   const [searchPosts, setSearchPosts] = useState<DisplayPostType[]>([]);
   const [searchPostPage, setSearchPostPage] = useState(0);
   const [searchPostLast, setSearchPostLast] = useState(false);
   const [searchPostLoading, setSearchPostLoading] = useState(false);
 
-  // Search users
   const [searchUsers, setSearchUsers] = useState<UserSearchResult[]>([]);
   const [searchUserPage, setSearchUserPage] = useState(0);
   const [searchUserLast, setSearchUserLast] = useState(false);
   const [searchUserLoading, setSearchUserLoading] = useState(false);
 
   const loaderRef = useRef<HTMLDivElement>(null);
-  const pageSize = 8;
+  const hasInitialFetched = useRef(false);
 
-  // ==================== FETCH FUNCTIONS ====================
-  const fetchExplore = async () => {
-    if (exploreLoading || exploreLast) return;
-    setExploreLoading(true);
+  async function fetchPosts() {
+    if (loading || last) return;
+    setLoading(true);
 
     try {
-      const endpoint = user?.accessToken
-        ? `${process.env.NEXT_PUBLIC_API_URL}/api/explore?page=${explorePage}&size=${pageSize}`
-        : `${process.env.NEXT_PUBLIC_API_URL}/api/explore/guest?page=${explorePage}&size=${pageSize}`;
-
-      const res = await axios.get(endpoint, {
-        headers: user?.accessToken ? { Authorization: `Bearer ${user.accessToken}` } : {},
-      });
-
+      let endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/explore?page=${currPage}&size=${pageSize}`;
+      let config = {};
+      if (user?.accessToken) {
+        console.log(`Fetching posts for user: ${user.name} on page: ${currPage}`);
+        config = { headers: { Authorization: `Bearer ${user.accessToken}` } };
+      } else {
+        console.log(`Fetching posts for guest on page: ${currPage}`);
+        endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/explore/guest?page=${currPage}&size=${pageSize}`;
+      }
+      const res = await axios.get(endpoint, config);
       const page = res.data;
-      setExplorePosts(prev => [...prev, ...page.content]);
-      setExplorePage(page.number + 1);
-      setExploreLast(page.last);
+      setLast(page.last);
+      setCurrPage(page.number + 1);
+      setPostData(prev => {
+        const existingIds = new Set(prev.map((p: DisplayPostType) => p.postId));
+        const uniquePosts = page.content.filter(
+          (p: DisplayPostType) => !existingIds.has(p.postId)
+        );
+        return [...prev, ...uniquePosts];
+      });
     } catch (err) {
-      console.error("Explore fetch failed", err);
+      console.error("Failed to fetch posts", err);
     } finally {
-      setExploreLoading(false);
+      setLoading(false);
     }
-  };
+  }
 
-  const fetchSearchPosts = async (reset = false) => {
+  async function fetchSearchPosts(reset = false) {
     if (!searchQuery.trim()) return;
+    if (searchPostLoading) return;
     const pageNum = reset ? 0 : searchPostPage;
     if (!reset && searchPostLast) return;
-
     setSearchPostLoading(true);
+    console.log(`[Search Posts] Fetching page ${pageNum} for "${searchQuery}"`);
     try {
       const res = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL}/api/search/posts/text?query=${encodeURIComponent(searchQuery)}&page=${pageNum}&size=${pageSize}`
       );
       const data = res.data;
-
       if (reset) {
         setSearchPosts(data.content);
       } else {
-        // Prevent duplicate postIds
-        const existingIds = new Set(searchPosts.map(p => p.postId));
-        const newPosts = data.content.filter((p: DisplayPostType) => !existingIds.has(p.postId));
-        setSearchPosts(prev => [...prev, ...newPosts]);
+        const existingIds = new Set(searchPosts.map((p: DisplayPostType) => p.postId));
+        const uniquePosts = data.content.filter((p: DisplayPostType) => !existingIds.has(p.postId));
+        setSearchPosts(prev => [...prev, ...uniquePosts]);
       }
-
       setSearchPostPage(data.number + 1);
       setSearchPostLast(data.last);
     } catch (err) {
@@ -97,23 +102,22 @@ export default function Explore() {
     } finally {
       setSearchPostLoading(false);
     }
-  };
+  }
 
-  const fetchSearchUsers = async (reset = false) => {
+  async function fetchSearchUsers(reset = false) {
     if (!searchQuery.trim()) return;
+    if (searchUserLoading) return;
     const pageNum = reset ? 0 : searchUserPage;
     if (!reset && searchUserLast) return;
-
     setSearchUserLoading(true);
+    console.log(`[Search Users] Fetching page ${pageNum} for "${searchQuery}"`);
     try {
       const res = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL}/api/search/users?query=${encodeURIComponent(searchQuery)}&page=${pageNum}&size=${pageSize}`
       );
       const data = res.data;
-
       if (reset) setSearchUsers(data.content);
       else setSearchUsers(prev => [...prev, ...data.content]);
-
       setSearchUserPage(data.number + 1);
       setSearchUserLast(data.last);
     } catch (err) {
@@ -121,68 +125,56 @@ export default function Explore() {
     } finally {
       setSearchUserLoading(false);
     }
-  };
+  }
 
-  // ==================== EFFECTS ====================
   useEffect(() => {
-    if (activeTab === 'explore' && explorePosts.length === 0) fetchExplore();
-  }, [activeTab]);
-
-  // Clear old results when changing tabs
-  useEffect(() => {
-    if (activeTab === 'posts') {
-      setSearchPosts([]);
-      setSearchPostPage(0);
-      setSearchPostLast(false);
-      if (searchQuery) fetchSearchPosts(true);
-    }
-    if (activeTab === 'people') {
-      setSearchUsers([]);
-      setSearchUserPage(0);
-      setSearchUserLast(false);
-      if (searchQuery) fetchSearchUsers(true);
+    if (activeTab === 'posts' && postData.length === 0 && !searchQuery && !hasInitialFetched.current) {
+      hasInitialFetched.current = true;
+      fetchPosts();
     }
   }, [activeTab]);
 
-  // Infinite scroll
+  // infinite scroll
   useEffect(() => {
     if (!loaderRef.current) return;
     const observer = new IntersectionObserver(entries => {
-      if (entries[0].isIntersecting) {
-        if (activeTab === 'explore') fetchExplore();
-        else if (activeTab === 'posts') fetchSearchPosts();
-        else if (activeTab === 'people') fetchSearchUsers();
+      if (!entries[0].isIntersecting) return;
+
+      if (activeTab === 'posts') {
+        if (searchQuery) {
+          if (searchPostLoading || searchPostLast) return;
+          fetchSearchPosts();
+        } else {
+          if (loading || last) return;
+          fetchPosts();
+        }
+      } else if (activeTab === 'people') {
+        if (searchUserLoading || searchUserLast) return;
+        fetchSearchUsers();
       }
     });
     observer.observe(loaderRef.current);
     return () => observer.disconnect();
-  }, [activeTab, exploreLoading, searchPostLoading, searchUserLoading]);
+  }, [activeTab, searchQuery, loading, searchPostLoading, searchUserLoading, last, searchPostLast, searchUserLast]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!searchQuery.trim()) return;
-    if (activeTab === 'explore') setActiveTab('posts');
-
+    if (activeTab === 'people') setActiveTab('posts');
     setSearchPosts([]);
-    setSearchUsers([]);
     setSearchPostPage(0);
-    setSearchUserPage(0);
     setSearchPostLast(false);
-    setSearchUserLast(false);
-
-    if (activeTab === 'posts') fetchSearchPosts(true);
-    if (activeTab === 'people') fetchSearchUsers(true);
+    fetchSearchPosts(true);
   };
 
   const clearSearch = () => {
     setSearchQuery('');
     setSearchPosts([]);
-    setSearchUsers([]);
   };
 
   return (
     <div className={styles.container}>
-      {/* SEARCH BAR SECTION */}
+      {/* search bar */}
       <div className={styles.searchSection}>
         <form onSubmit={handleSearch} className={styles.searchBarContainer}>
           <input
@@ -192,20 +184,10 @@ export default function Explore() {
             placeholder="Search posts, tags, or people..."
             className={styles.searchInput}
           />
-          {searchQuery && (
-            <button type="button" onClick={clearSearch} className={styles.clearBtn}>✕</button>
-          )}
+          {searchQuery && <button type="button" onClick={clearSearch} className={styles.clearBtn}>✕</button>}
           <button type="submit" className={styles.searchBtn}>🔎</button>
         </form>
-
-        {/* TABS - now centered */}
         <div className={styles.tabs}>
-          <button
-            onClick={() => setActiveTab('explore')}
-            className={`${styles.tabBtn} ${activeTab === 'explore' ? styles.activeTab : ''}`}
-          >
-            Explore
-          </button>
           <button
             onClick={() => setActiveTab('posts')}
             className={`${styles.tabBtn} ${activeTab === 'posts' ? styles.activeTab : ''}`}
@@ -220,16 +202,17 @@ export default function Explore() {
           </button>
         </div>
       </div>
-
-      {/* MAIN SCROLLABLE COLUMN */}
+      {/* main content */}
       <div className={styles.postContentContainer}>
-        {activeTab === 'explore' ? (
-          <>
-            <h2 className={styles.header}>My Explore Page</h2>
-            <PostList postDataArray={explorePosts} />
-          </>
-        ) : activeTab === 'posts' ? (
-          <PostList postDataArray={searchPosts} />
+        {activeTab === 'posts' ? (
+          searchQuery ? (
+            <PostList postDataArray={searchPosts} />
+          ) : (
+            <>
+              <h2 className={styles.header}>My Explore Page</h2>
+              <PostList postDataArray={postData} />
+            </>
+          )
         ) : (
           <UserSearchResults
             users={searchUsers}
@@ -239,10 +222,8 @@ export default function Explore() {
             loading={searchUserLoading}
           />
         )}
-
-        {/* Loader for infinite scroll */}
-        {!((activeTab === 'explore' && exploreLast) ||
-           (activeTab === 'posts' && searchPostLast) ||
+        {/* loader */}
+        {!((activeTab === 'posts' && (searchQuery ? searchPostLast : last)) ||
            (activeTab === 'people' && searchUserLast)) && (
           <div ref={loaderRef} className={styles.loader}>Loading more...</div>
         )}
