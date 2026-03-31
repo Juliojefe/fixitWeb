@@ -209,7 +209,6 @@ export default function Explore() {
             <PostList postDataArray={searchPosts} />
           ) : (
             <>
-              <h2 className={styles.header}>My Explore Page</h2>
               <PostList postDataArray={postData} />
             </>
           )

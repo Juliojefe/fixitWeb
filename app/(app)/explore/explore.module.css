@@ -38,10 +38,9 @@
   letter-spacing: -0.5px;
 }
 
-/* SEARCH BAR SECTION */
 .searchSection {
-  max-width: 700px;
-  margin: 20px auto 20px;   /* reduced top/bottom spacing */
+  max-width: 50%;
+  margin: 20px auto 20px;
   padding: 0 20px;
 }
 
@@ -74,7 +73,6 @@
 }
 
 .searchBtn {
-  background: #526fae;
   color: white;
   border: none;
   width: 70px;
@@ -85,10 +83,9 @@
 
 .searchBtn:hover { background: #3d5a96; }
 
-/* TABS - CENTERED */
 .tabs {
   display: flex;
-  justify-content: center;   /* ← this centers them */
+  justify-content: center;
   gap: 8px;
   margin-top: 12px;
   flex-wrap: wrap;
@@ -112,12 +109,11 @@
   border-color: #526fae;
 }
 
-/* Keep your original scrolling behavior */
 .container {
   background: #d2def9;
   color: black;
   min-height: 100vh;
-  padding-top: 0;           /* important - no extra top padding */
+  padding-top: 0;
 }
 
 .postContentContainer {
@@ -132,7 +128,6 @@
   overflow-y: auto;
 }
 
-/* Loader */
 .loader {
   text-align: center;
   padding: 30px;
