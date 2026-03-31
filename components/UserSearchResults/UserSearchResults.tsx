@@ -1,6 +1,5 @@
 'use client';
 
-import Image from 'next/image';
 import styles from './UserSearchResults.module.css';
 
 type UserSearchResult = {
@@ -21,8 +20,6 @@ type Props = {
 export default function UserSearchResults({ users, onUserClick, onLoadMore, hasMore, loading }: Props) {
   return (
     <div className={styles.userResultsContainer}>
-      <h2 className={styles.header}>People Results</h2>
-
       <div className={styles.userGrid}>
         {users.map(user => (
           <div
@@ -43,28 +40,24 @@ export default function UserSearchResults({ users, onUserClick, onLoadMore, hasM
                 <div className={styles.avatarPlaceholder}>👤</div>
               )}
             </div>
-
             <div className={styles.userInfo}>
               <h3>{user.name}</h3>
-              {user.isMechanic && <span className={styles.mechanicBadge}>🔧 Mechanic</span>}
+              {user.isMechanic && <span className={styles.mechanicBadge}>🔧 mechanic</span>}
             </div>
-
-            <button className={styles.viewProfileBtn}>View Profile →</button>
+            <button className={styles.viewProfileBtn}>view profile →</button>
           </div>
         ))}
       </div>
-
       {hasMore && (
         <button
           className={styles.loadMoreBtn}
           onClick={onLoadMore}
           disabled={loading}
         >
-          {loading ? 'Loading...' : 'Load More People'}
+          {loading ? 'loading...' : 'load more people'}
         </button>
       )}
-
-      {users.length === 0 && <p className={styles.noResults}>No users found.</p>}
+      {users.length === 0 && <p className={styles.noResults}>no users found.</p>}
     </div>
   );
 }
