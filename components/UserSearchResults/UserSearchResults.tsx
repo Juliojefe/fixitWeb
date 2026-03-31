@@ -32,12 +32,12 @@ export default function UserSearchResults({ users, onUserClick, onLoadMore, hasM
           >
             <div className={styles.userAvatar}>
               {user.profilePic ? (
-                <Image
+                <img
                   src={user.profilePic}
                   alt={user.name}
                   width={64}
                   height={64}
-                  className={styles.avatarImg}
+                  className={styles.avatarImage}
                 />
               ) : (
                 <div className={styles.avatarPlaceholder}>👤</div>
