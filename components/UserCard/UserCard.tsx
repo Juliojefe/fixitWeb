@@ -15,9 +15,19 @@ interface UserCardProps {
   createdByProfilePicUrl: string;
   authorIsMechanic: boolean;
   onFollowChange?: (newFollowing: boolean) => void;
+  showBottomBorder?: boolean;
 }
 
-export default function UserCard({ followingAuthor, authorId, createdBy, createdByProfilePicUrl, authorIsMechanic, onFollowChange }: UserCardProps) {
+export default function UserCard({
+  followingAuthor,
+  authorId,
+  createdBy,
+  createdByProfilePicUrl,
+  authorIsMechanic,
+  onFollowChange,
+  showBottomBorder = true,
+}: UserCardProps) {
+
   // basic needs
   const router = useRouter();
   const { user } = useUser();
@@ -36,8 +46,11 @@ export default function UserCard({ followingAuthor, authorId, createdBy, created
     if (deletedAuthor) {
       return;
     }
-    console.log("go to profile with id " + authorId)
-    return;
+    if (user?.userId == authorId) {
+      router.push("/myProfile");
+    } else {
+      router.push(`/profile/${authorId}`);
+    }
   }
 
   async function handleFollowToggle() {
@@ -81,7 +94,7 @@ export default function UserCard({ followingAuthor, authorId, createdBy, created
     }
   }
 
-  return (
+return (
     <>
       {showLoginModal &&
         createPortal(
@@ -89,9 +102,8 @@ export default function UserCard({ followingAuthor, authorId, createdBy, created
           document.body
         )}
 
-
       <div
-        className={styles.headerSection}
+        className={`${styles.headerSection} ${!showBottomBorder ? styles.noBottomBorder : ''}`}
         onClick={
           deletedAuthor
             ? undefined
@@ -128,6 +140,5 @@ export default function UserCard({ followingAuthor, authorId, createdBy, created
         ) : null}
       </div>
     </>
-  )
-
+  );
 }

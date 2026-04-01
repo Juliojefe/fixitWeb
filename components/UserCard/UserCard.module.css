@@ -54,3 +54,7 @@
   align-items: center;
   gap: 10px;
 }
+
+.noBottomBorder {
+  border-bottom: none !important;
+}
