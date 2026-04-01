@@ -49,7 +49,7 @@ export default function AuthCallback() {
         refreshTokenExpiresAt
       };
       setUser(userData);
-      router.push("/home");
+      router.push("/explore");
     } else {
       const message = searchParams.get("message") || "Authentication failed. Please try again.";
       router.push(`/login?error=${encodeURIComponent(message)}`);

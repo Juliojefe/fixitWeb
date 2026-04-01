@@ -40,7 +40,7 @@ export default function loginPage() {
           accessTokenExpiresAt: new Date(authData.accessTokenExpiresAt),
           refreshTokenExpiresAt: new Date(authData.refreshTokenExpiresAt)
         });
-        router.push("/home");
+        router.push("/explore");
       } else {
         setErrorMessage("Unexpected response from server.");
       }
