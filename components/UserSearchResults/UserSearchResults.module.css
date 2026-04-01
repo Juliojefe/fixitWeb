@@ -20,7 +20,7 @@
   cursor: pointer;
   transition: all 0.2s ease;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-  width: 100%;               /* full width */
+  width: 100%;
 }
 
 .userCard:hover {
@@ -69,46 +69,15 @@
 }
 
 .mechanicBadge {
-  display: inline-block;
-  background: #fef3c7;
-  color: #92400e;
-  font-size: 0.75rem;
-  padding: 2px 10px;
-  border-radius: 9999px;
-  margin-top: 4px;
-}
-
-.viewProfileBtn {
-  padding: 9px 22px;
-  background: #526fae;
-  color: white;
-  border: none;
-  border-radius: 9999px;
-  font-size: 0.92rem;
-  font-weight: 600;
-  white-space: nowrap;
-}
-
-.loadMoreBtn {
+  width: 24px;
+  height: 24px;
   display: block;
-  margin: 30px auto;
-  padding: 14px 40px;
-  background: #526fae;
-  color: white;
-  border: none;
-  border-radius: 9999px;
-  font-weight: 700;
-  cursor: pointer;
-  font-size: 1rem;
-}
-
-.loadMoreBtn:hover:not(:disabled) {
-  background: #3d5a96;
 }
 
 .noResults {
   text-align: center;
-  font-size: 1.2rem;
+  font-size: 1.25rem;
   color: #666;
-  margin: 80px 0;
+  margin: 100px 0;
+  font-style: italic;
 }

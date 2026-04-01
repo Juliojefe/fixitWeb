@@ -13,7 +13,8 @@ type UserSearchResult = {
   userId: number;
   name: string;
   profilePic?: string;
-  isMechanic: boolean;
+  mechanic: boolean;
+  following: boolean;
 };
 
 export default function Explore() {
@@ -42,20 +43,25 @@ export default function Explore() {
   const loaderRef = useRef<HTMLDivElement>(null);
   const hasInitialFetched = useRef(false);
 
+  async function fetchWithAuth(endpoint: string, config: any = {}) {
+    if (user?.accessToken) {
+      config.headers = {
+        ...config.headers,
+        Authorization: `Bearer ${user.accessToken}`,
+      };
+    }
+    return axios.get(endpoint, config);
+  }
+
   async function fetchPosts() {
     if (loading || last) return;
     setLoading(true);
     try {
       let endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/explore?page=${currPage}&size=${pageSize}`;
-      let config = {};
-      if (user?.accessToken) {
-        console.log(`Fetching posts for user: ${user.name} on page: ${currPage}`);
-        config = { headers: { Authorization: `Bearer ${user.accessToken}` } };
-      } else {
-        console.log(`Fetching posts for guest on page: ${currPage}`);
+      if (!user?.accessToken) {
         endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/explore/guest?page=${currPage}&size=${pageSize}`;
       }
-      const res = await axios.get(endpoint, config);
+      const res = await fetchWithAuth(endpoint);
       const page = res.data;
       setLast(page.last);
       setCurrPage(page.number + 1);
@@ -101,15 +107,28 @@ export default function Explore() {
     if (!searchQuery.trim() || searchUserLoading) return;
     const pageNum = reset ? 0 : searchUserPage;
     if (!reset && searchUserLast) return;
+
     setSearchUserLoading(true);
     console.log(`[Search Users] Fetching page ${pageNum} for "${searchQuery}"`);
+
     try {
-      const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/search/users?query=${encodeURIComponent(searchQuery)}&page=${pageNum}&size=${pageSize}`
-      );
+      const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/search/users?query=${encodeURIComponent(searchQuery)}&page=${pageNum}&size=${pageSize}`;
+      const res = await fetchWithAuth(endpoint);
       const data = res.data;
-      if (reset) setSearchUsers(data.content);
-      else setSearchUsers(prev => [...prev, ...data.content]);
+
+      // ==================== FULL DEBUG (shows exact JSON) ====================
+      console.log('=== RAW USER SEARCH RESPONSE ===');
+      data.content.forEach((u: any, i: number) => {
+        console.log(`User #${i} →`, JSON.stringify(u, null, 2));
+      });
+      console.log('=== END RAW DEBUG ===');
+      // =====================================================================
+
+      if (reset) {
+        setSearchUsers(data.content);
+      } else {
+        setSearchUsers(prev => [...prev, ...data.content]);
+      }
       setSearchUserPage(data.number + 1);
       setSearchUserLast(data.last);
     } catch (err) {
@@ -166,7 +185,7 @@ export default function Explore() {
       fetchSearchUsers(true);
     }
   };
-  
+
   const clearSearch = () => {
     setSearchQuery('');
     setSearchPosts([]);
@@ -218,18 +237,16 @@ export default function Explore() {
         ) : (
           <UserSearchResults
             users={searchUsers}
-            onUserClick={(id) => router.push(`/profile/${id}`)}
             onLoadMore={() => fetchSearchUsers()}
             hasMore={!searchUserLast}
             loading={searchUserLoading}
           />
         )}
-
         {/* loader */}
         {!((activeTab === 'posts' && (searchQuery ? searchPostLast : last)) ||
-           (activeTab === 'people' && searchUserLast)) && (
-          <div ref={loaderRef} className={styles.loader}>Loading more...</div>
-        )}
+          (activeTab === 'people' && searchUserLast)) && (
+            <div ref={loaderRef} className={styles.loader}>Loading more...</div>
+          )}
       </div>
     </div>
   );
