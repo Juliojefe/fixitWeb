@@ -82,12 +82,11 @@ export default function Explore() {
     const pageNum = reset ? 0 : searchPostPage;
     if (!reset && searchPostLast) return;
     setSearchPostLoading(true);
-    console.log(`[Search Posts] Fetching page ${pageNum} for "${searchQuery}"`);
     try {
-      const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/search/posts/text?query=${encodeURIComponent(searchQuery)}&page=${pageNum}&size=${pageSize}`
-      );
+      const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/search/posts/text?query=${encodeURIComponent(searchQuery)}&page=${pageNum}&size=${pageSize}`;
+      const res = await fetchWithAuth(endpoint);
       const data = res.data;
+
       if (reset) setSearchPosts(data.content);
       else {
         const existingIds = new Set(searchPosts.map((p: DisplayPostType) => p.postId));
@@ -109,21 +108,10 @@ export default function Explore() {
     if (!reset && searchUserLast) return;
 
     setSearchUserLoading(true);
-    console.log(`[Search Users] Fetching page ${pageNum} for "${searchQuery}"`);
-
     try {
       const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/search/users?query=${encodeURIComponent(searchQuery)}&page=${pageNum}&size=${pageSize}`;
       const res = await fetchWithAuth(endpoint);
       const data = res.data;
-
-      // ==================== FULL DEBUG (shows exact JSON) ====================
-      console.log('=== RAW USER SEARCH RESPONSE ===');
-      data.content.forEach((u: any, i: number) => {
-        console.log(`User #${i} →`, JSON.stringify(u, null, 2));
-      });
-      console.log('=== END RAW DEBUG ===');
-      // =====================================================================
-
       if (reset) {
         setSearchUsers(data.content);
       } else {
@@ -137,6 +125,7 @@ export default function Explore() {
       setSearchUserLoading(false);
     }
   }
+  
 
   // initial load
   useEffect(() => {
