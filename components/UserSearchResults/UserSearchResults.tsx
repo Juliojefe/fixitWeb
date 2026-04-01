@@ -33,21 +33,22 @@ export default function UserSearchResults({ users, onLoadMore, hasMore, loading 
   };
 
   return (
-    <div className={styles.userResultsContainer}>
+<div className={styles.userResultsContainer}>
       <div className={styles.userGrid}>
-        {localUsers.map(user => (
-          <UserCard
-            key={user.userId}
-            followingAuthor={user.following}
-            authorId={user.userId}
-            createdBy={user.name}
-            createdByProfilePicUrl={user.profilePic || ''}
-            authorIsMechanic={user.mechanic}
-            onFollowChange={(newFollowing) => handleFollowChange(user.userId, newFollowing)}
-          />
+        {localUsers.map((user) => (
+          <div key={user.userId} className={styles.userCard}>
+            <UserCard
+              followingAuthor={user.following}
+              authorId={user.userId}
+              createdBy={user.name}
+              createdByProfilePicUrl={user.profilePic || ''}
+              authorIsMechanic={user.mechanic}
+              onFollowChange={(newFollowing) => handleFollowChange(user.userId, newFollowing)}
+              showBottomBorder={false}
+            />
+          </div>
         ))}
       </div>
-
       {localUsers.length === 0 && (
         <p className={styles.noResults}>
           enter a name you would like to search for
