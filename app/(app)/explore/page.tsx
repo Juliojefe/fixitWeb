@@ -8,6 +8,7 @@ import { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import PostList from '@/components/PostList/PostList';
 import UserSearchResults from '@/components/UserSearchResults/UserSearchResults';
+import TagSuggestions from '@/components/TagSuggestions/TagSuggestions'; // ← NEW
 
 type UserSearchResult = {
   userId: number;
@@ -31,13 +32,26 @@ export default function Explore() {
   const [loading, setLoading] = useState(false);
   const pageSize = 5;
 
-  // search results (posts)
+  // semantic search (posts)
   const [searchPosts, setSearchPosts] = useState<DisplayPostType[]>([]);
   const [searchPostPage, setSearchPostPage] = useState(0);
   const [searchPostLast, setSearchPostLast] = useState(false);
   const [searchPostLoading, setSearchPostLoading] = useState(false);
 
-  // search results (people)
+  // tag suggestions (when query starts with #)
+  const [tagSuggestions, setTagSuggestions] = useState<string[]>([]);
+  const [tagSuggestionsLoading, setTagSuggestionsLoading] = useState(false);
+  const [tagSuggestionsLast, setTagSuggestionsLast] = useState(false);
+  const [tagSuggestionsPage, setTagSuggestionsPage] = useState(0);
+
+  // selected tag mode (after user clicks a suggestion)
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
+  const [tagPosts, setTagPosts] = useState<DisplayPostType[]>([]);
+  const [tagPostPage, setTagPostPage] = useState(0);
+  const [tagPostLast, setTagPostLast] = useState(false);
+  const [tagPostLoading, setTagPostLoading] = useState(false);
+
+  // people search
   const [searchUsers, setSearchUsers] = useState<UserSearchResult[]>([]);
   const [searchUserPage, setSearchUserPage] = useState(0);
   const [searchUserLast, setSearchUserLast] = useState(false);
@@ -46,6 +60,10 @@ export default function Explore() {
 
   const loaderRef = useRef<HTMLDivElement>(null);
   const hasInitialFetched = useRef(false);
+
+  // helper to decide search type
+  const isTagSearch = searchQuery.trim().startsWith('#');
+  const hasHashAnywhere = searchQuery.includes('#') && !isTagSearch;
 
   async function fetchWithAuth(endpoint: string, config: any = {}) {
     if (user?.accessToken) {
@@ -57,6 +75,7 @@ export default function Explore() {
     return axios.get(endpoint, config);
   }
 
+  //  explore feed
   async function fetchPosts() {
     if (loading || last) return;
     setLoading(true);
@@ -71,9 +90,7 @@ export default function Explore() {
       setCurrPage(page.number + 1);
       setPostData(prev => {
         const existingIds = new Set(prev.map((p: DisplayPostType) => p.postId));
-        const uniquePosts = page.content.filter(
-          (p: DisplayPostType) => !existingIds.has(p.postId)
-        );
+        const uniquePosts = page.content.filter((p: DisplayPostType) => !existingIds.has(p.postId));
         return [...prev, ...uniquePosts];
       });
     } catch (err) {
@@ -83,6 +100,7 @@ export default function Explore() {
     }
   }
 
+  //  semantic search
   async function fetchSearchPosts(reset = false) {
     if (!searchQuery.trim() || searchPostLoading) return;
     const pageNum = reset ? 0 : searchPostPage;
@@ -92,13 +110,10 @@ export default function Explore() {
       const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/search/posts/text?query=${encodeURIComponent(searchQuery)}&page=${pageNum}&size=${pageSize}`;
       const res = await fetchWithAuth(endpoint);
       const data = res.data;
-      if (reset) {
-        setSearchPosts(data.content);
-      } else {
+      if (reset) setSearchPosts(data.content);
+      else {
         const existingIds = new Set(searchPosts.map((p: DisplayPostType) => p.postId));
-        const uniquePosts = data.content.filter(
-          (p: DisplayPostType) => !existingIds.has(p.postId)
-        );
+        const uniquePosts = data.content.filter((p: DisplayPostType) => !existingIds.has(p.postId));
         setSearchPosts(prev => [...prev, ...uniquePosts]);
       }
       setSearchPostPage(data.number + 1);
@@ -110,6 +125,57 @@ export default function Explore() {
     }
   }
 
+  // tag suggestions
+  async function fetchTagSuggestions(reset = false) {
+    if (!searchQuery.trim() || tagSuggestionsLoading) return;
+    const cleanQuery = searchQuery.trim().replace(/^#/, '');
+    const pageNum = reset ? 0 : tagSuggestionsPage;
+    if (!reset && tagSuggestionsLast) return;
+
+    setTagSuggestionsLoading(true);
+    try {
+      const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/search/tags?query=${encodeURIComponent(cleanQuery)}&page=${pageNum}&size=20`;
+      const res = await axios.get(endpoint); // no auth needed
+      const data = res.data;
+
+      if (reset) setTagSuggestions(data.content);
+      else setTagSuggestions(prev => [...prev, ...data.content]);
+
+      setTagSuggestionsPage(data.number + 1);
+      setTagSuggestionsLast(data.last);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setTagSuggestionsLoading(false);
+    }
+  }
+
+  // posts by selected tag
+  async function fetchTagPosts(reset = false) {
+    if (!selectedTag || tagPostLoading) return;
+    const pageNum = reset ? 0 : tagPostPage;
+    if (!reset && tagPostLast) return;
+    setTagPostLoading(true);
+    try {
+      const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/search/posts/tag?tag=${encodeURIComponent(selectedTag)}&page=${pageNum}&size=${pageSize}`;
+      const res = await fetchWithAuth(endpoint);
+      const data = res.data;
+      if (reset) setTagPosts(data.content);
+      else {
+        const existingIds = new Set(tagPosts.map((p: DisplayPostType) => p.postId));
+        const uniquePosts = data.content.filter((p: DisplayPostType) => !existingIds.has(p.postId));
+        setTagPosts(prev => [...prev, ...uniquePosts]);
+      }
+      setTagPostPage(data.number + 1);
+      setTagPostLast(data.last);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setTagPostLoading(false);
+    }
+  }
+
+  // people search
   async function fetchSearchUsers(reset = false) {
     if (!searchQuery.trim() || searchUserLoading) return;
     const pageNum = reset ? 0 : searchUserPage;
@@ -119,16 +185,11 @@ export default function Explore() {
       const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/search/users?query=${encodeURIComponent(searchQuery)}&page=${pageNum}&size=${pageSize}`;
       const res = await fetchWithAuth(endpoint);
       const data = res.data;
-      if (reset) {
-        setSearchUsers(data.content);
-      } else {
-        setSearchUsers(prev => {
-          const existingIds = new Set(prev.map(user => user.userId));
-          const uniqueUsers = data.content.filter(
-            (user: UserSearchResult) => !existingIds.has(user.userId)
-          );
-          return [...prev, ...uniqueUsers];
-        });
+      if (reset) setSearchUsers(data.content);
+      else {
+        const existingIds = new Set(searchUsers.map(user => user.userId));
+        const uniqueUsers = data.content.filter((user: UserSearchResult) => !existingIds.has(user.userId));
+        setSearchUsers(prev => [...prev, ...uniqueUsers]);
       }
       setSearchUserPage(data.number + 1);
       setSearchUserLast(data.last);
@@ -139,28 +200,105 @@ export default function Explore() {
     }
   }
 
-  // initial load
-  useEffect(() => {
-    if (
-      activeTab === 'posts' &&
-      postData.length === 0 &&
-      !searchQuery &&
-      !hasInitialFetched.current
-    ) {
-      hasInitialFetched.current = true;
-      fetchPosts();
-    }
-  }, [activeTab]);
+  // handle tag selection from suggestions
+  const handleTagSelect = (tag: string) => {
+    const cleanTag = tag.startsWith('#') ? tag : `#${tag}`;
+    setSelectedTag(cleanTag);
+    setSearchPosts([]); // clear any previous results
+    setTagPosts([]); // clear previous tag posts
+    setTagPostPage(0);
+    setTagPostLast(false);
+    fetchTagPosts(true); // load first page of posts for this tag
+  };
 
-  // infinite scroll
+  // clear everything when search is cleared
+  const clearSearch = () => {
+    setSearchQuery('');
+    setSelectedTag(null);
+    setSearchPosts([]);
+    setTagPosts([]);
+    setTagSuggestions([]);
+    setSearchUsers([]);
+    setSearchUserPage(0);
+    setSearchUserLast(false);
+    setHasSearchedUsers(false);
+    setTagSuggestionsPage(0);
+    setTagSuggestionsLast(false);
+    setTagPostPage(0);
+    setTagPostLast(false);
+  };
+
+  // main search handler
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) return;
+
+    // reset selected tag if user is doing a new search
+    setSelectedTag(null);
+
+    if (activeTab === 'posts') {
+      if (isTagSearch) {
+        setTagSuggestions([]);
+        setTagSuggestionsPage(0);
+        setTagSuggestionsLast(false);
+        fetchTagSuggestions(true);
+      } else {
+        setSearchPosts([]);
+        setSearchPostPage(0);
+        setSearchPostLast(false);
+        fetchSearchPosts(true);
+      }
+    } else {
+      setHasSearchedUsers(true);
+      setSearchUsers([]);
+      setSearchUserPage(0);
+      setSearchUserLast(false);
+      fetchSearchUsers(true);
+    }
+  };
+
+  // decide what to show in Posts tab
+  const getPostContent = () => {
+    if (!searchQuery) {
+      return <PostList postDataArray={postData} />;
+    }
+
+    if (selectedTag) {
+      return <PostList postDataArray={tagPosts} />;
+    }
+
+    if (isTagSearch) {
+      return (
+        <TagSuggestions
+          suggestions={tagSuggestions}
+          loading={tagSuggestionsLoading}
+          onTagSelect={handleTagSelect}
+        />
+      );
+    }
+
+    // normal semantic search (or hash in the middle/end)
+    return <PostList postDataArray={searchPosts} />;
+  };
+
+  // infinite scroll logic
   useEffect(() => {
     if (!loaderRef.current) return;
     const observer = new IntersectionObserver(entries => {
       if (!entries[0].isIntersecting) return;
+
       if (activeTab === 'posts') {
-        if (searchQuery) {
-          if (searchPostLoading || searchPostLast) return;
-          fetchSearchPosts();
+        if (selectedTag) {
+          if (tagPostLoading || tagPostLast) return;
+          fetchTagPosts();
+        } else if (searchQuery) {
+          if (isTagSearch) {
+            if (tagSuggestionsLoading || tagSuggestionsLast) return;
+            fetchTagSuggestions();
+          } else {
+            if (searchPostLoading || searchPostLast) return;
+            fetchSearchPosts();
+          }
         } else {
           if (loading || last) return;
           fetchPosts();
@@ -175,59 +313,30 @@ export default function Explore() {
     observer.observe(loaderRef.current);
     return () => observer.disconnect();
   }, [
-    activeTab,
-    searchQuery,
-    loading,
-    searchPostLoading,
-    searchUserLoading,
-    last,
-    searchPostLast,
-    searchUserLast,
-    hasSearchedUsers
+    activeTab, searchQuery, selectedTag,
+    loading, searchPostLoading, tagPostLoading, tagSuggestionsLoading, searchUserLoading,
+    last, searchPostLast, tagPostLast, tagSuggestionsLast, searchUserLast, hasSearchedUsers
   ]);
 
-  // handle search
-  const handleSearch = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
-    if (activeTab === 'posts') {
-      setSearchPosts([]);
-      setSearchPostPage(0);
-      setSearchPostLast(false);
-      fetchSearchPosts(true);
-    } else {
-      setHasSearchedUsers(true);
-      setSearchUsers([]);
-      setSearchUserPage(0);
-      setSearchUserLast(false);
-      fetchSearchUsers(true);
+  // initial explore feed
+  useEffect(() => {
+    if (activeTab === 'posts' && postData.length === 0 && !searchQuery && !hasInitialFetched.current) {
+      hasInitialFetched.current = true;
+      fetchPosts();
     }
-  };
+  }, [activeTab]);
 
-  const clearSearch = () => {
-    setSearchQuery('');
-    setSearchPosts([]);
-    setSearchUsers([]);
-    setSearchUserPage(0);
-    setSearchUserLast(false);
-    setHasSearchedUsers(false);
-  };
-  // people ui states
-  const showPeopleInitial =
-    activeTab === 'people' && !hasSearchedUsers;
-
+  const showPeopleInitial = activeTab === 'people' && !hasSearchedUsers;
   const showPeopleLoading =
     activeTab === 'people' &&
     hasSearchedUsers &&
     searchUserLoading &&
     searchUsers.length === 0;
-
   const showPeopleEmpty =
     activeTab === 'people' &&
     hasSearchedUsers &&
     !searchUserLoading &&
     searchUsers.length === 0;
-
   const showPeopleLoadMore =
     activeTab === 'people' &&
     hasSearchedUsers &&
@@ -242,16 +351,19 @@ export default function Explore() {
           <input
             type="text"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Search posts, tags, or people..."
+            onChange={(e) => {
+              const newQuery = e.target.value;
+              setSearchQuery(newQuery);
+              // if user removes the leading # while in tag mode, exit tag mode
+              if (!newQuery.trim().startsWith('#')) {
+                setSelectedTag(null);
+              }
+            }}
+            placeholder="Search posts, tags (#mechanic), or people..."
             className={styles.searchInput}
           />
           {searchQuery && (
-            <button
-              type="button"
-              onClick={clearSearch}
-              className={styles.clearBtn}
-            >
+            <button type="button" onClick={clearSearch} className={styles.clearBtn}>
               ✕
             </button>
           )}
@@ -261,20 +373,10 @@ export default function Explore() {
         </form>
 
         <div className={styles.tabs}>
-          <button
-            onClick={() => setActiveTab('posts')}
-            className={`${styles.tabBtn} ${
-              activeTab === 'posts' ? styles.activeTab : ''
-            }`}
-          >
+          <button onClick={() => setActiveTab('posts')} className={`${styles.tabBtn} ${activeTab === 'posts' ? styles.activeTab : ''}`}>
             Posts
           </button>
-          <button
-            onClick={() => setActiveTab('people')}
-            className={`${styles.tabBtn} ${
-              activeTab === 'people' ? styles.activeTab : ''
-            }`}
-          >
+          <button onClick={() => setActiveTab('people')} className={`${styles.tabBtn} ${activeTab === 'people' ? styles.activeTab : ''}`}>
             People
           </button>
         </div>
@@ -283,23 +385,13 @@ export default function Explore() {
       {/* main content */}
       <div className={styles.postContentContainer}>
         {activeTab === 'posts' ? (
-          searchQuery ? (
-            <PostList postDataArray={searchPosts} />
-          ) : (
-            <PostList postDataArray={postData} />
-          )
+          getPostContent()
         ) : showPeopleInitial ? (
-          <div className={styles.emptyMessage}>
-            search for people to get started
-          </div>
+          <div className={styles.emptyMessage}>search for people to get started</div>
         ) : showPeopleLoading ? (
-          <div className={styles.loader}>
-            loading...
-          </div>
+          <div className={styles.loader}>loading...</div>
         ) : showPeopleEmpty ? (
-          <div className={styles.emptyMessage}>
-            no people found for "{searchQuery}"
-          </div>
+          <div className={styles.emptyMessage}>no people found for "{searchQuery}"</div>
         ) : (
           <UserSearchResults
             users={searchUsers}
@@ -311,7 +403,13 @@ export default function Explore() {
 
         {/* loader */}
         {!(
-          (activeTab === 'posts' && (searchQuery ? searchPostLast : last)) ||
+          (activeTab === 'posts' && 
+            (selectedTag 
+              ? tagPostLast 
+              : searchQuery 
+                ? (isTagSearch ? tagSuggestionsLast : searchPostLast) 
+                : last)
+          ) ||
           (activeTab === 'people' && !showPeopleLoadMore)
         ) && (
           <div ref={loaderRef} className={styles.loader}>
