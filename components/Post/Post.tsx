@@ -11,6 +11,7 @@ import UserCard from "../UserCard/UserCard";
 import PostModal from "../PostModal/PostModal";
 import { createPortal } from 'react-dom';
 import axios from 'axios';
+import { formatDistanceToNow } from "date-fns";
 
 interface PostProps {
   postData?: DisplayPostType | null;
@@ -25,7 +26,7 @@ export default function Post({ postData = null }: PostProps) {
   const [hasLiked, setHasLiked] = useState(postData?.hasLiked);
   const [hasSaved, setHasSaved] = useState(postData?.hasSaved);
   const [likeCount, setLikeCount] = useState<number>(postData?.likeCount ?? 0);
-  const hasImage = (postData?.imageUrls?.length ?? 0) > 0;  // true if one image or more false otherwise
+  const hasImage = (postData?.imageUrls?.length ?? 0) > 0;
   const [currImageIndex, setCurrImageIndex] = useState(0);
   const [followingAuthor, setFollowingAuthor] = useState(postData?.followingAuthor || false);
 
@@ -108,7 +109,7 @@ export default function Post({ postData = null }: PostProps) {
 
         await axios.post(
           endpoint,
-          {}, // body
+          {},
           { headers: { Authorization: `Bearer ${user.accessToken}` } }
         );
       } else {
@@ -168,7 +169,7 @@ export default function Post({ postData = null }: PostProps) {
 
       <div className={styles.postContainer}>
         {/* header section */}
-        {userCard} {/* pre-rendered component */}
+        {userCard}
         {/* Image Section */}
         {hasImage ? (
           <div className={styles.imageSection}>
@@ -176,6 +177,7 @@ export default function Post({ postData = null }: PostProps) {
               <img
                 className={styles.postImage}
                 src={postData.imageUrls[currImageIndex]}
+                alt="post"
               />
             )}
             {postData.imageUrls.length > 1 && currImageIndex > 0 && (
@@ -190,13 +192,20 @@ export default function Post({ postData = null }: PostProps) {
             )}
           </div>
         ) : null}
-        {/* description section */}
+
+        {/* description section + timestamp */}
         <p className={styles.postDescription}>{postData.description || ""}</p>
+        <p className={styles.postTime}>
+          {formatDistanceToNow(new Date(postData.createdAt), { addSuffix: true })}
+        </p>
+
         {/* like count */}
-        <p onClick={() => setShowWhoLikedModal(true)} className={styles.likeCount}>{likeCount || 0} likes</p>
+        <p onClick={() => setShowWhoLikedModal(true)} className={styles.likeCount}>
+          {likeCount || 0} likes
+        </p>
+
         {/* like comment save icons */}
         <div className={styles.actionIcons}>
-
           {hasLiked ? (
             <FaHeart
               className={styles.likeIconActive}

@@ -120,7 +120,7 @@ export default function PostModal({
         postId: postData?.postId,
         userId: user?.userId,
         content: commentContent,
-        createdAt: null // use server time
+        createdAt: null
       };
       const formData = new FormData();
       formData.append('dto', new Blob([JSON.stringify(dto)], { type: 'application/json' }));
@@ -189,14 +189,17 @@ export default function PostModal({
           </div>
         ) : null}
 
-        {/* COMMENTS SECTION - PROFESSIONAL & MODERN LOOK */}
+        {/* comments section */}
         <div className={styles.commentsSection}>
           {/* header section */}
           {header}
 
-          {/* description section */}
+          {/* description section + timestamp */}
           <div className={styles.postDescriptionWrapper}>
             <p className={styles.postDescription}>{postData.description || ""}</p>
+            <p className={styles.postTime}>
+              {formatDistanceToNow(new Date(postData.createdAt), { addSuffix: true })}
+            </p>
           </div>
 
           {/* comments list */}
