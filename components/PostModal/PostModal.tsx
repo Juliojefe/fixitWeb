@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef } from "react";
 import { FaHeart, FaRegHeart, FaRegComment, FaRegBookmark, FaBookmark, FaChevronLeft, FaChevronRight, FaPaperPlane, FaCamera } from "react-icons/fa";
 import { useUser } from '@/app/providers/UserProvider';
 import { useRouter } from "next/navigation";
@@ -43,8 +43,7 @@ export default function PostModal({
   const { user } = useUser();
 
   // post specific
-  const hasImage = (postData?.imageUrls?.length ?? 0) > 0;  // true if one image or more false otherwise
-  const deletedAuthor = postData?.authorId == null; // true if the user has been deleted
+  const hasImage = (postData?.imageUrls?.length ?? 0) > 0;
 
   // comments section 
   const [loadingComments, setLoadingComments] = useState(true);
@@ -72,9 +71,10 @@ export default function PostModal({
   }
 
   async function onGoToCommentorProfile(authorId: number) {
-    //  TODO
-    console.log("go to profile with id " + authorId);
-    return;
+    if (authorId === null) {
+      return; // deleted author do nothing
+    }
+    router.push(`/profile/${authorId}`);
   }
 
   async function fetchComments() {
@@ -120,7 +120,7 @@ export default function PostModal({
         postId: postData?.postId,
         userId: user?.userId,
         content: commentContent,
-        createdAt: null // use server time
+        createdAt: null
       };
       const formData = new FormData();
       formData.append('dto', new Blob([JSON.stringify(dto)], { type: 'application/json' }));
@@ -173,6 +173,7 @@ export default function PostModal({
               <img
                 className={styles.postImage}
                 src={postData.imageUrls[currImageIndex]}
+                alt="post"
               />
             )}
             {postData.imageUrls.length > 1 && currImageIndex > 0 && (
@@ -187,16 +188,24 @@ export default function PostModal({
             )}
           </div>
         ) : null}
+
+        {/* comments section */}
         <div className={styles.commentsSection}>
           {/* header section */}
-          {header}  {/* pre-rendered component inherited from Post parent component */}
-          {/* description section */}
-          <p className={styles.postDescription}>{postData.description || ""}</p>
+          {header}
+
+          {/* description section + timestamp */}
+          <div className={styles.postDescriptionWrapper}>
+            <p className={styles.postDescription}>{postData.description || ""}</p>
+            <p className={styles.postTime}>
+              {formatDistanceToNow(new Date(postData.createdAt), { addSuffix: true })}
+            </p>
+          </div>
 
           {/* comments list */}
           <div className={styles.commentsList}>
             {comments.length === 0 && !loadingComments ? (
-              <p className={styles.noComments}>No comments yet</p>
+              <p className={styles.noComments}>No comments yet. Be the first!</p>
             ) : (
               comments.map((comment) => (
                 <div key={comment.commentId} className={styles.commentItem}>
@@ -207,10 +216,16 @@ export default function PostModal({
                     onClick={() => onGoToCommentorProfile(comment.authorId)}
                   />
                   <div className={styles.commentContent}>
-                    <p className={styles.commentAuthor} onClick={() => onGoToCommentorProfile(comment.authorId)}>
-                      {comment.createdBy}
-                    </p>
+                    <div className={styles.commentHeader}>
+                      <p className={styles.commentAuthor} onClick={() => onGoToCommentorProfile(comment.authorId)}>
+                        {comment.createdBy}
+                      </p>
+                      <p className={styles.commentTime}>
+                        {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
+                      </p>
+                    </div>
                     <p className={styles.commentText}>{comment.content}</p>
+
                     {comment.imageUrls.length > 0 && (
                       <div className={styles.commentImages}>
                         {comment.imageUrls.map((url, idx) => (
@@ -224,19 +239,20 @@ export default function PostModal({
                         ))}
                       </div>
                     )}
-                    <p className={styles.commentTime}>
-                      {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
-                    </p>
                   </div>
                 </div>
               ))
             )}
+
             {loadingComments && (
-              <div className={comments.length === 0 ? styles.spinnerCenter : styles.spinnerBottom}>Loading...</div>
+              <div className={comments.length === 0 ? styles.spinnerCenter : styles.spinnerBottom}>
+                Loading comments...
+              </div>
             )}
+
             {!last && !loadingComments && (
-              <button className={styles.loadMore} onClick={handleLoadMore}>
-                +
+              <button className={styles.loadMoreBtn} onClick={handleLoadMore}>
+                Load more comments
               </button>
             )}
           </div>
@@ -250,13 +266,14 @@ export default function PostModal({
                 ) : (
                   <FaRegHeart className={styles.icon} onClick={onLike} />
                 )}
-                <FaRegComment className={styles.icon} /> {/* perhaps focus input */}
+                <FaRegComment className={styles.icon} />
                 {hasSaved ? (
                   <FaBookmark className={styles.icon} onClick={onSave} />
                 ) : (
                   <FaRegBookmark className={styles.icon} onClick={onSave} />
                 )}
               </div>
+
               <div className={styles.addComment}>
                 <div className={styles.inputRow}>
                   <label className={styles.uploadIcon}>
@@ -274,15 +291,17 @@ export default function PostModal({
                     onChange={(e) => setCommentContent(e.target.value)}
                     placeholder="Add a comment..."
                     className={styles.commentInput}
+                    rows={1}
                   />
-                  <button 
-                    onClick={handlePostComment} 
-                    disabled={postingComment || !commentContent.trim()} 
+                  <button
+                    onClick={handlePostComment}
+                    disabled={postingComment || !commentContent.trim()}
                     className={styles.postButton}
                   >
                     <FaPaperPlane />
                   </button>
                 </div>
+
                 {selectedImages.length > 0 && (
                   <div className={styles.previewImages}>
                     {selectedImages.map((file, idx) => (
@@ -307,5 +326,5 @@ export default function PostModal({
         </div>
       </div>
     </div>
-  )
+  );
 }
