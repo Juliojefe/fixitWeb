@@ -141,3 +141,16 @@
   color: #666;
   margin: 80px 0;
 }
+
+.searchInput::placeholder {
+  color: #888;
+}
+
+.searchInput:focus {
+  outline: none;
+}
+
+.searchQueryTag {
+  color: #526fae;
+  font-weight: 700;
+}
