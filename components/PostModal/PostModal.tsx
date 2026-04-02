@@ -72,9 +72,10 @@ export default function PostModal({
   }
 
   async function onGoToCommentorProfile(authorId: number) {
-    //  TODO
-    console.log("go to profile with id " + authorId);
-    return;
+    if (authorId === null) {
+      return; // deleted author do nothing
+    }
+    router.push(`/profile/${authorId}`);
   }
 
   async function fetchComments() {
