@@ -5,7 +5,7 @@ import styles from "./navbar.module.css";
 import CreatePostModal from '../CreatePostModal/CreatePostModal';
 import MustLoginModal from "../MustLoginModal/MustLoginModal";
 import { useRouter, usePathname } from 'next/navigation';
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useUser } from '@/app/providers/UserProvider';
 import { createPortal } from 'react-dom';
 
@@ -22,7 +22,7 @@ export default function Navbar() {
       setIsMustLoginModalOpen(true);
       return;
     } else {
-      router.push("myProfile");
+      router.push("/myProfile");
     }
   }
 

@@ -3,12 +3,30 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
+import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
+import 'leaflet/dist/leaflet.css';
+import L from 'leaflet';
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
+import markerIcon from 'leaflet/dist/images/marker-icon.png';
+import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
 import styles from './myProfile.module.css';
 import { useUser } from '../../providers/UserProvider';
 
 import CreatePostModal from '@/components/CreatePostModal/CreatePostModal';
 import PostList from '@/components/PostList/PostList';
+
+L.Icon.Default.mergeOptions({
+    iconRetinaUrl:
+        (markerIcon2x as unknown as { src: string }).src ??
+        (markerIcon2x as unknown as string),
+    iconUrl:
+        (markerIcon as unknown as { src: string }).src ??
+        (markerIcon as unknown as string),
+    shadowUrl:
+        (markerShadow as unknown as { src: string }).src ??
+        (markerShadow as unknown as string),
+});
 
 type TabKey = 'posts' | 'liked' | 'saved';
 
@@ -32,6 +50,9 @@ type ProfilePublic = {
     mechanic?: boolean;
 
     biography?: string;
+    businessAddress?: string;
+    businessLat?: number;
+    businessLon?: number;
 };
 
 type ProfilePrivate = ProfilePublic & {
@@ -43,6 +64,19 @@ type UserNameAndPfp = {
     userId: number;
     name: string;
     profilePic: string;
+};
+
+type LocationIQPlace = {
+    place_id?: string | number;
+    display_name?: string;
+    lat?: string;
+    lon?: string;
+};
+
+type SavedBusinessLocation = {
+    address: string;
+    lat: number;
+    lon: number;
 };
 
 type DisplayPost = {
@@ -64,6 +98,24 @@ type DisplayPost = {
 function safeNumberArray(v: unknown): number[] {
     if (!Array.isArray(v)) return [];
     return v.map((x) => Number(x)).filter((n) => Number.isFinite(n)) as number[];
+}
+
+function toNumber(v: unknown): number | null {
+    if (typeof v !== 'string' && typeof v !== 'number') return null;
+    const n = Number(v);
+    return Number.isFinite(n) ? n : null;
+}
+
+function normalizeBusinessLocation(source: ProfilePrivate | ProfilePublic | null): SavedBusinessLocation | null {
+    const address = (source as any)?.businessAddress?.trim?.() ?? '';
+    const lat = toNumber((source as any)?.businessLat);
+    const lon = toNumber((source as any)?.businessLon);
+
+    if (!address || lat == null || lon == null) {
+        return null;
+    }
+
+    return { address, lat, lon };
 }
 
 export default function MyProfilePage() {
@@ -117,6 +169,24 @@ export default function MyProfilePage() {
     const [photoSaving, setPhotoSaving] = useState(false);
     const [photoError, setPhotoError] = useState<string | null>(null);
     const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null);
+    const [showEditAddress, setShowEditAddress] = useState(false);
+
+    // Business map card
+    const [businessAddressInput, setBusinessAddressInput] = useState('');
+    const [businessLocation, setBusinessLocation] = useState<SavedBusinessLocation | null>(null);
+    const [businessSuggestions, setBusinessSuggestions] = useState<LocationIQPlace[]>([]);
+    const [businessSuggestionsOpen, setBusinessSuggestionsOpen] = useState(false);
+    const [businessMapLoading, setBusinessMapLoading] = useState(false);
+    const [businessLocationSaving, setBusinessLocationSaving] = useState(false);
+    const [businessMapError, setBusinessMapError] = useState<string | null>(null);
+    const [businessDraftLocation, setBusinessDraftLocation] = useState<SavedBusinessLocation | null>(null);
+    const [businessMapCenter, setBusinessMapCenter] = useState<[number, number]>([36.6777, -121.6555]);
+    const [businessMarker, setBusinessMarker] = useState<{ lat: number; lon: number; label: string } | null>(null);
+    const businessSearchAbortRef = useRef<AbortController | null>(null);
+    const businessAutocompleteAbortRef = useRef<AbortController | null>(null);
+    const businessAutocompleteDebounceRef = useRef<number | null>(null);
+    const businessSearchBlockRef = useRef<HTMLDivElement | null>(null);
+    const businessMapRef = useRef<any>(null);
 
     // Small caches so we don't refetch the same things repeatedly
     const postCacheRef = useRef<Map<number, DisplayPost>>(new Map());
@@ -138,6 +208,7 @@ export default function MyProfilePage() {
 
     const isAdmin = Boolean((profile as any)?.isAdmin ?? (profile as any)?.admin ?? user?.isAdmin ?? false);
     const isMechanic = Boolean((profile as any)?.isMechanic ?? (profile as any)?.mechanic ?? user?.isMechanic ?? false);
+    const canManageBusinessLocation = isAdmin || isMechanic;
 
     const followerIds = useMemo(() => safeNumberArray((profile as any)?.followerIds), [profile]);
     const followingIds = useMemo(() => safeNumberArray((profile as any)?.followingIds), [profile]);
@@ -304,6 +375,178 @@ export default function MyProfilePage() {
         }
     }
 
+    function syncBusinessLocationState(nextLocation: SavedBusinessLocation | null) {
+        setBusinessLocation(nextLocation);
+
+        if (!nextLocation) {
+            setBusinessMapCenter([36.6777, -121.6555]);
+            setBusinessMarker(null);
+            return;
+        }
+
+        setBusinessMapCenter([nextLocation.lat, nextLocation.lon]);
+        setBusinessMarker({ lat: nextLocation.lat, lon: nextLocation.lon, label: nextLocation.address });
+    }
+
+    function selectBusinessPlace(place: LocationIQPlace) {
+        const lat = toNumber(place.lat);
+        const lon = toNumber(place.lon);
+        const address = place.display_name?.trim() ?? '';
+
+        if (lat == null || lon == null || !address) {
+            setBusinessMapError('That result is missing map coordinates.');
+            return;
+        }
+
+        const nextLocation: SavedBusinessLocation = { address, lat, lon };
+        setBusinessDraftLocation(nextLocation);
+        setBusinessAddressInput(address);
+        setBusinessSuggestions([]);
+        setBusinessSuggestionsOpen(false);
+        setBusinessMapError(null);
+    }
+
+    async function fetchBusinessAutocomplete(q: string) {
+        if (!API_BASE || q.trim().length < 2) return;
+
+        businessAutocompleteAbortRef.current?.abort();
+        const controller = new AbortController();
+        businessAutocompleteAbortRef.current = controller;
+
+        try {
+            const res = await fetch(`${API_BASE}/api/geocode/autocomplete?q=${encodeURIComponent(q)}&limit=5`, {
+                signal: controller.signal,
+                credentials: 'include',
+            });
+
+            if (!res.ok) {
+                throw new Error(`Autocomplete failed with ${res.status}`);
+            }
+
+            const data = (await res.json()) as LocationIQPlace[];
+            const nextSuggestions = Array.isArray(data) ? data : [];
+            setBusinessSuggestions(nextSuggestions);
+            setBusinessSuggestionsOpen(nextSuggestions.length > 0);
+        } catch (err: any) {
+            if (err?.name === 'AbortError') return;
+            console.error(err);
+            setBusinessSuggestions([]);
+            setBusinessSuggestionsOpen(false);
+        }
+    }
+
+    async function searchBusinessLocation(q: string) {
+        if (!API_BASE) {
+            setBusinessMapError('Map search is not configured.');
+            return;
+        }
+
+        setBusinessMapLoading(true);
+        setBusinessMapError(null);
+        businessSearchAbortRef.current?.abort();
+        const controller = new AbortController();
+        businessSearchAbortRef.current = controller;
+
+        try {
+            const res = await fetch(`${API_BASE}/api/geocode/search?q=${encodeURIComponent(q)}&limit=1`, {
+                signal: controller.signal,
+                credentials: 'include',
+            });
+
+            if (!res.ok) {
+                const text = await res.text().catch(() => '');
+                throw new Error(`Search failed: ${res.status} ${text}`);
+            }
+
+            const data = (await res.json()) as LocationIQPlace[];
+            const first = Array.isArray(data) ? data[0] : null;
+
+            if (!first) {
+                setBusinessMapError('No matching address was found.');
+                return;
+            }
+
+            selectBusinessPlace(first);
+        } catch (err: any) {
+            if (err?.name === 'AbortError') return;
+            console.error(err);
+            setBusinessMapError('Unable to load that address right now.');
+        } finally {
+            setBusinessMapLoading(false);
+        }
+    }
+
+    async function saveBusinessLocation() {
+        if (!user?.accessToken) return;
+
+        setBusinessLocationSaving(true);
+        setBusinessMapError(null);
+
+        const payload = businessDraftLocation
+            ? {
+                address: businessDraftLocation.address,
+                lat: businessDraftLocation.lat,
+                lon: businessDraftLocation.lon,
+            }
+            : {
+                address: null,
+                lat: null,
+                lon: null,
+            };
+
+        try {
+            await axios.patch(`${API_BASE}/api/user/business-location`, payload, {
+                headers: authHeaders ?? {},
+            });
+
+            syncBusinessLocationState(businessDraftLocation);
+            setProfile((prev: any) => prev ? ({
+                ...prev,
+                businessAddress: businessDraftLocation?.address ?? null,
+                businessLat: businessDraftLocation?.lat ?? null,
+                businessLon: businessDraftLocation?.lon ?? null,
+            }) : prev);
+            setShowEditAddress(false);
+            setBusinessSuggestionsOpen(false);
+        } catch (err: any) {
+            console.error(err);
+            setBusinessMapError(
+                err?.response?.status
+                    ? `Failed to save address (${err.response.status})`
+                    : 'Failed to save address.'
+            );
+        } finally {
+            setBusinessLocationSaving(false);
+        }
+    }
+
+    function clearBusinessLocationDraft() {
+        setBusinessDraftLocation(null);
+        setBusinessAddressInput('');
+        setBusinessSuggestions([]);
+        setBusinessSuggestionsOpen(false);
+        setBusinessMapError(null);
+    }
+
+    function openBusinessLocationInGoogleMaps() {
+        if (!businessLocation) return;
+
+        const destination = `${businessLocation.lat},${businessLocation.lon}`;
+        const url = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}&travelmode=driving`;
+        window.open(url, '_blank', 'noopener,noreferrer');
+    }
+
+    function goToUserProfile(targetUserId: number) {
+        if (!Number.isFinite(targetUserId)) return;
+
+        if (user?.userId === targetUserId) {
+            router.push('/myProfile');
+            return;
+        }
+
+        router.push(`/profile/${targetUserId}`);
+    }
+
     // Saves bio to backend and updates local state
     async function saveBio() {
         if (!userId) return;
@@ -321,7 +564,7 @@ export default function MyProfilePage() {
             }
 
             setShowEditBio(false);
-            fetchProfile(userId);
+            void fetchProfile(userId);
         } catch (err: any) {
             console.error(err);
             setBioError(err?.response?.status ? `Failed (${err.response.status})` : 'Failed to update bio.');
@@ -389,19 +632,23 @@ export default function MyProfilePage() {
     // Load profile when the user is available
     useEffect(() => {
         if (!userId) return;
-        fetchProfile(userId);
+        void fetchProfile(userId);
     }, [userId]);
+
+    useEffect(() => {
+        syncBusinessLocationState(normalizeBusinessLocation(profile));
+    }, [profile]);
 
     // Load follower/following mini lists
     useEffect(() => {
         if (!profile) return;
-        loadMiniLists(followersExpanded, followingExpanded);
+        void loadMiniLists(followersExpanded, followingExpanded);
     }, [profile, followersExpanded, followingExpanded]);
 
     // Load posts when tab changes
     useEffect(() => {
         if (!profile) return;
-        loadPostsForTab(activeTab);
+        void loadPostsForTab(activeTab);
     }, [activeTab, profile]);
 
     // Fill the bio draft when opening the modal
@@ -423,6 +670,54 @@ export default function MyProfilePage() {
             }
         }
     }, [showEditPhoto]);
+
+    useEffect(() => {
+        if (showEditAddress) {
+            setBusinessAddressInput(businessLocation?.address ?? '');
+            setBusinessDraftLocation(businessLocation);
+            setBusinessMapError(null);
+            setBusinessSuggestions([]);
+            setBusinessSuggestionsOpen(false);
+        }
+    }, [showEditAddress, businessLocation]);
+
+    useEffect(() => {
+        const q = businessAddressInput.trim();
+
+        if (!showEditAddress || !canManageBusinessLocation || q.length < 2) {
+            businessAutocompleteAbortRef.current?.abort();
+            setBusinessSuggestions([]);
+            setBusinessSuggestionsOpen(false);
+            return;
+        }
+
+        if (businessAutocompleteDebounceRef.current) {
+            window.clearTimeout(businessAutocompleteDebounceRef.current);
+        }
+
+        businessAutocompleteDebounceRef.current = window.setTimeout(() => {
+            void fetchBusinessAutocomplete(q);
+        }, 250);
+
+        return () => {
+            if (businessAutocompleteDebounceRef.current) {
+                window.clearTimeout(businessAutocompleteDebounceRef.current);
+            }
+        };
+    }, [businessAddressInput, canManageBusinessLocation, showEditAddress]);
+
+    useEffect(() => {
+        function onDocumentMouseDown(e: MouseEvent) {
+            const block = businessSearchBlockRef.current;
+            if (!block) return;
+            if (e.target instanceof Node && !block.contains(e.target)) {
+                setBusinessSuggestionsOpen(false);
+            }
+        }
+
+        document.addEventListener('mousedown', onDocumentMouseDown);
+        return () => document.removeEventListener('mousedown', onDocumentMouseDown);
+    }, []);
 
     const currentPosts = activeTab === 'posts' ? ownedPosts : activeTab === 'liked' ? likedPosts : savedPosts;
 
@@ -537,6 +832,122 @@ export default function MyProfilePage() {
                             </div>
 
                             <div className={`${styles.feedCard} ${styles.sectionOutline}`}>
+                                {false && canManageBusinessLocation && (
+                                    <section className={styles.businessMapSection}>
+                                        <div className={styles.businessMapHeader}>
+                                            <div>
+                                                <h3 className={styles.h3}>Business location</h3>
+                                                <p className={styles.muted}>
+                                                    Add your shop address to preview it on the map here.
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div ref={businessSearchBlockRef} className={styles.businessSearchBlock}>
+                                            <form
+                                                className={styles.businessSearchRow}
+                                                onSubmit={(e) => {
+                                                    e.preventDefault();
+                                                    const q = businessAddressInput.trim();
+                                                    if (!q) return;
+                                                    setBusinessSuggestionsOpen(false);
+                                                    void searchBusinessLocation(q);
+                                                }}
+                                            >
+                                                <input
+                                                    className={styles.input}
+                                                    type="text"
+                                                    value={businessAddressInput}
+                                                    onChange={(e) => {
+                                                        setBusinessAddressInput(e.target.value);
+                                                        setBusinessMapError(null);
+                                                    }}
+                                                    onFocus={() => {
+                                                        if (businessSuggestions.length > 0) {
+                                                            setBusinessSuggestionsOpen(true);
+                                                        }
+                                                    }}
+                                                    placeholder="Enter the business address"
+                                                    aria-label="Business address"
+                                                    autoComplete="off"
+                                                />
+                                                <button
+                                                    className={styles.primaryBtn}
+                                                    type="submit"
+                                                    disabled={!businessAddressInput.trim() || businessMapLoading}
+                                                >
+                                                    {businessMapLoading ? 'Searching...' : 'Show map'}
+                                                </button>
+                                                {(businessDraftLocation || businessLocation) && (
+                                                    <button className={styles.secondaryBtn} type="button" onClick={clearBusinessLocationDraft}>
+                                                        Clear
+                                                    </button>
+                                                )}
+                                            </form>
+
+                                            {businessSuggestionsOpen && businessSuggestions.length > 0 && (
+                                                <div className={styles.businessSuggestions} role="listbox">
+                                                    {businessSuggestions.map((suggestion, idx) => (
+                                                        <button
+                                                            key={`${suggestion.place_id ?? 'na'}-${suggestion.lat ?? 'na'}-${suggestion.lon ?? 'na'}-${idx}`}
+                                                            className={styles.businessSuggestionItem}
+                                                            type="button"
+                                                            onClick={() => selectBusinessPlace(suggestion)}
+                                                        >
+                                                            {suggestion.display_name}
+                                                        </button>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {businessMapError && <p className={styles.error}>{businessMapError}</p>}
+
+                                        {businessLocation ? (
+                                            <div className={styles.businessMapCard}>
+                                                <div className={styles.businessMapMeta}>
+                                                    <span className={styles.businessMapLabel}>Current address</span>
+                                                    <p className={styles.businessMapAddress}>{businessLocation?.address ?? ''}</p>
+                                                </div>
+                                                <div className={styles.businessMapWrapper}>
+                                                    <MapContainer
+                                                        center={businessMapCenter}
+                                                        zoom={16}
+                                                        scrollWheelZoom={false}
+                                                        dragging={false}
+                                                        doubleClickZoom={false}
+                                                        touchZoom={false}
+                                                        boxZoom={false}
+                                                        keyboard={false}
+                                                        zoomControl={false}
+                                                        attributionControl={false}
+                                                        className={styles.businessMap}
+                                                        ref={businessMapRef}
+                                                    >
+                                                        <TileLayer
+                                                            attribution="&copy; OpenStreetMap contributors"
+                                                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                                        />
+
+                                                        {businessMarker && (
+                                                            <Marker position={[businessMarker!.lat, businessMarker!.lon]}>
+                                                                <Popup>{businessMarker!.label}</Popup>
+                                                            </Marker>
+                                                        )}
+                                                    </MapContainer>
+                                                </div>
+                                            </div>
+                                        ) : (
+                                            <div className={styles.businessMapEmpty}>
+                                                <p className={styles.emptyTitle}>No business address yet</p>
+                                                <p className={styles.muted}>
+                                                    Search for the address above and we&apos;ll pin it here on the interactive map.
+                                                </p>
+                                            </div>
+                                        )}
+                                    </section>
+                                )}
+
                                 {tabLoading && <p className={styles.muted}>Loading {activeTab}…</p>}
                                 {tabError && <p className={styles.error}>{tabError}</p>}
 
@@ -556,6 +967,89 @@ export default function MyProfilePage() {
                         </section>
 
                         <aside className={styles.sideCol}>
+                            {canManageBusinessLocation && (
+                                <div className={`${styles.sideCard} ${styles.sectionOutline} ${styles.businessLocationCard}`}>
+                                    <section className={styles.businessMapSection}>
+                                        <div className={styles.businessMapCard}>
+                                            {businessLocation ? (
+                                                <>
+                                                    <span className={styles.businessMapLabel}>Business Location</span>
+                                                    <p className={styles.businessMapAddress}>{businessLocation.address}</p>
+                                                    <div
+                                                        className={styles.businessMapWrapper}
+                                                        onClick={openBusinessLocationInGoogleMaps}
+                                                        onKeyDown={(e) => {
+                                                            if (e.key === 'Enter' || e.key === ' ') {
+                                                                e.preventDefault();
+                                                                openBusinessLocationInGoogleMaps();
+                                                            }
+                                                        }}
+                                                        role="link"
+                                                        tabIndex={0}
+                                                        aria-label="Open this address in Google Maps"
+                                                    >
+                                                        <MapContainer
+                                                            center={businessMapCenter}
+                                                            zoom={16}
+                                                            scrollWheelZoom={false}
+                                                            dragging={false}
+                                                            doubleClickZoom={false}
+                                                            touchZoom={false}
+                                                            boxZoom={false}
+                                                            keyboard={false}
+                                                            zoomControl={false}
+                                                            attributionControl={false}
+                                                            className={styles.businessMap}
+                                                            ref={businessMapRef}
+                                                        >
+                                                            <TileLayer
+                                                                attribution="&copy; OpenStreetMap contributors"
+                                                                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                                                            />
+
+                                                            {businessMarker && (
+                                                                <Marker position={[businessMarker.lat, businessMarker.lon]}>
+                                                                    <Popup>{businessMarker.label}</Popup>
+                                                                </Marker>
+                                                            )}
+                                                        </MapContainer>
+
+                                                        <div className={styles.mapNavigateBadge}>
+                                                            Get Directions
+                                                        </div>
+
+                                                        <button
+                                                            className={styles.mapSettingsButton}
+                                                            type="button"
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
+                                                                setShowEditAddress(true);
+                                                            }}
+                                                            aria-label="Edit address"
+                                                        >
+                                                            ⚙️
+                                                        </button>
+                                                    </div>
+                                                </>
+                                            ) : (
+                                                <div className={styles.businessMapEmpty}>
+                                                    <span className={styles.businessMapLabel}>Add your business location</span>
+                                                    <p className={styles.businessMapAddress}>
+                                                        Help people find your shop faster by adding the address you want shown on your profile.
+                                                    </p>
+                                                    <p className={styles.businessMapHint}>
+                                                        Your pinned location will appear here once you save it.
+                                                    </p>
+                                                    <button className={styles.emptyAddressButton} type="button" onClick={() => setShowEditAddress(true)}>
+                                                        Add business address
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </section>
+                                </div>
+                            )}
+
                             <div className={`${styles.sideCard} ${styles.sectionOutline}`}>
                                 <div className={styles.sideHeader}>
                                     <h3 className={styles.h3}>Followers</h3>
@@ -567,7 +1061,12 @@ export default function MyProfilePage() {
 
                                 <div className={styles.userList}>
                                     {followers.map((u) => (
-                                        <div key={u.userId} className={styles.userRow}>
+                                        <button
+                                            key={u.userId}
+                                            className={`${styles.userRow} ${styles.userRowButton}`}
+                                            type="button"
+                                            onClick={() => goToUserProfile(u.userId)}
+                                        >
                                             <img
                                                 className={styles.userAvatar}
                                                 src={u.profilePic || '/images/deletedUserPfp.png'}
@@ -577,7 +1076,7 @@ export default function MyProfilePage() {
                                                 }}
                                             />
                                             <span className={styles.userName}>{u.name}</span>
-                                        </div>
+                                        </button>
                                     ))}
                                 </div>
 
@@ -599,7 +1098,12 @@ export default function MyProfilePage() {
 
                                 <div className={styles.userList}>
                                     {following.map((u) => (
-                                        <div key={u.userId} className={styles.userRow}>
+                                        <button
+                                            key={u.userId}
+                                            className={`${styles.userRow} ${styles.userRowButton}`}
+                                            type="button"
+                                            onClick={() => goToUserProfile(u.userId)}
+                                        >
                                             <img
                                                 className={styles.userAvatar}
                                                 src={u.profilePic || '/images/deletedUserPfp.png'}
@@ -609,7 +1113,7 @@ export default function MyProfilePage() {
                                                 }}
                                             />
                                             <span className={styles.userName}>{u.name}</span>
-                                        </div>
+                                        </button>
                                     ))}
                                 </div>
 
@@ -629,7 +1133,7 @@ export default function MyProfilePage() {
                 <CreatePostModal
                     onClose={() => {
                         setShowCreateModal(false);
-                        if (userId) fetchProfile(userId);
+                        if (userId) void fetchProfile(userId);
                     }}
                 />
             )}
@@ -654,6 +1158,103 @@ export default function MyProfilePage() {
                             <button className={styles.primaryBtn} onClick={saveBio} disabled={bioSaving}>
                                 {bioSaving ? 'Saving…' : 'Save'}
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {showEditAddress && (
+                <div
+                    className={styles.modalOverlay}
+                    onMouseDown={() => {
+                        setShowEditAddress(false);
+                        setBusinessSuggestionsOpen(false);
+                    }}
+                >
+                    <div className={styles.modalCard} onMouseDown={(e) => e.stopPropagation()}>
+                        <div className={styles.modalTitle}>Edit address</div>
+                        <p className={styles.muted}>Search for a shop address, then select a result and save it to your profile.</p>
+
+                        <div ref={businessSearchBlockRef} className={styles.businessSearchBlock}>
+                            <form
+                                className={styles.businessSearchRow}
+                                onSubmit={(e) => {
+                                    e.preventDefault();
+                                    const q = businessAddressInput.trim();
+                                    if (!q) return;
+                                    setBusinessSuggestionsOpen(false);
+                                    void searchBusinessLocation(q);
+                                }}
+                            >
+                                <input
+                                    className={styles.input}
+                                    type="text"
+                                    value={businessAddressInput}
+                                    onChange={(e) => {
+                                        setBusinessAddressInput(e.target.value);
+                                        setBusinessMapError(null);
+                                    }}
+                                    onFocus={() => {
+                                        if (businessSuggestions.length > 0) {
+                                            setBusinessSuggestionsOpen(true);
+                                        }
+                                    }}
+                                    placeholder="Enter the business address"
+                                    aria-label="Business address"
+                                    autoComplete="off"
+                                />
+                            </form>
+
+                            {businessSuggestionsOpen && businessSuggestions.length > 0 && (
+                                <div className={styles.businessSuggestions} role="listbox">
+                                    {businessSuggestions.map((suggestion, idx) => (
+                                        <button
+                                            key={`${suggestion.place_id ?? 'na'}-${suggestion.lat ?? 'na'}-${suggestion.lon ?? 'na'}-${idx}`}
+                                            className={styles.businessSuggestionItem}
+                                            type="button"
+                                            onClick={() => selectBusinessPlace(suggestion)}
+                                        >
+                                            {suggestion.display_name}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+
+                        {businessMapError && <div className={styles.error}>{businessMapError}</div>}
+
+                        <div className={styles.modalActionsSplit}>
+                            <div className={styles.modalActionsLeft}>
+                                <button
+                                    className={styles.primaryBtn}
+                                    type="button"
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        const q = businessAddressInput.trim();
+                                        if (!q) return;
+                                        setBusinessSuggestionsOpen(false);
+                                        void searchBusinessLocation(q);
+                                    }}
+                                    disabled={!businessAddressInput.trim() || businessMapLoading}
+                                >
+                                    {businessMapLoading ? 'Searching...' : 'Search'}
+                                </button>
+                            </div>
+                            <div className={styles.modalActionsRight}>
+                                {(businessDraftLocation || businessLocation) && (
+                                    <button className={styles.secondaryBtn} type="button" onClick={clearBusinessLocationDraft} disabled={businessLocationSaving}>
+                                        Clear
+                                    </button>
+                                )}
+                                <button
+                                    className={styles.primaryBtn}
+                                    type="button"
+                                    onClick={() => void saveBusinessLocation()}
+                                    disabled={businessMapLoading || businessLocationSaving}
+                                >
+                                    {businessLocationSaving ? 'Saving...' : 'Save'}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>

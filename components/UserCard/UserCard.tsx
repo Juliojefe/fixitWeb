@@ -46,11 +46,11 @@ export default function UserCard({
     if (deletedAuthor) {
       return;
     }
-    if (user?.userId == authorId) {
+    if (user?.userId === authorId) {
       router.push("/myProfile");
-    } else {
-      router.push(`/profile/${authorId}`);
+      return;
     }
+    router.push(`/profile/${authorId}`);
   }
 
   async function handleFollowToggle() {
