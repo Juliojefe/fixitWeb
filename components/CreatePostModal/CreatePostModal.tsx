@@ -1,8 +1,9 @@
+'use client'
+
 import React, { useEffect, useState } from "react";
 import styles from "./CreatePostModal.module.css";
 import commonStyles from "../../app/styles/common.module.css";
 import axios from 'axios';
-import { useRouter } from "next/navigation";
 import { useUser } from "../../app/providers/UserProvider";
 import MustLoginModal from "../MustLoginModal/MustLoginModal";
 
@@ -49,12 +50,35 @@ export default function CreatePostModal({ onClose }: CreatePostModalProps) {
     }
   };
 
+  //  5 image limit
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(e.target.files ?? []);
+
+    if (selectedFiles.length > 5) {
+      setErrorMessage("You can only upload a maximum of 5 images.");
+      setImages([]);
+      e.target.value = "";
+      return;
+    }
+    // valid selection (5 or fewer)
+    setErrorMessage("");
+    setImages(selectedFiles);
+  };
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setErrorMessage("");
-
     if (!description.trim()) {
       setErrorMessage("Description is required");
+      return;
+    }
+    if (images.length > 5) {
+      setErrorMessage("You can only upload a maximum of 5 images.");
+      setImages([]);                    // clear again just in case
+      return;
+    }
+    if (images.length === 0) {
+      setErrorMessage("Please select at least one image.");
       return;
     }
 
@@ -64,10 +88,8 @@ export default function CreatePostModal({ onClose }: CreatePostModalProps) {
       formData.append("description", description.trim());
       formData.append("createdAt", new Date().toISOString());
 
-      // Images
       images.forEach(img => formData.append("requestImages", img));
 
-      // Tags
       tags.forEach(tag => formData.append("tags", tag));
 
       const rawResponse = await axios.post(
@@ -133,18 +155,23 @@ export default function CreatePostModal({ onClose }: CreatePostModalProps) {
               </div>
 
               <div className={styles.section}>
-                <label className={styles.label}>Upload Images</label>
+                <label className={styles.label}>Upload Images (max 5)</label>
                 <input
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/jpg,image/png"
                   multiple
-                  onChange={(e) => setImages(Array.from(e.target.files ?? []))}
+                  onChange={handleImageSelect}
                   disabled={uploading}
                   className={styles.fileInput}
                 />
                 {images.length > 0 && (
-                  <p className={styles.fileCount}>{images.length} image(s) selected</p>
+                  <p className={styles.fileCount}>
+                    {images.length} / 5 image(s) selected
+                  </p>
                 )}
+                <small className={styles.supportedFormats}>
+                  Supported: JPG, JPEG, PNG, WebP
+                </small>
               </div>
 
               <div className={styles.section}>

@@ -32,12 +32,13 @@ export default function Navbar() {
 
   return (
     <nav className={styles.navbar}>
+
       <div
-        className={`${styles.iconWrapper} ${pathname === '/home' ? styles.active : ''}`}
-        onClick={() => router.push("/home")}
+        className={`${styles.iconWrapper} ${pathname === '/explore' ? styles.active : ''}`}
+        onClick={() => router.push("/explore")}
       >
-        <FaHome className={styles.icon} />
-        <p>Home</p>
+        <FaCompass className={styles.icon} />
+        <p>Explore</p>
       </div>
 
       <div
@@ -48,13 +49,14 @@ export default function Navbar() {
         <p>Profile</p>
       </div>
 
-      <div
-        className={`${styles.iconWrapper} ${pathname === '/explore' ? styles.active : ''}`}
-        onClick={() => router.push("/explore")}
+      {/* remove temporarily */}
+      {/* <div
+        className={`${styles.iconWrapper} ${pathname === '/home' ? styles.active : ''}`}
+        onClick={() => router.push("/home")}
       >
-        <FaCompass className={styles.icon} />
-        <p>Explore</p>
-      </div>
+        <FaHome className={styles.icon} />
+        <p>Home</p>
+      </div> */}
 
       <div
         className={styles.iconWrapper}

@@ -12,7 +12,7 @@ export default function Gatekeeper() {
 
   useEffect(() => {
     if (user) {
-      router.push("/home");
+      router.push("/explore");
       setChecking(false);
     } else {
       router.push("/login");

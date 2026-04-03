@@ -1,70 +1,59 @@
 'use client';
 
-import Image from 'next/image';
+import { useState, useEffect } from 'react';
+import UserCard from '@/components/UserCard/UserCard';
 import styles from './UserSearchResults.module.css';
 
 type UserSearchResult = {
   userId: number;
   name: string;
   profilePic?: string;
-  isMechanic: boolean;
+  mechanic: boolean;
+  following: boolean;
 };
 
 type Props = {
   users: UserSearchResult[];
-  onUserClick: (userId: number) => void;
   onLoadMore: () => void;
   hasMore: boolean;
   loading: boolean;
 };
 
-export default function UserSearchResults({ users, onUserClick, onLoadMore, hasMore, loading }: Props) {
+export default function UserSearchResults({ users, onLoadMore, hasMore, loading }: Props) {
+  const [localUsers, setLocalUsers] = useState(users);
+
+  useEffect(() => {
+    setLocalUsers(users);
+  }, [users]);
+
+  const handleFollowChange = (userId: number, newFollowing: boolean) => {
+    setLocalUsers(prev =>
+      prev.map(u => u.userId === userId ? { ...u, following: newFollowing } : u)
+    );
+  };
+
   return (
-    <div className={styles.userResultsContainer}>
-      <h2 className={styles.header}>People Results</h2>
-
+<div className={styles.userResultsContainer}>
       <div className={styles.userGrid}>
-        {users.map(user => (
-          <div
-            key={user.userId}
-            className={styles.userCard}
-            onClick={() => onUserClick(user.userId)}
-          >
-            <div className={styles.userAvatar}>
-              {user.profilePic ? (
-                <Image
-                  src={user.profilePic}
-                  alt={user.name}
-                  width={64}
-                  height={64}
-                  className={styles.avatarImg}
-                />
-              ) : (
-                <div className={styles.avatarPlaceholder}>👤</div>
-              )}
-            </div>
-
-            <div className={styles.userInfo}>
-              <h3>{user.name}</h3>
-              {user.isMechanic && <span className={styles.mechanicBadge}>🔧 Mechanic</span>}
-            </div>
-
-            <button className={styles.viewProfileBtn}>View Profile →</button>
+        {localUsers.map((user) => (
+          <div key={user.userId} className={styles.userCard}>
+            <UserCard
+              followingAuthor={user.following}
+              authorId={user.userId}
+              createdBy={user.name}
+              createdByProfilePicUrl={user.profilePic || ''}
+              authorIsMechanic={user.mechanic}
+              onFollowChange={(newFollowing) => handleFollowChange(user.userId, newFollowing)}
+              showBottomBorder={false}
+            />
           </div>
         ))}
       </div>
-
-      {hasMore && (
-        <button
-          className={styles.loadMoreBtn}
-          onClick={onLoadMore}
-          disabled={loading}
-        >
-          {loading ? 'Loading...' : 'Load More People'}
-        </button>
+      {localUsers.length === 0 && (
+        <p className={styles.noResults}>
+          enter a name you would like to search for
+        </p>
       )}
-
-      {users.length === 0 && <p className={styles.noResults}>No users found.</p>}
     </div>
   );
 }
