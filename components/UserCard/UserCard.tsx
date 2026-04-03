@@ -36,8 +36,11 @@ export default function UserCard({ followingAuthor, authorId, createdBy, created
     if (deletedAuthor) {
       return;
     }
-    console.log("go to profile with id " + authorId)
-    return;
+    if (user?.userId === authorId) {
+      router.push("/myProfile");
+      return;
+    }
+    router.push(`/profile/${authorId}`);
   }
 
   async function handleFollowToggle() {
