@@ -536,6 +536,17 @@ export default function MyProfilePage() {
         window.open(url, '_blank', 'noopener,noreferrer');
     }
 
+    function goToUserProfile(targetUserId: number) {
+        if (!Number.isFinite(targetUserId)) return;
+
+        if (user?.userId === targetUserId) {
+            router.push('/myProfile');
+            return;
+        }
+
+        router.push(`/profile/${targetUserId}`);
+    }
+
     // Saves bio to backend and updates local state
     async function saveBio() {
         if (!userId) return;
@@ -1050,7 +1061,12 @@ export default function MyProfilePage() {
 
                                 <div className={styles.userList}>
                                     {followers.map((u) => (
-                                        <div key={u.userId} className={styles.userRow}>
+                                        <button
+                                            key={u.userId}
+                                            className={`${styles.userRow} ${styles.userRowButton}`}
+                                            type="button"
+                                            onClick={() => goToUserProfile(u.userId)}
+                                        >
                                             <img
                                                 className={styles.userAvatar}
                                                 src={u.profilePic || '/images/deletedUserPfp.png'}
@@ -1060,7 +1076,7 @@ export default function MyProfilePage() {
                                                 }}
                                             />
                                             <span className={styles.userName}>{u.name}</span>
-                                        </div>
+                                        </button>
                                     ))}
                                 </div>
 
@@ -1082,7 +1098,12 @@ export default function MyProfilePage() {
 
                                 <div className={styles.userList}>
                                     {following.map((u) => (
-                                        <div key={u.userId} className={styles.userRow}>
+                                        <button
+                                            key={u.userId}
+                                            className={`${styles.userRow} ${styles.userRowButton}`}
+                                            type="button"
+                                            onClick={() => goToUserProfile(u.userId)}
+                                        >
                                             <img
                                                 className={styles.userAvatar}
                                                 src={u.profilePic || '/images/deletedUserPfp.png'}
@@ -1092,7 +1113,7 @@ export default function MyProfilePage() {
                                                 }}
                                             />
                                             <span className={styles.userName}>{u.name}</span>
-                                        </div>
+                                        </button>
                                     ))}
                                 </div>
 

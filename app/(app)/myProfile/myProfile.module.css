@@ -499,6 +499,25 @@
   gap: 10px;
 }
 
+.userRowButton {
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 0;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 10px;
+}
+
+.userRowButton:hover {
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.userRowButton:focus-visible {
+  outline: 2px solid rgba(23, 64, 139, 0.22);
+  outline-offset: 2px;
+}
+
 .userAvatar {
   width: 34px;
   height: 34px;
