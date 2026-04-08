@@ -12,6 +12,7 @@ import { createPortal } from 'react-dom';
 export default function Navbar() {
   const [isCreatePostModalOpen, setIsCreatePostModalOpen] = useState(false);
   const [isMustLoginModalOpen, setIsMustLoginModalOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0); // placeholder for now connect to WebSocket/context later
   const router = useRouter();
   const pathname = usePathname();
   const { user } = useUser();
@@ -34,10 +35,6 @@ export default function Navbar() {
     }
   }
 
-  function doNothing() {
-    return;
-  }
-
   return (
     <nav className={styles.navbar}>
 
@@ -57,15 +54,6 @@ export default function Navbar() {
         <p>Profile</p>
       </div>
 
-      {/* remove temporarily */}
-      {/* <div
-        className={`${styles.iconWrapper} ${pathname === '/home' ? styles.active : ''}`}
-        onClick={() => router.push("/home")}
-      >
-        <FaHome className={styles.icon} />
-        <p>Home</p>
-      </div> */}
-
       <div
         className={styles.iconWrapper}
         onClick={() => setIsCreatePostModalOpen(true)}
@@ -74,11 +62,19 @@ export default function Navbar() {
         <p>Create</p>
       </div>
 
+      {/* notificatoins section with badge */}
       <div
         className={`${styles.iconWrapper} ${pathname === '/notifs' ? styles.active : ''}`}
         onClick={handleNotificationsClick}
       >
-        <FaBell className={styles.icon} />
+        <div className={styles.notificationBellWrapper}>
+          <FaBell className={styles.icon} />
+          {unreadCount > 0 && (
+            <span className={styles.notificationBadge}>
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
+          )}
+        </div>
         <p>Notifs</p>
       </div>
 
@@ -88,7 +84,6 @@ export default function Navbar() {
           document.body
         )}
 
-      {/* Guest user case */}
       {isMustLoginModalOpen && 
         createPortal(
           <MustLoginModal onClose={() => setIsMustLoginModalOpen(false)} />,
