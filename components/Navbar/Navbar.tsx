@@ -16,13 +16,21 @@ export default function Navbar() {
   const pathname = usePathname();
   const { user } = useUser();
 
-
   function handleGoToMyProfile() {
     if (!user) {
       setIsMustLoginModalOpen(true);
       return;
     } else {
       router.push("/myProfile");
+    }
+  }
+
+  function handleNotificationsClick() {
+    if (!user) {
+      setIsMustLoginModalOpen(true);
+      return;
+    } else {
+      router.push("/notifs");
     }
   }
 
@@ -66,7 +74,10 @@ export default function Navbar() {
         <p>Create</p>
       </div>
 
-      <div className={styles.iconWrapper} onClick={doNothing}>
+      <div
+        className={`${styles.iconWrapper} ${pathname === '/notifs' ? styles.active : ''}`}
+        onClick={handleNotificationsClick}
+      >
         <FaBell className={styles.icon} />
         <p>Notifs</p>
       </div>
@@ -77,12 +88,12 @@ export default function Navbar() {
           document.body
         )}
 
-      { /* Guest user case*/}
+      {/* Guest user case */}
       {isMustLoginModalOpen && 
         createPortal(
-        <MustLoginModal onClose={() => setIsMustLoginModalOpen(false)} />,
-        document.body
-      )}
+          <MustLoginModal onClose={() => setIsMustLoginModalOpen(false)} />,
+          document.body
+        )}
 
     </nav>
   );
