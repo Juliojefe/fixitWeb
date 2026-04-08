@@ -1,0 +1,79 @@
+.sidebar {
+  width: 100%;
+  height: 100vh;
+  background: #fff;
+  border-right: 4px solid black;
+  display: flex;
+  flex-direction: column;
+  font-family: 'DM Sans', sans-serif;
+  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.08);
+}
+
+.scrollContainer {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px 0;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+
+.scrollContainer::-webkit-scrollbar {
+  display: none; /* Chrome/Safari/Edge */
+}
+
+.chatRow {
+  padding: 14px 24px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.chatRow:hover {
+  background: #e8eef8;
+  transform: translateX(4px);
+}
+
+.chatContent {
+  flex: 1;
+  min-width: 0;
+}
+
+.chatName {
+  font-size: 1.05rem;
+  font-weight: 500;
+  color: #111;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.emptySpace {
+  flex: 1;
+  min-height: 120px;
+}
+
+.loadMoreBtn {
+  width: 100%;
+  margin: 16px 24px;
+  padding: 12px;
+  background: #526fae;
+  color: white;
+  font-weight: 600;
+  font-size: 0.95rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.loadMoreBtn:hover {
+  background: #3d5a96;
+}
+
+.loadMoreBtn:disabled {
+  background: #aaa;
+  cursor: not-allowed;
+}
