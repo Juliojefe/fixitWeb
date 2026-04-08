@@ -12,7 +12,9 @@
   align-items: center;
   justify-content: center;
   background: #f8f9fc;
-  border-left: 4px solid black;
+  border-right: 4px solid black;
+  border-top: 4px solid black;
+  border-bottom: 4px solid black;
 }
 
 .placeholder {
