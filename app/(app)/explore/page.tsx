@@ -8,7 +8,7 @@ import { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import PostList from '@/components/PostList/PostList';
 import UserSearchResults from '@/components/UserSearchResults/UserSearchResults';
-import TagSuggestions from '@/components/TagSuggestions/TagSuggestions'; // ← NEW
+import TagSuggestions from '@/components/TagSuggestions/TagSuggestions';
 
 type UserSearchResult = {
   userId: number;

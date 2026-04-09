@@ -9,6 +9,6 @@ export interface User {
   isAdmin: boolean;
   isMechanic: boolean;
   biography: string;
-  accessTokenExpiresAt: Date; // Buffered expiration for proactive refresh
-  refreshTokenExpiresAt: Date; // Buffered expiration
+  accessTokenExpiresAt: Date;
+  refreshTokenExpiresAt: Date;
 }

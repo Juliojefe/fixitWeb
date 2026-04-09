@@ -1,33 +1,59 @@
 'use client';
 
-import { FaHome, FaCompass, FaPlusSquare, FaBell, FaUser } from "react-icons/fa";
+import { FaCompass, FaPlusSquare, FaBell, FaUser } from "react-icons/fa";
 import styles from "./navbar.module.css";
 import CreatePostModal from '../CreatePostModal/CreatePostModal';
 import MustLoginModal from "../MustLoginModal/MustLoginModal";
 import { useRouter, usePathname } from 'next/navigation';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useUser } from '@/app/providers/UserProvider';
 import { createPortal } from 'react-dom';
+import axios from 'axios';
+
 
 export default function Navbar() {
   const [isCreatePostModalOpen, setIsCreatePostModalOpen] = useState(false);
   const [isMustLoginModalOpen, setIsMustLoginModalOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const router = useRouter();
   const pathname = usePathname();
   const { user } = useUser();
 
+  // fetch initial unread count
+  useEffect(() => {
+    async function fetchUnreadCount() {
+      if (!user?.accessToken) return;
+
+      try {
+        const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/chat/unread-count`;
+        const res = await axios.get(endpoint, {
+          headers: {
+            Authorization: `Bearer ${user.accessToken}`,
+          },
+        });
+        setUnreadCount(res.data);
+      } catch (err) {
+        console.error(err);
+        setUnreadCount(0);
+      }
+    }
+    fetchUnreadCount();
+  }, [user?.accessToken]);
 
   function handleGoToMyProfile() {
     if (!user) {
       setIsMustLoginModalOpen(true);
       return;
-    } else {
-      router.push("/myProfile");
     }
+    router.push("/myProfile");
   }
 
-  function doNothing() {
-    return;
+  function handleNotificationsClick() {
+    if (!user) {
+      setIsMustLoginModalOpen(true);
+      return;
+    }
+    router.push("/notifs");
   }
 
   return (
@@ -49,15 +75,6 @@ export default function Navbar() {
         <p>Profile</p>
       </div>
 
-      {/* remove temporarily */}
-      {/* <div
-        className={`${styles.iconWrapper} ${pathname === '/home' ? styles.active : ''}`}
-        onClick={() => router.push("/home")}
-      >
-        <FaHome className={styles.icon} />
-        <p>Home</p>
-      </div> */}
-
       <div
         className={styles.iconWrapper}
         onClick={() => setIsCreatePostModalOpen(true)}
@@ -66,8 +83,19 @@ export default function Navbar() {
         <p>Create</p>
       </div>
 
-      <div className={styles.iconWrapper} onClick={doNothing}>
-        <FaBell className={styles.icon} />
+      {/* notificatoins section with badge */}
+      <div
+        className={`${styles.iconWrapper} ${pathname === '/notifs' ? styles.active : ''}`}
+        onClick={handleNotificationsClick}
+      >
+        <div className={styles.notificationBellWrapper}>
+          <FaBell className={styles.icon} />
+          {unreadCount > 0 && (
+            <span className={styles.notificationBadge}>
+              {unreadCount > 99 ? '99+' : unreadCount}
+            </span>
+          )}
+        </div>
         <p>Notifs</p>
       </div>
 
@@ -77,12 +105,11 @@ export default function Navbar() {
           document.body
         )}
 
-      { /* Guest user case*/}
       {isMustLoginModalOpen && 
         createPortal(
-        <MustLoginModal onClose={() => setIsMustLoginModalOpen(false)} />,
-        document.body
-      )}
+          <MustLoginModal onClose={() => setIsMustLoginModalOpen(false)} />,
+          document.body
+        )}
 
     </nav>
   );
