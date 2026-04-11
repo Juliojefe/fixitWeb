@@ -66,8 +66,8 @@ export default function MessageBubble({ message, isMine, onRetry }: MessageBubbl
           {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </span>
 
-        {/* Failed state UI */}
-        {message.failed && (
+        {/* Failed indicator */}
+        {message.failed && onRetry && (
           <div
             className={styles.failedIndicator}
             title="Message failed to send. Click to try again."

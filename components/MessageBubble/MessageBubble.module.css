@@ -131,8 +131,8 @@
 .failedIndicator {
   position: absolute;
   bottom: 8px;
-  right: 12px;
-  font-size: 18px;
+  left: 12px;
+  font-size: 30px;
   color: #e11d48;
   cursor: pointer;
   transition: transform 0.2s;
