@@ -8,6 +8,7 @@ interface MessageBubbleProps {
     messageId?: number | string;
     content: string;
     userId: number;
+    senderName?: string;
     createdAt: string;
     imageUrls: string[];
     failed?: boolean;
@@ -29,6 +30,10 @@ export default function MessageBubble({ message, isMine, onRetry }: MessageBubbl
   return (
     <div className={`${styles.messageRow} ${isMine ? styles.mine : styles.theirs}`}>
       <div className={styles.bubble}>
+        {!isMine && message.senderName && (
+          <div className={styles.senderName}>{message.senderName}</div>
+        )}
+
         {message.content && <p className={styles.messageText}>{message.content}</p>}
 
         {hasImages && (

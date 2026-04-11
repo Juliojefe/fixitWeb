@@ -10,6 +10,7 @@ interface Message {
   messageId?: number | string;
   content: string;
   userId: number;
+  senderName?: string;
   createdAt: string;
   imageUrls: string[];
   failed?: boolean;

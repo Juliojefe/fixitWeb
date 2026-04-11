@@ -141,3 +141,11 @@
 .failedIndicator:hover {
   transform: scale(1.2);
 }
+
+.senderName {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #526fae;
+  margin-bottom: 4px;
+  opacity: 0.9;
+}
