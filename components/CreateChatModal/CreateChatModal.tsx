@@ -29,6 +29,7 @@ export default function CreateChatModal({ onClose }: CreateChatModalProps) {
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState('');
 
+  // Debounced search
   useEffect(() => {
     if (!searchQuery.trim() || !user?.accessToken) {
       setSearchResults([]);
@@ -89,7 +90,7 @@ export default function CreateChatModal({ onClose }: CreateChatModalProps) {
         { headers: { Authorization: `Bearer ${user.accessToken}` } }
       );
 
-      onClose();   // modal closes on success
+      onClose();
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to create chat');
     } finally {
@@ -97,11 +98,8 @@ export default function CreateChatModal({ onClose }: CreateChatModalProps) {
     }
   };
 
-  // Prevent Enter key from submitting the form while typing in search
   const handleSearchKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-    }
+    if (e.key === 'Enter') e.preventDefault();
   };
 
   return createPortal(
@@ -110,7 +108,7 @@ export default function CreateChatModal({ onClose }: CreateChatModalProps) {
         className={commonStyles.formContainer}
         onSubmit={handleCreateChat}
         onClick={e => e.stopPropagation()}
-        style={{ width: '520px', maxHeight: '85vh', overflowY: 'auto' }}
+        style={{ width: '700px', maxHeight: 'none' }}
       >
         <h2 className={commonStyles.formHeader}>Create New Chat</h2>
 
@@ -127,22 +125,22 @@ export default function CreateChatModal({ onClose }: CreateChatModalProps) {
           />
         </div>
 
-        {/* User Search */}
-        <div className={styles.field}>
-          <label className={styles.label}>Add People</label>
-          <div className={styles.searchRow}>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              onKeyDown={handleSearchKeyDown}
-              placeholder="Search users by name..."
-              className={styles.searchInput}
-            />
-          </div>
+        {/* Side-by-side panels */}
+        <div className={styles.twoColumnLayout}>
+          {/* LEFT: Search */}
+          <div className={styles.panel}>
+            <label className={styles.label}>Search Users</label>
+            <div className={styles.searchRow}>
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
+                placeholder="Search users by name..."
+                className={styles.searchInput}
+              />
+            </div>
 
-          {/* Search Results */}
-          {searchResults.length > 0 && (
             <div className={styles.resultsContainer}>
               {searchResults.map(u => (
                 <div
@@ -159,14 +157,17 @@ export default function CreateChatModal({ onClose }: CreateChatModalProps) {
                   <button type="button" className={styles.addBtn}>Add</button>
                 </div>
               ))}
+              {searchResults.length === 0 && searchQuery.trim() && (
+                <p className={styles.noResults}>No users found</p>
+              )}
             </div>
-          )}
-        </div>
+          </div>
 
-        {/* Selected Users */}
-        {selectedUsers.length > 0 && (
-          <div className={styles.field}>
-            <label className={styles.label}>Selected ({selectedUsers.length})</label>
+          {/* RIGHT: Selected Users */}
+          <div className={styles.panel}>
+            <label className={styles.label}>
+              Selected ({selectedUsers.length})
+            </label>
             <div className={styles.selectedContainer}>
               {selectedUsers.map(u => (
                 <div key={u.userId} className={styles.selectedChip}>
@@ -185,9 +186,12 @@ export default function CreateChatModal({ onClose }: CreateChatModalProps) {
                   </button>
                 </div>
               ))}
+              {selectedUsers.length === 0 && (
+                <p className={styles.emptySelected}>No users selected yet</p>
+              )}
             </div>
           </div>
-        )}
+        </div>
 
         {error && <p className={commonStyles.error}>{error}</p>}
 
