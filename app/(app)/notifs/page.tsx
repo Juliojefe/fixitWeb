@@ -16,15 +16,17 @@ export default function Notifs() {
   return (
     <div className={styles.pageContainer}>
       {/* left column */}
-      <ChatListSidebar onChatSelect={handleChatSelect} />
+      <ChatListSidebar 
+        onChatSelect={handleChatSelect} 
+        selectedChatId={selectedChatId} 
+      />
 
-      {/* right side - Messages area */}
+      {/* right side */}
       <div className={styles.messageArea}>
         {selectedChatId ? (
           <div className={styles.chatOpened}>
             <h3>Chat #{selectedChatId} opened</h3>
             <p>Messages will appear here soon...</p>
-            {/* replace this later with actual message view */}
           </div>
         ) : (
           <div className={styles.placeholder}>

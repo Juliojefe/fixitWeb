@@ -15,9 +15,10 @@ interface ChatSummary {
 
 interface ChatListSidebarProps {
   onChatSelect: (chatId: number) => void;
+  selectedChatId: number | null;
 }
 
-export default function ChatListSidebar({ onChatSelect }: ChatListSidebarProps) {
+export default function ChatListSidebar({ onChatSelect, selectedChatId }: ChatListSidebarProps) {
   const { user } = useUser();
   const [chats, setChats] = useState<ChatSummary[]>([]);
   const [page, setPage] = useState(0);
@@ -58,18 +59,16 @@ export default function ChatListSidebar({ onChatSelect }: ChatListSidebarProps) 
   }
 
   function handleChatClick(chatId: number) {
-    onChatSelect(chatId);   //  tells parent to open on right
+    onChatSelect(chatId);
   }
 
   function handleCreateNewChat() {
     setIsCreateChatModalOpen(true);
   }
 
-  // called by modal after successful creation
   const handleChatCreated = (newChat: ChatSummary) => {
-    setChats(prev => [newChat, ...prev]);   // add to top
-    onChatSelect(newChat.chatId);           // auto-open on right
-    setIsCreateChatModalOpen(false);
+    setChats(prev => [newChat, ...prev]);
+    onChatSelect(newChat.chatId);
   };
 
   return (
@@ -87,7 +86,7 @@ export default function ChatListSidebar({ onChatSelect }: ChatListSidebarProps) 
             chats.map((chat) => (
               <div
                 key={chat.chatId}
-                className={styles.chatRow}
+                className={`${styles.chatRow} ${selectedChatId === chat.chatId ? styles.active : ''}`}
                 onClick={() => handleChatClick(chat.chatId)}
               >
                 <div className={styles.chatContent}>

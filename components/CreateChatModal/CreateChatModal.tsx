@@ -69,8 +69,6 @@ export default function CreateChatModal({ onClose, onChatCreated }: CreateChatMo
     if (!selectedUsers.find(u => u.userId === userToAdd.userId)) {
       setSelectedUsers(prev => [...prev, userToAdd]);
     }
-    setSearchQuery('');
-    setSearchResults([]);
   };
 
   const removeUser = (userId: number) => {
@@ -100,7 +98,6 @@ export default function CreateChatModal({ onClose, onChatCreated }: CreateChatMo
         { headers: { Authorization: `Bearer ${user.accessToken}` } }
       );
 
-      // tell parent to add the new chat to the list and open it
       onChatCreated({
         chatId: res.data.chatId,
         name: res.data.name || 'Unnamed Chat'
@@ -122,7 +119,7 @@ export default function CreateChatModal({ onClose, onChatCreated }: CreateChatMo
     <div className={commonStyles.modalBackdrop} onClick={onClose}>
       {successfulUpload ? (
         <div className={commonStyles.formContainer}>
-          <h2 className={commonStyles.successMessage}>{successMessage}</h2>
+          <h2 className={styles.successMessage}>{successMessage}</h2>
         </div>
       ) : (
         <form
@@ -133,7 +130,6 @@ export default function CreateChatModal({ onClose, onChatCreated }: CreateChatMo
         >
           <h2 className={commonStyles.formHeader}>Create New Chat</h2>
 
-          {/* Chat Name */}
           <div className={styles.field}>
             <label className={styles.label}>Chat Name (optional)</label>
             <input
@@ -146,9 +142,7 @@ export default function CreateChatModal({ onClose, onChatCreated }: CreateChatMo
             />
           </div>
 
-          {/* Side-by-side panels */}
           <div className={styles.twoColumnLayout}>
-            {/* left: search users */}
             <div className={styles.panel}>
               <label className={styles.label}>Search Users</label>
               <div className={styles.searchRow}>
@@ -184,7 +178,6 @@ export default function CreateChatModal({ onClose, onChatCreated }: CreateChatMo
               </div>
             </div>
 
-            {/* right: selected users */}
             <div className={styles.panel}>
               <label className={styles.label}>
                 Selected ({selectedUsers.length})
