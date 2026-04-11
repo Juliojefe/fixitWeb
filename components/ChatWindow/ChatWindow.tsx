@@ -7,11 +7,13 @@ import styles from './ChatWindow.module.css';
 import MessageBubble from '../MessageBubble/MessageBubble';
 
 interface Message {
-  messageId: number;
+  messageId?: number | string;   // real messages have number, optimistic have string tempId
   content: string;
   userId: number;
   createdAt: string;
   imageUrls: string[];
+  failed?: boolean;
+  tempId?: string;
 }
 
 interface ChatWindowProps {
@@ -63,7 +65,7 @@ export default function ChatWindow({ selectedChatId, chatName }: ChatWindowProps
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // WebSocket live messages
+  // WebSocket - live messages
   useEffect(() => {
     if (!user?.accessToken || !selectedChatId) return;
 
@@ -73,38 +75,63 @@ export default function ChatWindow({ selectedChatId, chatName }: ChatWindowProps
       debug: (str: string) => console.log(str),
       reconnectDelay: 5000,
       onConnect: () => {
-        client.subscribe(`/topic/chat/${selectedChatId}`, (message: import('@stomp/stompjs').IMessage) => {
-          const newMsg = JSON.parse(message.body);
-          setMessages((prev) => [...prev, newMsg]);
+        client.subscribe(`/topic/chat/${selectedChatId}`, (message: { body: string }) => {
+          const newMsg: Message = JSON.parse(message.body);
+          setMessages(prev => {
+            // Remove any optimistic version of this message (match by tempId or messageId)
+            const filtered = prev.filter(m => m.tempId !== newMsg.tempId && m.messageId !== newMsg.messageId);
+            return [...filtered, newMsg];
+          });
         });
       },
     });
 
     client.activate();
 
-    return () => {
-      client.deactivate();
-    };
+    return () => client.deactivate();
   }, [selectedChatId, user?.accessToken]);
 
+  // Optimistic send
   const handleSend = async () => {
     if ((!inputValue.trim() && previewImages.length === 0) || !user?.accessToken) return;
 
-    const payload = {
-      content: inputValue.trim() || null,
-      imageUrls: previewImages,
+    const tempId = 'temp-' + Date.now();
+
+    // Optimistic message
+    const optimisticMsg: Message = {
+      tempId,
+      messageId: tempId,
+      content: inputValue.trim() || '',
+      userId: user.userId!,
+      createdAt: new Date().toISOString(),
+      imageUrls: [...previewImages],
+      failed: false,
     };
 
+    // Add immediately
+    setMessages(prev => [...prev, optimisticMsg]);
+    setInputValue('');
+    setPreviewImages([]);
+
+    // Try to send
     try {
+      const payload = {
+        content: optimisticMsg.content || null,
+        imageUrls: optimisticMsg.imageUrls,
+      };
+
       await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/api/message/${selectedChatId}`,
         payload,
         { headers: { Authorization: `Bearer ${user.accessToken}` } }
       );
-      setInputValue('');
-      setPreviewImages([]);
+      // Success - WebSocket will bring the real message and remove the optimistic one
     } catch (err) {
-      console.error('Failed to send message', err);
+      console.error('Send failed', err);
+      // Mark as failed
+      setMessages(prev =>
+        prev.map(m => (m.tempId === tempId ? { ...m, failed: true } : m))
+      );
     }
   };
 
@@ -136,9 +163,25 @@ export default function ChatWindow({ selectedChatId, chatName }: ChatWindowProps
       <div className={styles.messagesContainer}>
         {messages.map((msg) => (
           <MessageBubble
-            key={msg.messageId}
+            key={msg.tempId || msg.messageId}
             message={msg}
             isMine={msg.userId === user?.userId}
+            onRetry={() => {
+              // Retry logic
+              const payload = {
+                content: msg.content || null,
+                imageUrls: msg.imageUrls,
+              };
+              axios.post(
+                `${process.env.NEXT_PUBLIC_API_URL}/api/message/${selectedChatId}`,
+                payload,
+                { headers: { Authorization: `Bearer ${user?.accessToken}` } }
+              ).then(() => {
+                setMessages(prev => prev.filter(m => m.tempId !== msg.tempId));
+              }).catch(() => {
+                console.error('Retry failed');
+              });
+            }}
           />
         ))}
         <div ref={messagesEndRef} />

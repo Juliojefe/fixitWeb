@@ -126,3 +126,18 @@
   margin-top: 8px;
   text-align: right;
 }
+
+/* Failed message indicator */
+.failedIndicator {
+  position: absolute;
+  bottom: 8px;
+  right: 12px;
+  font-size: 18px;
+  color: #e11d48;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.failedIndicator:hover {
+  transform: scale(1.2);
+}
