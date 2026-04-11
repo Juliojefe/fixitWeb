@@ -13,13 +13,16 @@ interface ChatSummary {
   name: string;
 }
 
-export default function ChatListSidebar() {
+interface ChatListSidebarProps {
+  onChatSelect: (chatId: number) => void;
+}
+
+export default function ChatListSidebar({ onChatSelect }: ChatListSidebarProps) {
   const { user } = useUser();
   const [chats, setChats] = useState<ChatSummary[]>([]);
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
-
   const [isCreateChatModalOpen, setIsCreateChatModalOpen] = useState(false);
 
   const pageSize = 10;
@@ -55,12 +58,19 @@ export default function ChatListSidebar() {
   }
 
   function handleChatClick(chatId: number) {
-    console.log(`Chat ${chatId} clicked`);
+    onChatSelect(chatId);   //  tells parent to open on right
   }
 
   function handleCreateNewChat() {
     setIsCreateChatModalOpen(true);
   }
+
+  // called by modal after successful creation
+  const handleChatCreated = (newChat: ChatSummary) => {
+    setChats(prev => [newChat, ...prev]);   // add to top
+    onChatSelect(newChat.chatId);           // auto-open on right
+    setIsCreateChatModalOpen(false);
+  };
 
   return (
     <>
@@ -74,37 +84,32 @@ export default function ChatListSidebar() {
               </p>
             </div>
           ) : (
-            <>
-              {chats.map((chat) => (
-                <div
-                  key={chat.chatId}
-                  className={styles.chatRow}
-                  onClick={() => handleChatClick(chat.chatId)}
-                >
-                  <div className={styles.chatContent}>
-                    <span className={styles.chatName}>
-                      {chat.name || 'Unnamed Chat'}
-                    </span>
-                  </div>
+            chats.map((chat) => (
+              <div
+                key={chat.chatId}
+                className={styles.chatRow}
+                onClick={() => handleChatClick(chat.chatId)}
+              >
+                <div className={styles.chatContent}>
+                  <span className={styles.chatName}>{chat.name || 'Unnamed Chat'}</span>
                 </div>
-              ))}
+              </div>
+            ))
+          )}
 
-              {chats.length < 8 && <div className={styles.emptySpace} />}
+          {chats.length < 8 && <div className={styles.emptySpace} />}
 
-              {hasMore && (
-                <button
-                  className={styles.loadMoreBtn}
-                  onClick={handleLoadMore}
-                  disabled={loading}
-                >
-                  {loading ? 'Loading...' : 'Load More Chats'}
-                </button>
-              )}
-            </>
+          {hasMore && (
+            <button
+              className={styles.loadMoreBtn}
+              onClick={handleLoadMore}
+              disabled={loading}
+            >
+              {loading ? 'Loading...' : 'Load More Chats'}
+            </button>
           )}
         </div>
 
-        {/* Create Chat Button */}
         <button
           className={styles.createChatBtn}
           onClick={handleCreateNewChat}
@@ -115,7 +120,10 @@ export default function ChatListSidebar() {
       </div>
 
       {isCreateChatModalOpen && createPortal(
-        <CreateChatModal onClose={() => setIsCreateChatModalOpen(false)} />,
+        <CreateChatModal 
+          onClose={() => setIsCreateChatModalOpen(false)}
+          onChatCreated={handleChatCreated}
+        />,
         document.body
       )}
     </>

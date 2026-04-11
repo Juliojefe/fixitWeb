@@ -16,9 +16,10 @@ interface SelectedUser {
 
 interface CreateChatModalProps {
   onClose: () => void;
+  onChatCreated: (newChat: { chatId: number; name: string }) => void;
 }
 
-export default function CreateChatModal({ onClose }: CreateChatModalProps) {
+export default function CreateChatModal({ onClose, onChatCreated }: CreateChatModalProps) {
   const { user } = useUser();
 
   const [chatName, setChatName] = useState('');
@@ -38,7 +39,7 @@ export default function CreateChatModal({ onClose }: CreateChatModalProps) {
     }
   }, [successfulUpload, onClose]);
 
-  // Debounced search
+  // debounced user search
   useEffect(() => {
     if (!searchQuery.trim() || !user?.accessToken) {
       setSearchResults([]);
@@ -93,11 +94,17 @@ export default function CreateChatModal({ onClose }: CreateChatModalProps) {
         userIds: selectedUsers.map(u => u.userId),
       };
 
-      await axios.post(
+      const res = await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/api/chat/create`,
         payload,
         { headers: { Authorization: `Bearer ${user.accessToken}` } }
       );
+
+      // tell parent to add the new chat to the list and open it
+      onChatCreated({
+        chatId: res.data.chatId,
+        name: res.data.name || 'Unnamed Chat'
+      });
 
       setSuccessfulUpload(true);
     } catch (err: any) {
@@ -115,7 +122,7 @@ export default function CreateChatModal({ onClose }: CreateChatModalProps) {
     <div className={commonStyles.modalBackdrop} onClick={onClose}>
       {successfulUpload ? (
         <div className={commonStyles.formContainer}>
-          <h2 className={styles.successMessage}>{successMessage}</h2>
+          <h2 className={commonStyles.successMessage}>{successMessage}</h2>
         </div>
       ) : (
         <form
@@ -139,9 +146,9 @@ export default function CreateChatModal({ onClose }: CreateChatModalProps) {
             />
           </div>
 
-          {/* side by side panels */}
+          {/* Side-by-side panels */}
           <div className={styles.twoColumnLayout}>
-            {/* search */}
+            {/* left: search users */}
             <div className={styles.panel}>
               <label className={styles.label}>Search Users</label>
               <div className={styles.searchRow}>
@@ -177,7 +184,7 @@ export default function CreateChatModal({ onClose }: CreateChatModalProps) {
               </div>
             </div>
 
-            {/* selected users */}
+            {/* right: selected users */}
             <div className={styles.panel}>
               <label className={styles.label}>
                 Selected ({selectedUsers.length})

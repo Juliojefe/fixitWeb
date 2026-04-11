@@ -1,26 +1,36 @@
 'use client'
 
-import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import styles from "./notifs.module.css";
 import { useUser } from '@/app/providers/UserProvider';
-import { useEffect, useState, useRef } from 'react';
-import axios from 'axios';
 import ChatListSidebar from '@/components/ChatListSidebar/ChatListSidebar';
 
 export default function Notifs() {
   const { user } = useUser();
-  const router = useRouter();
+  const [selectedChatId, setSelectedChatId] = useState<number | null>(null);
 
-  // placeholder will expand this later when messages appear on the right
+  const handleChatSelect = (chatId: number) => {
+    setSelectedChatId(chatId);
+  };
+
   return (
     <div className={styles.pageContainer}>
-      <ChatListSidebar />
+      {/* left column */}
+      <ChatListSidebar onChatSelect={handleChatSelect} />
 
-      {/* right side empty area for now messages will go here later */}
+      {/* right side - Messages area */}
       <div className={styles.messageArea}>
-        <div className={styles.placeholder}>
-          <p>Select a chat from the left to view messages</p>
-        </div>
+        {selectedChatId ? (
+          <div className={styles.chatOpened}>
+            <h3>Chat #{selectedChatId} opened</h3>
+            <p>Messages will appear here soon...</p>
+            {/* replace this later with actual message view */}
+          </div>
+        ) : (
+          <div className={styles.placeholder}>
+            <p>Select a chat from the left to view messages</p>
+          </div>
+        )}
       </div>
     </div>
   );
