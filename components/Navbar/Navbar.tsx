@@ -10,7 +10,6 @@ import { useUser } from '@/app/providers/UserProvider';
 import { createPortal } from 'react-dom';
 import axios from 'axios';
 
-
 export default function Navbar() {
   const [isCreatePostModalOpen, setIsCreatePostModalOpen] = useState(false);
   const [isMustLoginModalOpen, setIsMustLoginModalOpen] = useState(false);
@@ -19,17 +18,14 @@ export default function Navbar() {
   const pathname = usePathname();
   const { user } = useUser();
 
-  // fetch initial unread count
+  // Fetch initial unread count
   useEffect(() => {
     async function fetchUnreadCount() {
       if (!user?.accessToken) return;
-
       try {
         const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/chat/unread-count`;
         const res = await axios.get(endpoint, {
-          headers: {
-            Authorization: `Bearer ${user.accessToken}`,
-          },
+          headers: { Authorization: `Bearer ${user.accessToken}` },
         });
         setUnreadCount(res.data);
       } catch (err) {
@@ -39,6 +35,18 @@ export default function Navbar() {
     }
     fetchUnreadCount();
   }, [user?.accessToken]);
+
+  // listen for instant decrement when a chat is opened
+  useEffect(() => {
+    const handleChatOpened = (e: CustomEvent) => {
+      const amount = e.detail.unreadCount || 0;
+      setUnreadCount(prev => Math.max(0, prev - amount));
+    };
+    window.addEventListener('chatOpened', handleChatOpened as EventListener);
+    return () => {
+      window.removeEventListener('chatOpened', handleChatOpened as EventListener);
+    };
+  }, []);
 
   function handleGoToMyProfile() {
     if (!user) {
@@ -83,7 +91,6 @@ export default function Navbar() {
         <p>Create</p>
       </div>
 
-      {/* notificatoins section with badge */}
       <div
         className={`${styles.iconWrapper} ${pathname === '/notifs' ? styles.active : ''}`}
         onClick={handleNotificationsClick}

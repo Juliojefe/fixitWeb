@@ -61,12 +61,17 @@ export default function ChatListSidebar({ onChatSelect, selectedChatId, onChatOp
   }
 
   function handleChatClick(chat: ChatSummary) {
-    // INSTANT UI UPDATE - decrement unread count right away
+    // local update in sidebar
     setChats(prevChats =>
       prevChats.map(c =>
         c.chatId === chat.chatId ? { ...c, unreadCount: 0 } : c
       )
     );
+
+    // navbar decrement global unread count instantly
+    window.dispatchEvent(new CustomEvent('chatOpened', {
+      detail: { unreadCount: chat.unreadCount }
+    }));
 
     onChatSelect(chat.chatId, chat.name);
     if (onChatOpened) onChatOpened(chat.chatId);
