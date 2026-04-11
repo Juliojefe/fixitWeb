@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useUser } from '@/app/providers/UserProvider';
 import { createPortal } from 'react-dom';
-import { FaPlus, FaTimes } from 'react-icons/fa';
+import { FaTimes } from 'react-icons/fa';
 import styles from './CreateChatModal.module.css';
 import commonStyles from '../../app/styles/common.module.css';
 
@@ -28,6 +28,15 @@ export default function CreateChatModal({ onClose }: CreateChatModalProps) {
   const [loadingSearch, setLoadingSearch] = useState(false);
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState('');
+  const [successfulUpload, setSuccessfulUpload] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('Chat created successfully!');
+
+  useEffect(() => {
+    if (successfulUpload) {
+      const timer = setTimeout(() => onClose(), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [successfulUpload, onClose]);
 
   // Debounced search
   useEffect(() => {
@@ -50,7 +59,7 @@ export default function CreateChatModal({ onClose }: CreateChatModalProps) {
       } finally {
         setLoadingSearch(false);
       }
-    }, 300);
+    }, 250);
 
     return () => clearTimeout(timeout);
   }, [searchQuery, user?.accessToken]);
@@ -90,7 +99,7 @@ export default function CreateChatModal({ onClose }: CreateChatModalProps) {
         { headers: { Authorization: `Bearer ${user.accessToken}` } }
       );
 
-      onClose();
+      setSuccessfulUpload(true);
     } catch (err: any) {
       setError(err.response?.data?.message || 'Failed to create chat');
     } finally {
@@ -104,117 +113,123 @@ export default function CreateChatModal({ onClose }: CreateChatModalProps) {
 
   return createPortal(
     <div className={commonStyles.modalBackdrop} onClick={onClose}>
-      <form
-        className={commonStyles.formContainer}
-        onSubmit={handleCreateChat}
-        onClick={e => e.stopPropagation()}
-        style={{ width: '700px', maxHeight: 'none' }}
-      >
-        <h2 className={commonStyles.formHeader}>Create New Chat</h2>
-
-        {/* Chat Name */}
-        <div className={styles.field}>
-          <label className={styles.label}>Chat Name (optional)</label>
-          <input
-            type="text"
-            value={chatName}
-            onChange={e => setChatName(e.target.value)}
-            placeholder="e.g. Car Club"
-            className={styles.input}
-            maxLength={50}
-          />
+      {successfulUpload ? (
+        <div className={commonStyles.formContainer}>
+          <h2 className={styles.successMessage}>{successMessage}</h2>
         </div>
+      ) : (
+        <form
+          className={commonStyles.formContainer}
+          onSubmit={handleCreateChat}
+          onClick={e => e.stopPropagation()}
+          style={{ width: '700px', maxHeight: 'none' }}
+        >
+          <h2 className={commonStyles.formHeader}>Create New Chat</h2>
 
-        {/* Side-by-side panels */}
-        <div className={styles.twoColumnLayout}>
-          {/* LEFT: Search */}
-          <div className={styles.panel}>
-            <label className={styles.label}>Search Users</label>
-            <div className={styles.searchRow}>
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                onKeyDown={handleSearchKeyDown}
-                placeholder="Search users by name..."
-                className={styles.searchInput}
-              />
-            </div>
-
-            <div className={styles.resultsContainer}>
-              {searchResults.map(u => (
-                <div
-                  key={u.userId}
-                  className={styles.resultRow}
-                  onClick={() => addUser(u)}
-                >
-                  <img
-                    src={u.profilePic || '/images/defaultPfp.png'}
-                    alt={u.name}
-                    className={styles.resultPic}
-                  />
-                  <span className={styles.resultName}>{u.name}</span>
-                  <button type="button" className={styles.addBtn}>Add</button>
-                </div>
-              ))}
-              {searchResults.length === 0 && searchQuery.trim() && (
-                <p className={styles.noResults}>No users found</p>
-              )}
-            </div>
+          {/* Chat Name */}
+          <div className={styles.field}>
+            <label className={styles.label}>Chat Name (optional)</label>
+            <input
+              type="text"
+              value={chatName}
+              onChange={e => setChatName(e.target.value)}
+              placeholder="e.g. Car Club"
+              className={styles.input}
+              maxLength={50}
+            />
           </div>
 
-          {/* RIGHT: Selected Users */}
-          <div className={styles.panel}>
-            <label className={styles.label}>
-              Selected ({selectedUsers.length})
-            </label>
-            <div className={styles.selectedContainer}>
-              {selectedUsers.map(u => (
-                <div key={u.userId} className={styles.selectedChip}>
-                  <img
-                    src={u.profilePic || '/images/defaultPfp.png'}
-                    alt={u.name}
-                    className={styles.chipPic}
-                  />
-                  <span className={styles.chipName}>{u.name}</span>
-                  <button
-                    type="button"
-                    onClick={() => removeUser(u.userId)}
-                    className={styles.removeChip}
+          {/* side by side panels */}
+          <div className={styles.twoColumnLayout}>
+            {/* search */}
+            <div className={styles.panel}>
+              <label className={styles.label}>Search Users</label>
+              <div className={styles.searchRow}>
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  onKeyDown={handleSearchKeyDown}
+                  placeholder="Search users by name..."
+                  className={styles.searchInput}
+                />
+              </div>
+
+              <div className={styles.resultsContainer}>
+                {searchResults.map(u => (
+                  <div
+                    key={u.userId}
+                    className={styles.resultRow}
+                    onClick={() => addUser(u)}
                   >
-                    <FaTimes />
-                  </button>
-                </div>
-              ))}
-              {selectedUsers.length === 0 && (
-                <p className={styles.emptySelected}>No users selected yet</p>
-              )}
+                    <img
+                      src={u.profilePic || '/images/defaultPfp.png'}
+                      alt={u.name}
+                      className={styles.resultPic}
+                    />
+                    <span className={styles.resultName}>{u.name}</span>
+                    <button type="button" className={styles.addBtn}>Add</button>
+                  </div>
+                ))}
+                {searchResults.length === 0 && searchQuery.trim() && (
+                  <p className={styles.noResults}>No users found</p>
+                )}
+              </div>
+            </div>
+
+            {/* selected users */}
+            <div className={styles.panel}>
+              <label className={styles.label}>
+                Selected ({selectedUsers.length})
+              </label>
+              <div className={styles.selectedContainer}>
+                {selectedUsers.map(u => (
+                  <div key={u.userId} className={styles.selectedChip}>
+                    <img
+                      src={u.profilePic || '/images/defaultPfp.png'}
+                      alt={u.name}
+                      className={styles.chipPic}
+                    />
+                    <span className={styles.chipName}>{u.name}</span>
+                    <button
+                      type="button"
+                      onClick={() => removeUser(u.userId)}
+                      className={styles.removeChip}
+                    >
+                      <FaTimes />
+                    </button>
+                  </div>
+                ))}
+                {selectedUsers.length === 0 && (
+                  <p className={styles.emptySelected}>No users selected yet</p>
+                )}
+              </div>
             </div>
           </div>
-        </div>
 
-        {error && <p className={commonStyles.error}>{error}</p>}
+          {error && <p className={commonStyles.error}>{error}</p>}
 
-        <button
-          type="submit"
-          className={commonStyles.primaryBtn}
-          disabled={creating || selectedUsers.length === 0}
-        >
-          {creating ? (
-            <>Creating<span className={commonStyles.dots}></span></>
-          ) : (
-            'Create Chat'
-          )}
-        </button>
+          <button
+            type="submit"
+            className={commonStyles.primaryBtn}
+            disabled={creating || selectedUsers.length === 0}
+          >
+            {creating ? (
+              <>Creating<span className={commonStyles.dots}></span></>
+            ) : (
+              'Create Chat'
+            )}
+          </button>
 
-        <button
-          type="button"
-          onClick={onClose}
-          className={styles.cancelBtn}
-        >
-          Cancel
-        </button>
-      </form>
+          <button
+            type="button"
+            onClick={onClose}
+            className={styles.cancelBtn}
+          >
+            Cancel
+          </button>
+        </form>
+      )}
     </div>,
     document.body
   );

@@ -157,3 +157,10 @@
 .cancelBtn:hover {
   background: rgba(82,111,174,0.08);
 }
+
+.successMessage {
+  color: green;
+  font-weight: bold;
+  text-align: center;
+  font-size: large;
+}
