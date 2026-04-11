@@ -11,6 +11,12 @@ export default function Notifs() {
   const [selectedChatId, setSelectedChatId] = useState<number | null>(null);
   const [currentChatName, setCurrentChatName] = useState<string>('');
 
+  // Callback to instantly reset unread count in sidebar when a chat is opened
+  const handleChatOpened = (chatId: number) => {
+    // The sidebar now handles the instant UI update itself
+    // This callback is here for future global unread count if needed
+  };
+
   const handleChatSelect = (chatId: number, name: string) => {
     setSelectedChatId(chatId);
     setCurrentChatName(name);
@@ -20,14 +26,16 @@ export default function Notifs() {
     <div className={styles.pageContainer}>
       <ChatListSidebar 
         onChatSelect={handleChatSelect} 
-        selectedChatId={selectedChatId} 
+        selectedChatId={selectedChatId}
+        onChatOpened={handleChatOpened}
       />
 
       <div className={styles.messageArea}>
         {selectedChatId ? (
           <ChatWindow 
             selectedChatId={selectedChatId} 
-            chatName={currentChatName} 
+            chatName={currentChatName}
+            onChatOpened={handleChatOpened}
           />
         ) : (
           <div className={styles.placeholder}>

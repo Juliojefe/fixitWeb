@@ -17,9 +17,10 @@ interface ChatSummary {
 interface ChatListSidebarProps {
   onChatSelect: (chatId: number, name: string) => void;
   selectedChatId: number | null;
+  onChatOpened?: (chatId: number) => void;
 }
 
-export default function ChatListSidebar({ onChatSelect, selectedChatId }: ChatListSidebarProps) {
+export default function ChatListSidebar({ onChatSelect, selectedChatId, onChatOpened }: ChatListSidebarProps) {
   const { user } = useUser();
   const [chats, setChats] = useState<ChatSummary[]>([]);
   const [page, setPage] = useState(0);
@@ -60,7 +61,15 @@ export default function ChatListSidebar({ onChatSelect, selectedChatId }: ChatLi
   }
 
   function handleChatClick(chat: ChatSummary) {
+    // INSTANT UI UPDATE - decrement unread count right away
+    setChats(prevChats =>
+      prevChats.map(c =>
+        c.chatId === chat.chatId ? { ...c, unreadCount: 0 } : c
+      )
+    );
+
     onChatSelect(chat.chatId, chat.name);
+    if (onChatOpened) onChatOpened(chat.chatId);
   }
 
   function handleCreateNewChat() {

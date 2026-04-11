@@ -19,16 +19,16 @@ interface Message {
 interface ChatWindowProps {
   selectedChatId: number;
   chatName: string;
+  onChatOpened: (chatId: number) => void;
 }
 
-export default function ChatWindow({ selectedChatId, chatName }: ChatWindowProps) {
+export default function ChatWindow({ selectedChatId, chatName, onChatOpened }: ChatWindowProps) {
   const { user } = useUser();
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [previewImages, setPreviewImages] = useState<string[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Load past messages
   const loadMessages = async () => {
     if (!user?.accessToken) return;
     try {
@@ -50,6 +50,8 @@ export default function ChatWindow({ selectedChatId, chatName }: ChatWindowProps
         {},
         { headers: { Authorization: `Bearer ${user.accessToken}` } }
       );
+      // Instant UI update in sidebar
+      onChatOpened(selectedChatId);
     } catch (err) {
       console.error('Mark as read failed', err);
     }
@@ -66,7 +68,7 @@ export default function ChatWindow({ selectedChatId, chatName }: ChatWindowProps
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Live WebSocket
+  // WebSocket remains unchanged
   useEffect(() => {
     if (!user?.accessToken || !selectedChatId) return;
 
@@ -76,10 +78,9 @@ export default function ChatWindow({ selectedChatId, chatName }: ChatWindowProps
       debug: (str: string) => console.log(str),
       reconnectDelay: 5000,
       onConnect: () => {
-        client.subscribe(`/topic/chat/${selectedChatId}`, (message: { body: string }) => {
+        client.subscribe(`/topic/chat/${selectedChatId}`, (message: any) => {
           const newMsg: Message = JSON.parse(message.body);
           setMessages((prev) => {
-            // Remove optimistic version if it exists
             const filtered = prev.filter(m => m.tempId !== newMsg.tempId && m.messageId !== newMsg.messageId);
             return [...filtered, newMsg];
           });
@@ -92,7 +93,7 @@ export default function ChatWindow({ selectedChatId, chatName }: ChatWindowProps
     return () => client.deactivate();
   }, [selectedChatId, user?.accessToken]);
 
-  // Send with optimistic update
+  // Send logic (unchanged)
   const handleSend = async () => {
     if ((!inputValue.trim() && previewImages.length === 0) || !user?.accessToken) return;
 
@@ -123,7 +124,6 @@ export default function ChatWindow({ selectedChatId, chatName }: ChatWindowProps
         payload,
         { headers: { Authorization: `Bearer ${user.accessToken}` } }
       );
-      // Success: WebSocket will replace it with real message
     } catch (err) {
       console.error('Send failed', err);
       setMessages(prev =>
