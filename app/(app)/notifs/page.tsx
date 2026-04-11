@@ -11,9 +11,9 @@ export default function Notifs() {
   const [selectedChatId, setSelectedChatId] = useState<number | null>(null);
   const [currentChatName, setCurrentChatName] = useState<string>('');
 
-  const handleChatSelect = (chatId: number) => {
+  const handleChatSelect = (chatId: number, name: string) => {
     setSelectedChatId(chatId);
-    setCurrentChatName(`Chat #${chatId}`);
+    setCurrentChatName(name);
   };
 
   return (
