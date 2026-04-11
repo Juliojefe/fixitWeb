@@ -1,6 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import { useUser } from '@/app/providers/UserProvider';
+import { FaPlusSquare } from 'react-icons/fa';
+import { createPortal } from 'react-dom';
+import CreateChatModal from '../CreateChatModal/CreateChatModal';
 import styles from './ChatListSidebar.module.css';
 
 interface ChatSummary {
@@ -8,61 +13,118 @@ interface ChatSummary {
   name: string;
 }
 
-export default function ChatListSidebar() {
-  // TEMPORARY MOCK DATA — remove this whole block when connecting to real backend
-  const [chats] = useState<ChatSummary[]>([
-    { chatId: 1, name: "Sarah Chen" },
-    { chatId: 2, name: "Mechanic Group - Bay Area" },
-    { chatId: 3, name: "David Rodriguez" },
-    { chatId: 4, name: "Car Parts Deal" },
-    { chatId: 5, name: "Emma Thompson" },
-    { chatId: 6, name: "Weekend Project Crew" },
-    { chatId: 7, name: "Michael Park" },
-    { chatId: 8, name: "Auto Repair Tips" },
-    { chatId: 9, name: "Jessica Rivera" },
-    { chatId: 10, name: "Classic Car Enthusiasts" },
-    { chatId: 11, name: "John Ramirez" },
-    { chatId: 12, name: "Engine Swap Discussion" },
-  ]);
+interface ChatListSidebarProps {
+  onChatSelect: (chatId: number) => void;
+  selectedChatId: number | null;
+}
 
-  const [hasMore] = useState(false); // set to true if you want to test "Load More"
+export default function ChatListSidebar({ onChatSelect, selectedChatId }: ChatListSidebarProps) {
+  const { user } = useUser();
+  const [chats, setChats] = useState<ChatSummary[]>([]);
+  const [page, setPage] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+  const [isCreateChatModalOpen, setIsCreateChatModalOpen] = useState(false);
 
-  function handleChatClick(chatId: number) {
-    console.log(`Chat ${chatId} clicked — will open messages on right later`);
+  const pageSize = 10;
+
+  async function fetchChats(currentPage: number, reset = false) {
+    if (!user?.accessToken || loading) return;
+    setLoading(true);
+    try {
+      const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/chat/user?page=${currentPage}&size=${pageSize}`;
+      const res = await axios.get(endpoint, {
+        headers: { Authorization: `Bearer ${user.accessToken}` },
+      });
+      const newChats = res.data.content || [];
+
+      if (reset) setChats(newChats);
+      else setChats(prev => [...prev, ...newChats]);
+
+      setPage(currentPage + 1);
+      setHasMore(!res.data.last);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
   }
+
+  useEffect(() => {
+    if (user?.accessToken) fetchChats(0, true);
+  }, [user?.accessToken]);
 
   function handleLoadMore() {
-    alert("Load more clicked — mock only");
+    if (hasMore && !loading) fetchChats(page, false);
   }
 
+  function handleChatClick(chatId: number) {
+    onChatSelect(chatId);
+  }
+
+  function handleCreateNewChat() {
+    setIsCreateChatModalOpen(true);
+  }
+
+  const handleChatCreated = (newChat: ChatSummary) => {
+    setChats(prev => [newChat, ...prev]);
+    onChatSelect(newChat.chatId);
+  };
+
   return (
-    <div className={styles.sidebar}>
-      <div className={styles.scrollContainer}>
-        {chats.map((chat) => (
-          <div
-            key={chat.chatId}
-            className={styles.chatRow}
-            onClick={() => handleChatClick(chat.chatId)}
-          >
-            <div className={styles.chatContent}>
-              <span className={styles.chatName}>{chat.name}</span>
+    <>
+      <div className={styles.sidebar}>
+        <div className={styles.scrollContainer}>
+          {chats.length === 0 && !loading ? (
+            <div className={styles.emptyState}>
+              <p className={styles.emptyTitle}>No chats yet</p>
+              <p className={styles.emptySubtitle}>
+                Create your first chat using the <strong>+</strong> button
+              </p>
             </div>
-          </div>
-        ))}
+          ) : (
+            chats.map((chat) => (
+              <div
+                key={chat.chatId}
+                className={`${styles.chatRow} ${selectedChatId === chat.chatId ? styles.active : ''}`}
+                onClick={() => handleChatClick(chat.chatId)}
+              >
+                <div className={styles.chatContent}>
+                  <span className={styles.chatName}>{chat.name || 'Unnamed Chat'}</span>
+                </div>
+              </div>
+            ))
+          )}
 
-        {/* Empty space at bottom when few chats (exactly as you wanted) */}
-        {chats.length < 8 && <div className={styles.emptySpace} />}
+          {chats.length < 8 && <div className={styles.emptySpace} />}
 
-        {/* Load More Button (still works for demo) */}
-        {hasMore && (
-          <button
-            className={styles.loadMoreBtn}
-            onClick={handleLoadMore}
-          >
-            Load More Chats
-          </button>
-        )}
+          {hasMore && (
+            <button
+              className={styles.loadMoreBtn}
+              onClick={handleLoadMore}
+              disabled={loading}
+            >
+              {loading ? 'Loading...' : 'Load More Chats'}
+            </button>
+          )}
+        </div>
+
+        <button
+          className={styles.createChatBtn}
+          onClick={handleCreateNewChat}
+          title="Create a new chat"
+        >
+          <FaPlusSquare />
+        </button>
       </div>
-    </div>
+
+      {isCreateChatModalOpen && createPortal(
+        <CreateChatModal 
+          onClose={() => setIsCreateChatModalOpen(false)}
+          onChatCreated={handleChatCreated}
+        />,
+        document.body
+      )}
+    </>
   );
 }

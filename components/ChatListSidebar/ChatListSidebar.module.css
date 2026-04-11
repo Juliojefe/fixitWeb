@@ -1,12 +1,13 @@
 .sidebar {
   width: 300px;
   height: 100vh;
-  background: #fff;
+  background: #c7d5ed;
   border: 4px solid black;
   display: flex;
   flex-direction: column;
-  font-family: 'DM Sans', sans-serif;
-  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.08);
+  box-shadow: 4px 0 12px rgba(249, 238, 238, 0.08);
+  position: relative; 
+  overflow: hidden;
 }
 
 .scrollContainer {
@@ -25,14 +26,14 @@
   padding: 14px 24px;
   cursor: pointer;
   transition: all 0.15s ease;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  border-bottom: 1px solid black;
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
 .chatRow:hover {
-  background: #e8eef8;
+  background: white;
   transform: translateX(4px);
 }
 
@@ -44,7 +45,7 @@
 .chatName {
   font-size: 1.05rem;
   font-weight: 500;
-  color: #111;
+  color: black;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -75,4 +76,73 @@
   cursor: not-allowed;
   background-color: white;
   color: black;
+}
+
+.createChatBtn {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  background: #526fae;
+  color: white;
+  border: none;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  opacity: 0.60;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.createChatBtn:hover {
+  opacity: 1;
+  transform: scale(1.08);
+  background: #3d5a96;
+}
+
+.createChatBtn:active {
+  transform: scale(0.95);
+}
+
+.emptyState {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  padding: 40px 20px;
+  color: #555;
+}
+
+.emptyTitle {
+  font-size: 1.35rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: #111;
+}
+
+.emptySubtitle {
+  font-size: 0.98rem;
+  color: #666;
+  max-width: 220px;
+}
+
+.chatRow.active {
+  background: white !important;
+  border-left: 5px solid #ffb437;
+}
+
+.chatRow.active .chatName {
+  color: #111;
+}
+
+.chatRow.active:hover {
+  transform: none;
 }

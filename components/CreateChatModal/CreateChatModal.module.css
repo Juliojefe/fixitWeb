@@ -1,0 +1,166 @@
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.label {
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.input,
+.searchInput {
+  background: #fafaf8;
+  color: #111;
+  font-family: 'DM Sans', sans-serif;
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border: 1.5px solid rgba(0,0,0,0.14);
+  border-radius: 12px;
+  font-size: 1rem;
+  outline: none;
+  transition: all 0.2s;
+}
+
+.input:focus,
+.searchInput:focus {
+  border-color: #526fae;
+  box-shadow: 0 0 0 4px rgba(82,111,174,0.15);
+}
+
+/* New two-column layout */
+.twoColumnLayout {
+  display: flex;
+  gap: 20px;
+  margin-top: 12px;
+}
+
+.panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border: 2px solid rgba(0,0,0,0.12);
+  border-radius: 14px;
+  padding: 14px;
+  min-height: 320px;
+  max-height: 320px;
+  overflow: hidden;
+}
+
+/* Scrollable areas with invisible scrollbar */
+.resultsContainer,
+.selectedContainer {
+  flex: 1;
+  overflow-y: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.resultsContainer::-webkit-scrollbar,
+.selectedContainer::-webkit-scrollbar {
+  display: none;
+}
+
+/* Search results */
+.resultRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+}
+
+.resultRow:last-child { border-bottom: none; }
+.resultRow:hover { background: #f0f4ff; }
+
+.resultPic {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid #526fae;
+  object-fit: cover;
+}
+
+.resultName {
+  flex: 1;
+  font-size: 1.05rem;
+  font-weight: 500;
+}
+
+.addBtn {
+  background: #526fae;
+  color: white;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 9999px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Selected users */
+.selectedChip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #e8f0ff;
+  color: #1e3a8a;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 0.95rem;
+}
+
+.chipPic {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.chipName { font-weight: 500; }
+
+.removeChip {
+  background: none;
+  border: none;
+  color: #e11d48;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+/* Empty states */
+.emptySelected,
+.noResults {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #888;
+  font-size: 0.95rem;
+  text-align: center;
+}
+
+.cancelBtn {
+  width: 100%;
+  padding: 0.85rem;
+  background: transparent;
+  border: 2px solid #526fae;
+  color: #526fae;
+  font-weight: 600;
+  border-radius: 12px;
+  cursor: pointer;
+  margin-top: 12px;
+}
+
+.cancelBtn:hover {
+  background: rgba(82,111,174,0.08);
+}
+
+.successMessage {
+  color: green;
+  font-weight: bold;
+  text-align: center;
+  font-size: large;
+}

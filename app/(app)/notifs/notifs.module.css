@@ -3,7 +3,7 @@
   height: 100vh;
   width: 100%;
   overflow: hidden;
-  background: #fff;
+  background: black;
 }
 
 .messageArea {
@@ -11,7 +11,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #f8f9fc;
+  background: #dde2f3;
   border-right: 4px solid black;
   border-top: 4px solid black;
   border-bottom: 4px solid black;
@@ -20,7 +20,7 @@
 .placeholder {
   font-family: 'DM Sans', sans-serif;
   font-size: 1.1rem;
-  color: #666;
+  color: black;
   text-align: center;
   max-width: 280px;
 }
