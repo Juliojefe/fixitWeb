@@ -35,18 +35,18 @@ export default function MessageBubble({ message, isMine }: MessageBubbleProps) {
 
         {hasImages && (
           <div className={styles.imageContainer}>
-            {/* Large image (always shown by default) */}
+            {/* Large image - always shown by default */}
             <img
               src={largeImage!}
               alt="large attachment"
               className={styles.enlargedImage}
             />
 
-            {/* Navigation arrows when there are multiple images */}
+            {/* Navigation arrows - only when there are multiple images */}
             {message.imageUrls.length > 1 && (
               <>
-                <button className={styles.navBtn} onClick={prevImage}>‹</button>
-                <button className={styles.navBtn} onClick={nextImage}>›</button>
+                <button className={styles.navLeft} onClick={prevImage}>‹</button>
+                <button className={styles.navRight} onClick={nextImage}>›</button>
               </>
             )}
 

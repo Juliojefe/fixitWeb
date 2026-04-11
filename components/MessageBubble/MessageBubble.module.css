@@ -42,9 +42,9 @@
   align-items: center;
   gap: 10px;
   margin: 10px 0;
+  position: relative;
 }
 
-/* Large image (default view) */
 .enlargedImage {
   max-width: 100%;
   max-height: 400px;
@@ -55,17 +55,17 @@
   background: #f8f8f8;
 }
 
-/* Navigation arrows */
-.navBtn {
+.navLeft {
   position: absolute;
   top: 50%;
+  left: 12px;
   transform: translateY(-50%);
   background: white;
   border: 3px solid black;
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  font-size: 24px;
+  font-size: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -74,8 +74,24 @@
   box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.15);
 }
 
-.navBtn:first-child { left: 12px; }
-.navBtn:last-child { right: 12px; }
+.navRight {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  transform: translateY(-50%);
+  background: white;
+  border: 3px solid black;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  font-size: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.15);
+}
 
 /* Small thumbnails below */
 .thumbnailStrip {
