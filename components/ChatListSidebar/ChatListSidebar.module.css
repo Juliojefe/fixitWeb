@@ -7,6 +7,8 @@
   flex-direction: column;
   font-family: 'DM Sans', sans-serif;
   box-shadow: 4px 0 12px rgba(0, 0, 0, 0.08);
+  position: relative; 
+  overflow: hidden;
 }
 
 .scrollContainer {
@@ -75,4 +77,35 @@
   cursor: not-allowed;
   background-color: white;
   color: black;
+}
+
+.createChatBtn {
+  position: absolute;
+  bottom: 24px;
+  right: 24px;
+  width: 56px;
+  height: 56px;
+  background: #526fae;
+  color: white;
+  border: none;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  opacity: 0.60;
+  transition: all 0.2s ease;
+  z-index: 10;
+}
+
+.createChatBtn:hover {
+  opacity: 1;
+  transform: scale(1.08);
+  background: #3d5a96;
+}
+
+.createChatBtn:active {
+  transform: scale(0.95);
 }

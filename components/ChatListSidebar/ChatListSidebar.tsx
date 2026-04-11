@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useUser } from '@/app/providers/UserProvider';
+import { FaPlusSquare } from 'react-icons/fa';
 import styles from './ChatListSidebar.module.css';
 
 interface ChatSummary {
@@ -62,8 +63,11 @@ export default function ChatListSidebar() {
   }
 
   function handleChatClick(chatId: number) {
-    // Placeholder – later this will open messages on the right
     console.log(`Chat ${chatId} clicked`);
+  }
+
+  function handleCreateNewChat() {
+    console.log('Create new chat button clicked — modal will open here later');
   }
 
   return (
@@ -81,10 +85,8 @@ export default function ChatListSidebar() {
           </div>
         ))}
 
-        {/* Empty space at bottom when there are few chats */}
         {chats.length < 8 && <div className={styles.emptySpace} />}
 
-        {/* Load More Button */}
         {hasMore && (
           <button
             className={styles.loadMoreBtn}
@@ -95,6 +97,14 @@ export default function ChatListSidebar() {
           </button>
         )}
       </div>
+
+      <button
+        className={styles.createChatBtn}
+        onClick={handleCreateNewChat}
+        title="Create a new chat"
+      >
+        <FaPlusSquare />
+      </button>
     </div>
   );
 }
