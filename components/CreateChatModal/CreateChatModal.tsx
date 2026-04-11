@@ -1,0 +1,217 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import axios from 'axios';
+import { useUser } from '@/app/providers/UserProvider';
+import { createPortal } from 'react-dom';
+import { FaPlus, FaTimes } from 'react-icons/fa';
+import styles from './CreateChatModal.module.css';
+import commonStyles from '../../app/styles/common.module.css';
+
+interface SelectedUser {
+  userId: number;
+  name: string;
+  profilePic?: string;
+}
+
+interface CreateChatModalProps {
+  onClose: () => void;
+}
+
+export default function CreateChatModal({ onClose }: CreateChatModalProps) {
+  const { user } = useUser();
+
+  const [chatName, setChatName] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<SelectedUser[]>([]);
+  const [selectedUsers, setSelectedUsers] = useState<SelectedUser[]>([]);
+  const [loadingSearch, setLoadingSearch] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!searchQuery.trim() || !user?.accessToken) {
+      setSearchResults([]);
+      return;
+    }
+
+    const timeout = setTimeout(async () => {
+      setLoadingSearch(true);
+      try {
+        const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/search/users?query=${encodeURIComponent(searchQuery)}&page=0&size=15`;
+        const res = await axios.get(endpoint, {
+          headers: { Authorization: `Bearer ${user.accessToken}` },
+        });
+        setSearchResults(res.data.content || []);
+      } catch (err) {
+        console.error(err);
+        setSearchResults([]);
+      } finally {
+        setLoadingSearch(false);
+      }
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [searchQuery, user?.accessToken]);
+
+  const addUser = (userToAdd: SelectedUser) => {
+    if (!selectedUsers.find(u => u.userId === userToAdd.userId)) {
+      setSelectedUsers(prev => [...prev, userToAdd]);
+    }
+    setSearchQuery('');
+    setSearchResults([]);
+  };
+
+  const removeUser = (userId: number) => {
+    setSelectedUsers(prev => prev.filter(u => u.userId !== userId));
+  };
+
+  const handleCreateChat = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user?.accessToken) return;
+    if (selectedUsers.length === 0) {
+      setError('You must add at least one other user');
+      return;
+    }
+
+    setCreating(true);
+    setError('');
+
+    try {
+      const payload = {
+        name: chatName.trim() || null,
+        userIds: selectedUsers.map(u => u.userId),
+      };
+
+      await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/chat/create`,
+        payload,
+        { headers: { Authorization: `Bearer ${user.accessToken}` } }
+      );
+
+      onClose();   // modal closes on success
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Failed to create chat');
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  // Prevent Enter key from submitting the form while typing in search
+  const handleSearchKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+    }
+  };
+
+  return createPortal(
+    <div className={commonStyles.modalBackdrop} onClick={onClose}>
+      <form
+        className={commonStyles.formContainer}
+        onSubmit={handleCreateChat}
+        onClick={e => e.stopPropagation()}
+        style={{ width: '520px', maxHeight: '85vh', overflowY: 'auto' }}
+      >
+        <h2 className={commonStyles.formHeader}>Create New Chat</h2>
+
+        {/* Chat Name */}
+        <div className={styles.field}>
+          <label className={styles.label}>Chat Name (optional)</label>
+          <input
+            type="text"
+            value={chatName}
+            onChange={e => setChatName(e.target.value)}
+            placeholder="e.g. Car Club"
+            className={styles.input}
+            maxLength={50}
+          />
+        </div>
+
+        {/* User Search */}
+        <div className={styles.field}>
+          <label className={styles.label}>Add People</label>
+          <div className={styles.searchRow}>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              onKeyDown={handleSearchKeyDown}
+              placeholder="Search users by name..."
+              className={styles.searchInput}
+            />
+          </div>
+
+          {/* Search Results */}
+          {searchResults.length > 0 && (
+            <div className={styles.resultsContainer}>
+              {searchResults.map(u => (
+                <div
+                  key={u.userId}
+                  className={styles.resultRow}
+                  onClick={() => addUser(u)}
+                >
+                  <img
+                    src={u.profilePic || '/images/defaultPfp.png'}
+                    alt={u.name}
+                    className={styles.resultPic}
+                  />
+                  <span className={styles.resultName}>{u.name}</span>
+                  <button type="button" className={styles.addBtn}>Add</button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Selected Users */}
+        {selectedUsers.length > 0 && (
+          <div className={styles.field}>
+            <label className={styles.label}>Selected ({selectedUsers.length})</label>
+            <div className={styles.selectedContainer}>
+              {selectedUsers.map(u => (
+                <div key={u.userId} className={styles.selectedChip}>
+                  <img
+                    src={u.profilePic || '/images/defaultPfp.png'}
+                    alt={u.name}
+                    className={styles.chipPic}
+                  />
+                  <span className={styles.chipName}>{u.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeUser(u.userId)}
+                    className={styles.removeChip}
+                  >
+                    <FaTimes />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {error && <p className={commonStyles.error}>{error}</p>}
+
+        <button
+          type="submit"
+          className={commonStyles.primaryBtn}
+          disabled={creating || selectedUsers.length === 0}
+        >
+          {creating ? (
+            <>Creating<span className={commonStyles.dots}></span></>
+          ) : (
+            'Create Chat'
+          )}
+        </button>
+
+        <button
+          type="button"
+          onClick={onClose}
+          className={styles.cancelBtn}
+        >
+          Cancel
+        </button>
+      </form>
+    </div>,
+    document.body
+  );
+}
