@@ -17,25 +17,6 @@
   flex-shrink: 0;
 }
 
-.headerContent {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.chatTitle {
-  font-size: 1.35rem;
-  font-weight: 600;
-  color: #111;
-  margin: 0;
-}
-
-.participants {
-  font-size: 0.95rem;
-  color: #526fae;
-  font-weight: 500;
-}
-
 .messagesContainer {
   flex: 1;
   overflow-y: auto;
@@ -48,64 +29,6 @@
 
 .messagesContainer::-webkit-scrollbar {
   display: none;
-}
-
-.messageRow {
-  display: flex;
-  max-width: 75%;
-}
-
-.messageRow.mine {
-  align-self: flex-end;
-}
-
-.messageRow.theirs {
-  align-self: flex-start;
-}
-
-.bubble {
-  background: white;
-  border: 3px solid black;
-  border-radius: 18px;
-  padding: 14px 18px;
-  position: relative;
-  max-width: 100%;
-  box-shadow: 4px 4px 0 rgba(0, 0, 0, 0.1);
-}
-
-.messageRow.mine .bubble {
-  background: #526fae;
-  color: white;
-  border-color: #3d5a96;
-}
-
-.messageText {
-  margin: 0 0 8px 0;
-  font-size: 1.05rem;
-  line-height: 1.4;
-}
-
-.imageGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-  gap: 8px;
-  margin-top: 8px;
-}
-
-.messageImage {
-  width: 100%;
-  border-radius: 12px;
-  border: 2px solid black;
-  object-fit: cover;
-  aspect-ratio: 1 / 1;
-}
-
-.timestamp {
-  font-size: 0.75rem;
-  opacity: 0.7;
-  display: block;
-  margin-top: 6px;
-  text-align: right;
 }
 
 .inputArea {
