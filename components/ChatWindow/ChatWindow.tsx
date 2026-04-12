@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useLayoutEffect } from 'react';
 import axios from 'axios';
 import { useUser } from '@/app/providers/UserProvider';
 import styles from './ChatWindow.module.css';
@@ -28,41 +28,79 @@ interface ChatWindowProps {
   onChatOpened: (chatId: number) => void;
 }
 
-export default function ChatWindow({ selectedChatId, chatName, onChatOpened }: ChatWindowProps) {
+const PAGE_SIZE = 15;
+
+export default function ChatWindow({
+  selectedChatId,
+  chatName,
+  onChatOpened,
+}: ChatWindowProps) {
   const { user } = useUser();
+
   const [messages, setMessages] = useState<Message[]>([]);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [previewImages, setPreviewImages] = useState<string[]>([]);
+
+  const [page, setPage] = useState(0);
+  const [last, setLast] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [loadingMore, setLoadingMore] = useState(false);
+
+  const messagesContainerRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Load messages + participants
-  const loadChatData = async () => {
-    if (!user?.accessToken) return;
+  const shouldScrollToBottomRef = useRef(false);
+  const preserveScrollRef = useRef<{
+    shouldPreserve: boolean;
+    prevScrollHeight: number;
+    prevScrollTop: number;
+  }>({
+    shouldPreserve: false,
+    prevScrollHeight: 0,
+    prevScrollTop: 0,
+  });
 
-    // Load messages
+  useEffect(() => {
+    if (!selectedChatId) return;
+
+    setMessages([]);
+    setParticipants([]);
+    setPage(0);
+    setLast(false);
+
+    loadInitialData();
+  }, [selectedChatId]);
+
+  const loadInitialData = async () => {
+    if (!user?.accessToken || !selectedChatId) return;
+
+    setLoading(true);
+
     try {
-      const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/message/${selectedChatId}?page=0&size=50`,
-        { headers: { Authorization: `Bearer ${user.accessToken}` } }
-      );
-      setMessages(res.data);
+      const [messagesRes, participantsRes] = await Promise.all([
+        axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/message/${selectedChatId}?page=0&size=${PAGE_SIZE}`,
+          { headers: { Authorization: `Bearer ${user.accessToken}` } }
+        ),
+        axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/chat/${selectedChatId}/participants`,
+          { headers: { Authorization: `Bearer ${user.accessToken}` } }
+        ),
+      ]);
+
+      setMessages(messagesRes.data);
+      setParticipants(participantsRes.data);
+
+      setPage(1);
+      setLast(messagesRes.data.length < PAGE_SIZE);
+
+      // Initial load should scroll to bottom once
+      shouldScrollToBottomRef.current = true;
     } catch (err) {
-      console.error('Failed to load messages', err);
+      console.error('Failed to load initial chat data', err);
     }
 
-    // Load participants
-    try {
-      const res = await axios.get(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/chat/${selectedChatId}/participants`,
-        { headers: { Authorization: `Bearer ${user.accessToken}` } }
-      );
-      setParticipants(res.data);
-    } catch (err) {
-      console.error('Failed to load participants', err);
-    }
-
-    // Mark as read
     try {
       await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/api/chat/${selectedChatId}/read`,
@@ -72,17 +110,70 @@ export default function ChatWindow({ selectedChatId, chatName, onChatOpened }: C
       onChatOpened(selectedChatId);
     } catch (err) {
       console.error('Mark as read failed', err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  useEffect(() => {
-    if (selectedChatId) {
-      loadChatData();
-    }
-  }, [selectedChatId]);
+  const loadMoreMessages = async () => {
+    if (loadingMore || last || !selectedChatId || !user?.accessToken) return;
 
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const container = messagesContainerRef.current;
+    if (container) {
+      preserveScrollRef.current = {
+        shouldPreserve: true,
+        prevScrollHeight: container.scrollHeight,
+        prevScrollTop: container.scrollTop,
+      };
+    }
+
+    setLoadingMore(true);
+
+    try {
+      const res = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/message/${selectedChatId}?page=${page}&size=${PAGE_SIZE}`,
+        { headers: { Authorization: `Bearer ${user.accessToken}` } }
+      );
+
+      const olderMessages: Message[] = res.data;
+
+      if (olderMessages.length > 0) {
+        setMessages((prev) => [...olderMessages, ...prev]);
+        setPage((prev) => prev + 1);
+      }
+
+      setLast(olderMessages.length < PAGE_SIZE);
+
+      // Do not scroll to bottom when loading older messages
+      shouldScrollToBottomRef.current = false;
+    } catch (err) {
+      console.error('Failed to load more messages', err);
+      preserveScrollRef.current.shouldPreserve = false;
+    } finally {
+      setLoadingMore(false);
+    }
+  };
+
+  useLayoutEffect(() => {
+    const container = messagesContainerRef.current;
+
+    if (!container) return;
+
+    if (preserveScrollRef.current.shouldPreserve) {
+      const { prevScrollHeight, prevScrollTop } = preserveScrollRef.current;
+      const newScrollHeight = container.scrollHeight;
+      const heightDiff = newScrollHeight - prevScrollHeight;
+
+      container.scrollTop = prevScrollTop + heightDiff;
+
+      preserveScrollRef.current.shouldPreserve = false;
+      return;
+    }
+
+    if (shouldScrollToBottomRef.current) {
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      shouldScrollToBottomRef.current = false;
+    }
   }, [messages]);
 
   // Live WebSocket
@@ -96,11 +187,16 @@ export default function ChatWindow({ selectedChatId, chatName, onChatOpened }: C
       reconnectDelay: 5000,
       onConnect: () => {
         client.subscribe(`/topic/chat/${selectedChatId}`, (message: any) => {
-          const newMsg = JSON.parse(message.body) as Message;
+          const newMsg = JSON.parse(message.body);
+
           setMessages((prev) => {
-            const filtered = prev.filter(m => m.tempId !== newMsg.tempId && m.messageId !== newMsg.messageId);
+            const filtered = prev.filter(
+              (m) => m.tempId !== newMsg.tempId && m.messageId !== newMsg.messageId
+            );
             return [...filtered, newMsg];
           });
+
+          shouldScrollToBottomRef.current = true;
         });
       },
     });
@@ -110,7 +206,6 @@ export default function ChatWindow({ selectedChatId, chatName, onChatOpened }: C
     return () => client.deactivate();
   }, [selectedChatId, user?.accessToken]);
 
-  // Send with optimistic update
   const handleSend = async () => {
     if ((!inputValue.trim() && previewImages.length === 0) || !user?.accessToken) return;
 
@@ -127,16 +222,19 @@ export default function ChatWindow({ selectedChatId, chatName, onChatOpened }: C
       failed: false,
     };
 
-    setMessages(prev => [...prev, optimisticMsg]);
+    setMessages((prev) => [...prev, optimisticMsg]);
+    shouldScrollToBottomRef.current = true;
+
+    const payload = {
+      content: optimisticMsg.content || null,
+      imageUrls: optimisticMsg.imageUrls,
+      tempId,
+    };
+
     setInputValue('');
     setPreviewImages([]);
 
     try {
-      const payload = {
-        content: optimisticMsg.content || null,
-        imageUrls: optimisticMsg.imageUrls,
-      };
-
       await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/api/message/${selectedChatId}`,
         payload,
@@ -144,8 +242,8 @@ export default function ChatWindow({ selectedChatId, chatName, onChatOpened }: C
       );
     } catch (err) {
       console.error('Send failed', err);
-      setMessages(prev =>
-        prev.map(m => m.tempId === tempId ? { ...m, failed: true } : m)
+      setMessages((prev) =>
+        prev.map((m) => (m.tempId === tempId ? { ...m, failed: true } : m))
       );
     }
   };
@@ -158,7 +256,7 @@ export default function ChatWindow({ selectedChatId, chatName, onChatOpened }: C
       const reader = new FileReader();
       reader.onload = (ev) => {
         if (ev.target?.result) {
-          setPreviewImages(prev => [...prev, ev.target!.result as string]);
+          setPreviewImages((prev) => [...prev, ev.target!.result as string]);
         }
       };
       reader.readAsDataURL(file);
@@ -166,16 +264,14 @@ export default function ChatWindow({ selectedChatId, chatName, onChatOpened }: C
   };
 
   const removePreview = (index: number) => {
-    setPreviewImages(prev => prev.filter((_, i) => i !== index));
+    setPreviewImages((prev) => prev.filter((_, i) => i !== index));
   };
 
   return (
     <div className={styles.chatWindow}>
-      {/* HEADER - Chat name LEFT, Participants RIGHT with space in between */}
       <div className={styles.header}>
         <h3 className={styles.chatTitle}>{chatName}</h3>
 
-        {/* Participants pushed to the right side */}
         <div className={styles.participantsContainer}>
           {participants.map((p, i) => (
             <div key={i} className={styles.participant}>
@@ -190,42 +286,68 @@ export default function ChatWindow({ selectedChatId, chatName, onChatOpened }: C
         </div>
       </div>
 
-      {/* MESSAGES */}
-      <div className={styles.messagesContainer}>
-        {messages.map((msg) => (
-          <MessageBubble
-            key={msg.tempId || msg.messageId}
-            message={msg}
-            isMine={msg.userId === user?.userId}
-            onRetry={() => {
-              if (!user?.accessToken) return;
-              const payload = {
-                content: msg.content || null,
-                imageUrls: msg.imageUrls,
-              };
-              axios.post(
-                `${process.env.NEXT_PUBLIC_API_URL}/api/message/${selectedChatId}`,
-                payload,
-                { headers: { Authorization: `Bearer ${user.accessToken}` } }
-              )
-                .then(() => {
-                  setMessages(prev => prev.filter(m => m.tempId !== msg.tempId));
-                })
-                .catch(() => console.error('Retry failed'));
-            }}
-          />
-        ))}
+      <div className={styles.messagesContainer} ref={messagesContainerRef}>
+        {!loading && !last && (
+          <button
+            className={styles.loadMoreBtn}
+            onClick={loadMoreMessages}
+            disabled={loadingMore}
+          >
+            {loadingMore ? 'Loading more messages...' : 'Load more messages'}
+          </button>
+        )}
+
+        {messages.length === 0 && !loading ? (
+          <div className={styles.emptyMessage}>No messages in this chat yet</div>
+        ) : (
+          messages.map((msg) => (
+            <MessageBubble
+              key={msg.tempId || msg.messageId}
+              message={msg}
+              isMine={msg.userId === user?.userId}
+              onRetry={() => {
+                if (!user?.accessToken) return;
+
+                const payload = {
+                  content: msg.content || null,
+                  imageUrls: msg.imageUrls,
+                  tempId: msg.tempId,
+                };
+
+                axios
+                  .post(
+                    `${process.env.NEXT_PUBLIC_API_URL}/api/message/${selectedChatId}`,
+                    payload,
+                    { headers: { Authorization: `Bearer ${user.accessToken}` } }
+                  )
+                  .then(() => {
+                    setMessages((prev) =>
+                      prev.map((m) =>
+                        m.tempId === msg.tempId ? { ...m, failed: false } : m
+                      )
+                    );
+                  })
+                  .catch(() => console.error('Retry failed'));
+              }}
+            />
+          ))
+        )}
+
         <div ref={messagesEndRef} />
       </div>
 
-      {/* INPUT BAR */}
       <div className={styles.inputArea}>
         {previewImages.length > 0 && (
           <div className={styles.previewStrip}>
             {previewImages.map((src, i) => (
               <div key={i} className={styles.previewItem}>
                 <img src={src} alt="preview" />
-                <button onClick={() => removePreview(i)} className={styles.removePreview}>✕</button>
+                <button
+                  onClick={() => removePreview(i)}
+                  className={styles.removePreview}
+                >
+                  ✕
+                </button>
               </div>
             ))}
           </div>

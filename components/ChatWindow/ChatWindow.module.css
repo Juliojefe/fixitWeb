@@ -170,3 +170,18 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.loadMoreBtn {
+  width: 100%;
+  padding: 10px;
+  background: #c7d5ed;
+  border: 3px solid black;
+  color: #111;
+  font-weight: 600;
+  cursor: pointer;
+  margin-bottom: 15px;
+}
+
+.loadMoreBtn:hover {
+  background: #d4e0f5;
+}
