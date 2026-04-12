@@ -11,14 +11,16 @@ import styles from './ChatListSidebar.module.css';
 interface ChatSummary {
   chatId: number;
   name: string;
+  unreadCount: number;
 }
 
 interface ChatListSidebarProps {
-  onChatSelect: (chatId: number) => void;
+  onChatSelect: (chatId: number, name: string) => void;
   selectedChatId: number | null;
+  onChatOpened?: (chatId: number) => void;
 }
 
-export default function ChatListSidebar({ onChatSelect, selectedChatId }: ChatListSidebarProps) {
+export default function ChatListSidebar({ onChatSelect, selectedChatId, onChatOpened }: ChatListSidebarProps) {
   const { user } = useUser();
   const [chats, setChats] = useState<ChatSummary[]>([]);
   const [page, setPage] = useState(0);
@@ -58,8 +60,21 @@ export default function ChatListSidebar({ onChatSelect, selectedChatId }: ChatLi
     if (hasMore && !loading) fetchChats(page, false);
   }
 
-  function handleChatClick(chatId: number) {
-    onChatSelect(chatId);
+  function handleChatClick(chat: ChatSummary) {
+    // local update in sidebar
+    setChats(prevChats =>
+      prevChats.map(c =>
+        c.chatId === chat.chatId ? { ...c, unreadCount: 0 } : c
+      )
+    );
+
+    // navbar decrement global unread count instantly
+    window.dispatchEvent(new CustomEvent('chatOpened', {
+      detail: { unreadCount: chat.unreadCount }
+    }));
+
+    onChatSelect(chat.chatId, chat.name);
+    if (onChatOpened) onChatOpened(chat.chatId);
   }
 
   function handleCreateNewChat() {
@@ -68,7 +83,7 @@ export default function ChatListSidebar({ onChatSelect, selectedChatId }: ChatLi
 
   const handleChatCreated = (newChat: ChatSummary) => {
     setChats(prev => [newChat, ...prev]);
-    onChatSelect(newChat.chatId);
+    onChatSelect(newChat.chatId, newChat.name);
   };
 
   return (
@@ -87,33 +102,28 @@ export default function ChatListSidebar({ onChatSelect, selectedChatId }: ChatLi
               <div
                 key={chat.chatId}
                 className={`${styles.chatRow} ${selectedChatId === chat.chatId ? styles.active : ''}`}
-                onClick={() => handleChatClick(chat.chatId)}
+                onClick={() => handleChatClick(chat)}
               >
                 <div className={styles.chatContent}>
-                  <span className={styles.chatName}>{chat.name || 'Unnamed Chat'}</span>
+                  <span className={`${styles.chatName} ${chat.unreadCount > 0 ? styles.bold : ''}`}>
+                    {chat.name || 'Unnamed Chat'}
+                  </span>
+                  {chat.unreadCount > 0 && (
+                    <span className={styles.unreadBadge}>{chat.unreadCount}</span>
+                  )}
                 </div>
               </div>
             ))
           )}
 
-          {chats.length < 8 && <div className={styles.emptySpace} />}
-
           {hasMore && (
-            <button
-              className={styles.loadMoreBtn}
-              onClick={handleLoadMore}
-              disabled={loading}
-            >
+            <button className={styles.loadMoreBtn} onClick={handleLoadMore} disabled={loading}>
               {loading ? 'Loading...' : 'Load More Chats'}
             </button>
           )}
         </div>
 
-        <button
-          className={styles.createChatBtn}
-          onClick={handleCreateNewChat}
-          title="Create a new chat"
-        >
+        <button className={styles.createChatBtn} onClick={handleCreateNewChat} title="Create a new chat">
           <FaPlusSquare />
         </button>
       </div>
@@ -121,7 +131,7 @@ export default function ChatListSidebar({ onChatSelect, selectedChatId }: ChatLi
       {isCreateChatModalOpen && createPortal(
         <CreateChatModal 
           onClose={() => setIsCreateChatModalOpen(false)}
-          onChatCreated={handleChatCreated}
+          onChatCreated={(newChat) => handleChatCreated({ ...newChat, unreadCount: 0 })}
         />,
         document.body
       )}
