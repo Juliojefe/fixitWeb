@@ -61,13 +61,14 @@ export default function ChatWindow({
     prevScrollTop: 0,
   });
 
-  // Ensure consistent ordering (oldest -> newest)
+  // Ensure consistent chronological order (oldest first)
   const normalizeMessages = (incoming: Message[]) => {
     return [...incoming].sort(
       (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
     );
   };
 
+  // Reset chat when switching chats
   useEffect(() => {
     if (!selectedChatId) return;
 
@@ -155,7 +156,7 @@ export default function ChatWindow({
             (m) => !existingIds.has(`${m.messageId ?? ''}-${m.tempId ?? ''}`)
           );
 
-          return [...deduped, ...prev];
+          return [...deduped, ...prev];   // older messages go at the top
         });
 
         setPage((prev) => prev + 1);
@@ -171,6 +172,7 @@ export default function ChatWindow({
     }
   };
 
+  // Scroll handling: preserve position when loading older messages, auto-scroll on new messages
   useLayoutEffect(() => {
     const container = messagesContainerRef.current;
     if (!container) return;
@@ -190,6 +192,7 @@ export default function ChatWindow({
     }
   }, [messages]);
 
+  // Live WebSocket
   useEffect(() => {
     if (!user?.accessToken || !selectedChatId) return;
 
@@ -198,20 +201,16 @@ export default function ChatWindow({
       connectHeaders: { Authorization: `Bearer ${user.accessToken}` },
       reconnectDelay: 5000,
       onConnect: () => {
+        console.log(`✅ Connected to chat ${selectedChatId}`);
         client.subscribe(`/topic/chat/${selectedChatId}`, (message: any) => {
           const newMsg: Message = JSON.parse(message.body);
 
           setMessages((prev) => {
             const exists = prev.some((m) => {
-              if (m.messageId && newMsg.messageId) {
-                return m.messageId === newMsg.messageId;
-              }
-              if (m.tempId && newMsg.tempId) {
-                return m.tempId === newMsg.tempId;
-              }
+              if (m.messageId && newMsg.messageId) return m.messageId === newMsg.messageId;
+              if (m.tempId && newMsg.tempId) return m.tempId === newMsg.tempId;
               return false;
             });
-
             if (exists) return prev;
 
             return normalizeMessages([...prev, newMsg]);
@@ -223,6 +222,7 @@ export default function ChatWindow({
     });
 
     client.activate();
+
     return () => client.deactivate();
   }, [selectedChatId, user?.accessToken]);
 
@@ -250,7 +250,6 @@ export default function ChatWindow({
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
-
     const files = Array.from(e.target.files).slice(0, 3 - previewImages.length);
 
     files.forEach((file) => {
@@ -290,7 +289,7 @@ export default function ChatWindow({
       </div>
 
       <div className={styles.messagesContainer} ref={messagesContainerRef}>
-        {/* LOAD MORE BUTTON (fixed) */}
+        {/* Load More Button - appears at the top */}
         {!loading && !last && (
           <button
             className={styles.loadMoreBtn}
@@ -322,7 +321,10 @@ export default function ChatWindow({
             {previewImages.map((src, i) => (
               <div key={i} className={styles.previewItem}>
                 <img src={src} alt="preview" />
-                <button onClick={() => removePreview(i)} className={styles.removePreview}>
+                <button
+                  onClick={() => removePreview(i)}
+                  className={styles.removePreview}
+                >
                   ✕
                 </button>
               </div>
