@@ -61,6 +61,13 @@ export default function ChatWindow({
     prevScrollTop: 0,
   });
 
+  // Ensure consistent ordering (oldest -> newest)
+  const normalizeMessages = (incoming: Message[]) => {
+    return [...incoming].sort(
+      (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+    );
+  };
+
   useEffect(() => {
     if (!selectedChatId) return;
 
@@ -89,13 +96,14 @@ export default function ChatWindow({
         ),
       ]);
 
-      setMessages(messagesRes.data);
+      const initialMessages = normalizeMessages(messagesRes.data);
+
+      setMessages(initialMessages);
       setParticipants(participantsRes.data);
 
       setPage(1);
       setLast(messagesRes.data.length < PAGE_SIZE);
 
-      // Initial load should scroll to bottom once
       shouldScrollToBottomRef.current = true;
     } catch (err) {
       console.error('Failed to load initial chat data', err);
@@ -135,16 +143,25 @@ export default function ChatWindow({
         { headers: { Authorization: `Bearer ${user.accessToken}` } }
       );
 
-      const olderMessages: Message[] = res.data;
+      const olderMessages = normalizeMessages(res.data);
 
       if (olderMessages.length > 0) {
-        setMessages((prev) => [...olderMessages, ...prev]);
+        setMessages((prev) => {
+          const existingIds = new Set(
+            prev.map((m) => `${m.messageId ?? ''}-${m.tempId ?? ''}`)
+          );
+
+          const deduped = olderMessages.filter(
+            (m) => !existingIds.has(`${m.messageId ?? ''}-${m.tempId ?? ''}`)
+          );
+
+          return [...deduped, ...prev];
+        });
+
         setPage((prev) => prev + 1);
       }
 
-      setLast(olderMessages.length < PAGE_SIZE);
-
-      // Do not scroll to bottom when loading older messages
+      setLast(res.data.length < PAGE_SIZE);
       shouldScrollToBottomRef.current = false;
     } catch (err) {
       console.error('Failed to load more messages', err);
@@ -156,16 +173,13 @@ export default function ChatWindow({
 
   useLayoutEffect(() => {
     const container = messagesContainerRef.current;
-
     if (!container) return;
 
     if (preserveScrollRef.current.shouldPreserve) {
       const { prevScrollHeight, prevScrollTop } = preserveScrollRef.current;
       const newScrollHeight = container.scrollHeight;
       const heightDiff = newScrollHeight - prevScrollHeight;
-
       container.scrollTop = prevScrollTop + heightDiff;
-
       preserveScrollRef.current.shouldPreserve = false;
       return;
     }
@@ -176,24 +190,31 @@ export default function ChatWindow({
     }
   }, [messages]);
 
-  // Live WebSocket
   useEffect(() => {
     if (!user?.accessToken || !selectedChatId) return;
 
     const client = new (require('@stomp/stompjs').Client)({
       brokerURL: `${process.env.NEXT_PUBLIC_API_URL?.replace('http', 'ws')}/ws-chat`,
       connectHeaders: { Authorization: `Bearer ${user.accessToken}` },
-      debug: (str: string) => console.log(str),
       reconnectDelay: 5000,
       onConnect: () => {
         client.subscribe(`/topic/chat/${selectedChatId}`, (message: any) => {
-          const newMsg = JSON.parse(message.body);
+          const newMsg: Message = JSON.parse(message.body);
 
           setMessages((prev) => {
-            const filtered = prev.filter(
-              (m) => m.tempId !== newMsg.tempId && m.messageId !== newMsg.messageId
-            );
-            return [...filtered, newMsg];
+            const exists = prev.some((m) => {
+              if (m.messageId && newMsg.messageId) {
+                return m.messageId === newMsg.messageId;
+              }
+              if (m.tempId && newMsg.tempId) {
+                return m.tempId === newMsg.tempId;
+              }
+              return false;
+            });
+
+            if (exists) return prev;
+
+            return normalizeMessages([...prev, newMsg]);
           });
 
           shouldScrollToBottomRef.current = true;
@@ -202,33 +223,15 @@ export default function ChatWindow({
     });
 
     client.activate();
-
     return () => client.deactivate();
   }, [selectedChatId, user?.accessToken]);
 
   const handleSend = async () => {
     if ((!inputValue.trim() && previewImages.length === 0) || !user?.accessToken) return;
 
-    const tempId = 'temp-' + Date.now();
-
-    const optimisticMsg: Message = {
-      tempId,
-      messageId: tempId,
-      content: inputValue.trim() || '',
-      userId: user.userId!,
-      senderName: user.name,
-      createdAt: new Date().toISOString(),
-      imageUrls: [...previewImages],
-      failed: false,
-    };
-
-    setMessages((prev) => [...prev, optimisticMsg]);
-    shouldScrollToBottomRef.current = true;
-
     const payload = {
-      content: optimisticMsg.content || null,
-      imageUrls: optimisticMsg.imageUrls,
-      tempId,
+      content: inputValue.trim() || null,
+      imageUrls: [...previewImages],
     };
 
     setInputValue('');
@@ -242,14 +245,12 @@ export default function ChatWindow({
       );
     } catch (err) {
       console.error('Send failed', err);
-      setMessages((prev) =>
-        prev.map((m) => (m.tempId === tempId ? { ...m, failed: true } : m))
-      );
     }
   };
 
   const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
+
     const files = Array.from(e.target.files).slice(0, 3 - previewImages.length);
 
     files.forEach((file) => {
@@ -261,6 +262,8 @@ export default function ChatWindow({
       };
       reader.readAsDataURL(file);
     });
+
+    e.target.value = '';
   };
 
   const removePreview = (index: number) => {
@@ -287,6 +290,7 @@ export default function ChatWindow({
       </div>
 
       <div className={styles.messagesContainer} ref={messagesContainerRef}>
+        {/* LOAD MORE BUTTON (fixed) */}
         {!loading && !last && (
           <button
             className={styles.loadMoreBtn}
@@ -302,33 +306,9 @@ export default function ChatWindow({
         ) : (
           messages.map((msg) => (
             <MessageBubble
-              key={msg.tempId || msg.messageId}
+              key={msg.messageId ?? msg.tempId ?? `${msg.userId}-${msg.createdAt}`}
               message={msg}
               isMine={msg.userId === user?.userId}
-              onRetry={() => {
-                if (!user?.accessToken) return;
-
-                const payload = {
-                  content: msg.content || null,
-                  imageUrls: msg.imageUrls,
-                  tempId: msg.tempId,
-                };
-
-                axios
-                  .post(
-                    `${process.env.NEXT_PUBLIC_API_URL}/api/message/${selectedChatId}`,
-                    payload,
-                    { headers: { Authorization: `Bearer ${user.accessToken}` } }
-                  )
-                  .then(() => {
-                    setMessages((prev) =>
-                      prev.map((m) =>
-                        m.tempId === msg.tempId ? { ...m, failed: false } : m
-                      )
-                    );
-                  })
-                  .catch(() => console.error('Retry failed'));
-              }}
             />
           ))
         )}
@@ -342,10 +322,7 @@ export default function ChatWindow({
             {previewImages.map((src, i) => (
               <div key={i} className={styles.previewItem}>
                 <img src={src} alt="preview" />
-                <button
-                  onClick={() => removePreview(i)}
-                  className={styles.removePreview}
-                >
+                <button onClick={() => removePreview(i)} className={styles.removePreview}>
                   ✕
                 </button>
               </div>
