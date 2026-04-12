@@ -17,6 +17,11 @@ interface Message {
   tempId?: string;
 }
 
+interface Participant {
+  name: string;
+  profilePic?: string;
+}
+
 interface ChatWindowProps {
   selectedChatId: number;
   chatName: string;
@@ -26,12 +31,16 @@ interface ChatWindowProps {
 export default function ChatWindow({ selectedChatId, chatName, onChatOpened }: ChatWindowProps) {
   const { user } = useUser();
   const [messages, setMessages] = useState<Message[]>([]);
+  const [participants, setParticipants] = useState<Participant[]>([]);
   const [inputValue, setInputValue] = useState('');
   const [previewImages, setPreviewImages] = useState<string[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  const loadMessages = async () => {
+  // Load messages + participants
+  const loadChatData = async () => {
     if (!user?.accessToken) return;
+
+    // Load messages
     try {
       const res = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL}/api/message/${selectedChatId}?page=0&size=50`,
@@ -41,17 +50,25 @@ export default function ChatWindow({ selectedChatId, chatName, onChatOpened }: C
     } catch (err) {
       console.error('Failed to load messages', err);
     }
-  };
 
-  const markAsRead = async () => {
-    if (!user?.accessToken) return;
+    // Load participants
+    try {
+      const res = await axios.get(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/chat/${selectedChatId}/participants`,
+        { headers: { Authorization: `Bearer ${user.accessToken}` } }
+      );
+      setParticipants(res.data);
+    } catch (err) {
+      console.error('Failed to load participants', err);
+    }
+
+    // Mark as read
     try {
       await axios.post(
         `${process.env.NEXT_PUBLIC_API_URL}/api/chat/${selectedChatId}/read`,
         {},
         { headers: { Authorization: `Bearer ${user.accessToken}` } }
       );
-      // Instant UI update in sidebar
       onChatOpened(selectedChatId);
     } catch (err) {
       console.error('Mark as read failed', err);
@@ -60,8 +77,7 @@ export default function ChatWindow({ selectedChatId, chatName, onChatOpened }: C
 
   useEffect(() => {
     if (selectedChatId) {
-      loadMessages();
-      markAsRead();
+      loadChatData();
     }
   }, [selectedChatId]);
 
@@ -69,7 +85,7 @@ export default function ChatWindow({ selectedChatId, chatName, onChatOpened }: C
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // WebSocket remains unchanged
+  // Live WebSocket
   useEffect(() => {
     if (!user?.accessToken || !selectedChatId) return;
 
@@ -80,7 +96,7 @@ export default function ChatWindow({ selectedChatId, chatName, onChatOpened }: C
       reconnectDelay: 5000,
       onConnect: () => {
         client.subscribe(`/topic/chat/${selectedChatId}`, (message: any) => {
-          const newMsg: Message = JSON.parse(message.body);
+          const newMsg = JSON.parse(message.body) as Message;
           setMessages((prev) => {
             const filtered = prev.filter(m => m.tempId !== newMsg.tempId && m.messageId !== newMsg.messageId);
             return [...filtered, newMsg];
@@ -94,7 +110,7 @@ export default function ChatWindow({ selectedChatId, chatName, onChatOpened }: C
     return () => client.deactivate();
   }, [selectedChatId, user?.accessToken]);
 
-  // Send logic (unchanged)
+  // Send with optimistic update
   const handleSend = async () => {
     if ((!inputValue.trim() && previewImages.length === 0) || !user?.accessToken) return;
 
@@ -105,6 +121,7 @@ export default function ChatWindow({ selectedChatId, chatName, onChatOpened }: C
       messageId: tempId,
       content: inputValue.trim() || '',
       userId: user.userId!,
+      senderName: user.name,
       createdAt: new Date().toISOString(),
       imageUrls: [...previewImages],
       failed: false,
@@ -154,10 +171,26 @@ export default function ChatWindow({ selectedChatId, chatName, onChatOpened }: C
 
   return (
     <div className={styles.chatWindow}>
+      {/* HEADER - Chat name LEFT, Participants RIGHT with space in between */}
       <div className={styles.header}>
-        <h3>{chatName}</h3>
+        <h3 className={styles.chatTitle}>{chatName}</h3>
+
+        {/* Participants pushed to the right side */}
+        <div className={styles.participantsContainer}>
+          {participants.map((p, i) => (
+            <div key={i} className={styles.participant}>
+              <img
+                src={p.profilePic || '/images/defaultPfp.png'}
+                alt={p.name}
+                className={styles.participantPic}
+              />
+              <span className={styles.participantName}>{p.name}</span>
+            </div>
+          ))}
+        </div>
       </div>
 
+      {/* MESSAGES */}
       <div className={styles.messagesContainer}>
         {messages.map((msg) => (
           <MessageBubble
@@ -170,29 +203,22 @@ export default function ChatWindow({ selectedChatId, chatName, onChatOpened }: C
                 content: msg.content || null,
                 imageUrls: msg.imageUrls,
               };
-
               axios.post(
                 `${process.env.NEXT_PUBLIC_API_URL}/api/message/${selectedChatId}`,
                 payload,
                 { headers: { Authorization: `Bearer ${user.accessToken}` } }
               )
                 .then(() => {
-                  // On successful retry, clear the failed flag immediately
-                  setMessages(prev =>
-                    prev.map(m =>
-                      m.tempId === msg.tempId ? { ...m, failed: false } : m
-                    )
-                  );
+                  setMessages(prev => prev.filter(m => m.tempId !== msg.tempId));
                 })
-                .catch(() => {
-                  console.error('Retry failed');
-                });
+                .catch(() => console.error('Retry failed'));
             }}
           />
         ))}
         <div ref={messagesEndRef} />
       </div>
 
+      {/* INPUT BAR */}
       <div className={styles.inputArea}>
         {previewImages.length > 0 && (
           <div className={styles.previewStrip}>

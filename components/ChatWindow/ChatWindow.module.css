@@ -10,13 +10,56 @@
   font-family: 'DM Sans', sans-serif;
 }
 
+/* ==================== HEADER ==================== */
 .header {
   background: #c7d5ed;
   border-bottom: 4px solid black;
-  padding: 16px 24px;
+  padding: 14px 24px;
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 30px;
 }
 
+.chatTitle {
+  margin: 0;
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: #111;
+  white-space: nowrap;
+}
+
+.participantsContainer {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+.participant {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.participantPic {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid black;
+  object-fit: cover;
+}
+
+.participantName {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #111;
+  white-space: nowrap;
+}
+
+/* ==================== MESSAGES AREA ==================== */
 .messagesContainer {
   flex: 1;
   overflow-y: auto;
@@ -31,6 +74,7 @@
   display: none;
 }
 
+/* ==================== INPUT BAR ==================== */
 .inputArea {
   border-top: 4px solid black;
   background: #c7d5ed;
