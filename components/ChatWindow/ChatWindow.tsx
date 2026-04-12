@@ -11,7 +11,7 @@ interface Message {
   content: string;
   userId: number;
   senderName?: string;
-  createdAt: string;
+  createdAt: string | number;
   imageUrls: string[];
   failed?: boolean;
   tempId?: string;

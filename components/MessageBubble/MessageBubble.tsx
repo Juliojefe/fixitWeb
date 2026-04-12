@@ -8,8 +8,8 @@ interface MessageBubbleProps {
     messageId?: number | string;
     content: string;
     userId: number;
-    senderName?: string;
-    createdAt: string;
+    senderName?: string;          // ← from your updated backend DTO
+    createdAt: string | number;   // ← can be string or number (epoch ms)
     imageUrls: string[];
     failed?: boolean;
     tempId?: string;
@@ -24,12 +24,22 @@ export default function MessageBubble({ message, isMine, onRetry }: MessageBubbl
   const hasImages = message.imageUrls && message.imageUrls.length > 0;
   const largeImage = hasImages ? message.imageUrls[currentIndex] : null;
 
+  // Robust date parsing - handles both epoch number and ISO string
+  const getDisplayTime = () => {
+    const date = new Date(message.createdAt);
+    if (isNaN(date.getTime())) {
+      return '??:??'; // fallback if parsing fails
+    }
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
   const nextImage = () => setCurrentIndex((prev) => (prev + 1) % message.imageUrls.length);
   const prevImage = () => setCurrentIndex((prev) => (prev - 1 + message.imageUrls.length) % message.imageUrls.length);
 
   return (
     <div className={`${styles.messageRow} ${isMine ? styles.mine : styles.theirs}`}>
       <div className={styles.bubble}>
+        {/* Sender name - only for other people's messages */}
         {!isMine && message.senderName && (
           <div className={styles.senderName}>{message.senderName}</div>
         )}
@@ -68,7 +78,7 @@ export default function MessageBubble({ message, isMine, onRetry }: MessageBubbl
         )}
 
         <span className={styles.timestamp}>
-          {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+          {getDisplayTime()}
         </span>
 
         {/* Failed indicator */}
