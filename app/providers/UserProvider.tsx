@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import axios from 'axios';
 import { useRouter } from 'next/navigation';
 import { User } from "@/types/user";
@@ -10,6 +10,8 @@ interface UserContextType {
   user: User | null;
   setUser: (userData: User | null) => void;
   logout: () => void;
+  totalUnreadCount: number;           // global unread count
+  refreshUnreadCount: () => Promise<void>; // instant refresh helper
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -32,8 +34,11 @@ function decodeJwt(token: string): { exp: number } | null {
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
   const [user, setUserState] = useState<User | null>(null);
+  const [totalUnreadCount, setTotalUnreadCount] = useState(0);
   const [isLoaded, setIsLoaded] = useState(false);
   const router = useRouter();
+
+  const stompClientRef = useRef<any>(null); // persistent global WebSocket
 
   // Load from localStorage on app start
   useEffect(() => {
@@ -87,9 +92,65 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
+    if (stompClientRef.current) {
+      stompClientRef.current.deactivate();
+      stompClientRef.current = null;
+    }
+    setTotalUnreadCount(0);
     setUser(null);
     router.push("/login");
   }, [setUser]);
+
+  // initial unread count from backend
+  const fetchUnreadCount = useCallback(async () => {
+    if (!user?.accessToken) return;
+    try {
+      const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/api/chat/unread-count`, {
+        headers: { Authorization: `Bearer ${user.accessToken}` },
+      });
+      setTotalUnreadCount(res.data ?? 0);
+    } catch (err) {
+      console.error("Failed to fetch unread count", err);
+      setTotalUnreadCount(0);
+    }
+  }, [user?.accessToken]);
+
+  const setupUnreadWebSocket = useCallback(() => {
+    if (!user?.accessToken || stompClientRef.current) return;
+
+    const client = new (require('@stomp/stompjs').Client)({
+      brokerURL: `${process.env.NEXT_PUBLIC_API_URL?.replace('http', 'ws')}/ws-chat`,
+      connectHeaders: { Authorization: `Bearer ${user.accessToken}` },
+      reconnectDelay: 5000,
+      onConnect: () => {
+        // console.log("✅ Global unread count WebSocket connected");
+        client.subscribe("/user/queue/unread-count", (message: any) => {
+          const count = parseInt(message.body, 10);
+          setTotalUnreadCount(isNaN(count) ? 0 : count);
+        });
+      },
+      onStompError: (frame: any) => {
+        console.error("STOMP error (unread count)", frame);
+      },
+    });
+
+    stompClientRef.current = client;
+    client.activate();
+  }, [user?.accessToken]);
+
+  // Connect WebSocket + fetch initial count whenever user logs in
+  useEffect(() => {
+    if (user?.accessToken) {
+      fetchUnreadCount();
+      setupUnreadWebSocket();
+    } else {
+      setTotalUnreadCount(0);
+      if (stompClientRef.current) {
+        stompClientRef.current.deactivate();
+        stompClientRef.current = null;
+      }
+    }
+  }, [user?.accessToken, fetchUnreadCount, setupUnreadWebSocket]);
 
   // Auto-refresh logic
   const refreshTokens = useCallback(async () => {
@@ -99,9 +160,7 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     }
     try {
       const headers: Record<string, string> = { "Content-Type": "application/json" };
-
       const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/auth/refresh`, { refreshToken: user.refreshToken }, { headers });
-
       const data = response.data;
       if (data.success) {
         setUser({ ...user, accessToken: data.accessToken, refreshToken: data.refreshToken });
@@ -132,10 +191,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
     const timeToRefresh = user.accessTokenExpiresAt.getTime() - now;
     let timer: NodeJS.Timeout | null = null;
     if (timeToRefresh <= 0) {
-      // Access token already "expired" (past buffer); attempt refresh anyway, but endpoint may reject if actually expired
       refreshTokens();
     } else {
-      // Schedule refresh at the buffered expiration time (a few minutes/seconds before actual)
       timer = setTimeout(refreshTokens, timeToRefresh);
     }
 
@@ -145,11 +202,11 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
   }, [user, refreshTokens, logout]);
 
   if (!isLoaded) {
-    return <AuthLoading />; // Prevent children from rendering until loaded
+    return <AuthLoading />;
   }
 
   return (
-    <UserContext.Provider value={{ user, setUser, logout }}>
+    <UserContext.Provider value={{ user, setUser, logout, totalUnreadCount, refreshUnreadCount: fetchUnreadCount }}>
       {children}
     </UserContext.Provider>
   );
