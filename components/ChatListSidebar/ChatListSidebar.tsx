@@ -28,7 +28,7 @@ export default function ChatListSidebar({ onChatSelect, selectedChatId, onChatOp
   const [hasMore, setHasMore] = useState(true);
   const [isCreateChatModalOpen, setIsCreateChatModalOpen] = useState(false);
 
-  const pageSize = 10;
+  const pageSize = 20;  //  matches backend
 
   async function fetchChats(currentPage: number, reset = false) {
     if (!user?.accessToken || loading) return;
