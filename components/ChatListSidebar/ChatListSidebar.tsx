@@ -21,14 +21,14 @@ interface ChatListSidebarProps {
 }
 
 export default function ChatListSidebar({ onChatSelect, selectedChatId, onChatOpened }: ChatListSidebarProps) {
-  const { user } = useUser();
+  const { user, refreshUnreadCount } = useUser();   // using live context
   const [chats, setChats] = useState<ChatSummary[]>([]);
   const [page, setPage] = useState(0);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const [isCreateChatModalOpen, setIsCreateChatModalOpen] = useState(false);
 
-  const pageSize = 10;
+  const pageSize = 20;  //  matches backend
 
   async function fetchChats(currentPage: number, reset = false) {
     if (!user?.accessToken || loading) return;
@@ -68,10 +68,8 @@ export default function ChatListSidebar({ onChatSelect, selectedChatId, onChatOp
       )
     );
 
-    // navbar decrement global unread count instantly
-    window.dispatchEvent(new CustomEvent('chatOpened', {
-      detail: { unreadCount: chat.unreadCount }
-    }));
+    // instant navbar sync WebSocket is the source of truth
+    refreshUnreadCount();
 
     onChatSelect(chat.chatId, chat.name);
     if (onChatOpened) onChatOpened(chat.chatId);

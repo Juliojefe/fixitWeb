@@ -28,7 +28,7 @@ interface ChatWindowProps {
   onChatOpened: (chatId: number) => void;
 }
 
-const PAGE_SIZE = 15;
+const PAGE_SIZE = 15; //  matches backend
 
 export default function ChatWindow({
   selectedChatId,
@@ -61,7 +61,7 @@ export default function ChatWindow({
     prevScrollTop: 0,
   });
 
-  // Ensure consistent chronological order (oldest first)
+  // Ensure consistent chronological order oldest first
   const normalizeMessages = (incoming: Message[]) => {
     return [...incoming].sort(
       (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
@@ -79,6 +79,21 @@ export default function ChatWindow({
 
     loadInitialData();
   }, [selectedChatId]);
+
+  // Mark chat as read
+  const markChatAsRead = async () => {
+    if (!user?.accessToken || !selectedChatId) return;
+    try {
+      await axios.post(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/chat/${selectedChatId}/read`,
+        {},
+        { headers: { Authorization: `Bearer ${user.accessToken}` } }
+      );
+      onChatOpened(selectedChatId); // refreshes navbar instantly
+    } catch (err) {
+      console.error('Mark as read failed', err);
+    }
+  };
 
   const loadInitialData = async () => {
     if (!user?.accessToken || !selectedChatId) return;
@@ -106,19 +121,11 @@ export default function ChatWindow({
       setLast(messagesRes.data.length < PAGE_SIZE);
 
       shouldScrollToBottomRef.current = true;
+
+      // Mark as read when first opening the chat
+      await markChatAsRead();
     } catch (err) {
       console.error('Failed to load initial chat data', err);
-    }
-
-    try {
-      await axios.post(
-        `${process.env.NEXT_PUBLIC_API_URL}/api/chat/${selectedChatId}/read`,
-        {},
-        { headers: { Authorization: `Bearer ${user.accessToken}` } }
-      );
-      onChatOpened(selectedChatId);
-    } catch (err) {
-      console.error('Mark as read failed', err);
     } finally {
       setLoading(false);
     }
@@ -151,12 +158,10 @@ export default function ChatWindow({
           const existingIds = new Set(
             prev.map((m) => `${m.messageId ?? ''}-${m.tempId ?? ''}`)
           );
-
           const deduped = olderMessages.filter(
             (m) => !existingIds.has(`${m.messageId ?? ''}-${m.tempId ?? ''}`)
           );
-
-          return [...deduped, ...prev];   // older messages go at the top
+          return [...deduped, ...prev];
         });
 
         setPage((prev) => prev + 1);
@@ -201,7 +206,6 @@ export default function ChatWindow({
       connectHeaders: { Authorization: `Bearer ${user.accessToken}` },
       reconnectDelay: 5000,
       onConnect: () => {
-        console.log(`✅ Connected to chat ${selectedChatId}`);
         client.subscribe(`/topic/chat/${selectedChatId}`, (message: any) => {
           const newMsg: Message = JSON.parse(message.body);
 
@@ -217,6 +221,12 @@ export default function ChatWindow({
           });
 
           shouldScrollToBottomRef.current = true;
+
+          // If we are actively viewing this chat and it's not our own message,
+          // mark it as read immediately so the unread count does not increment
+          if (newMsg.userId !== user?.userId) {
+            markChatAsRead();
+          }
         });
       },
     });
@@ -224,7 +234,7 @@ export default function ChatWindow({
     client.activate();
 
     return () => client.deactivate();
-  }, [selectedChatId, user?.accessToken]);
+  }, [selectedChatId, user?.accessToken, user?.userId]);
 
   const handleSend = async () => {
     if ((!inputValue.trim() && previewImages.length === 0) || !user?.accessToken) return;
