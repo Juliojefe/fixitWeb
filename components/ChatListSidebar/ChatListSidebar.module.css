@@ -13,13 +13,13 @@
 .scrollContainer {
   flex: 1;
   overflow-y: auto;
-  padding: 12px 0;
+  padding: 12px 0 90px 0;
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE/Edge */
 }
 
 .scrollContainer::-webkit-scrollbar {
-  display: none; /* Chrome/Safari/Edge */
+  display: none; /* Chrome / Safari / Edge */
 }
 
 .chatRow {
@@ -181,6 +181,8 @@
   transition: all 0.2s ease;
   padding: 4px;
   margin-left: 8px;
+  position: relative;
+  z-index: 20;
 }
 
 .chatRow:hover .leaveBtn {
