@@ -170,3 +170,68 @@
   border: 2px solid black;
   flex-shrink: 0;
 }
+
+.leaveBtn {
+  background: none;
+  border: none;
+  color: #e11d48;
+  font-size: 1.45rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.2s ease;
+  padding: 4px;
+  margin-left: 8px;
+}
+
+.chatRow:hover .leaveBtn {
+  opacity: 0.65;
+}
+
+.leaveBtn:hover {
+  opacity: 1;
+  transform: scale(1.15);
+}
+
+.leaveModalContainer {
+  width: 460px;
+  max-width: 92vw;
+}
+
+.leaveModalHeader {
+  color: #e11d48;
+}
+
+.leaveWarningText {
+  font-size: 1.1rem;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.leaveWarningSubtext {
+  font-size: 0.98rem;
+  color: #555;
+  margin-bottom: 24px;
+}
+
+.leaveModalActions {
+  display: flex;
+  gap: 12px;
+}
+
+.leaveModalActions {
+  display: flex;
+  gap: 12px;
+}
+
+.leaveModalCancel {
+  flex: 1;
+}
+
+.leaveModalLeave {
+  flex: 1;
+  background-color: #e11d48;
+}
+
+.leaveModalLeave:hover {
+  background-color: #c81e3f;
+}
