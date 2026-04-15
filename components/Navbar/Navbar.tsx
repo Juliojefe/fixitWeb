@@ -1,6 +1,6 @@
 'use client';
 
-import { FaCompass, FaPlusSquare, FaBell, FaUser } from "react-icons/fa";
+import { FaCompass, FaPlusSquare, FaBell, FaUser, FaShieldAlt } from "react-icons/fa";
 import styles from "./navbar.module.css";
 import CreatePostModal from '../CreatePostModal/CreatePostModal';
 import MustLoginModal from "../MustLoginModal/MustLoginModal";
@@ -14,7 +14,7 @@ export default function Navbar() {
   const [isMustLoginModalOpen, setIsMustLoginModalOpen] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
-  const { user, totalUnreadCount } = useUser();   // using live global count
+  const { user, totalUnreadCount } = useUser();
 
   function handleGoToMyProfile() {
     if (!user) {
@@ -30,6 +30,14 @@ export default function Navbar() {
       return;
     }
     router.push("/notifs");
+  }
+
+  function handleAdminClick() {
+    if (!user) {
+      setIsMustLoginModalOpen(true);
+      return;
+    }
+    router.push("/admin");
   }
 
   return (
@@ -73,6 +81,17 @@ export default function Navbar() {
         </div>
         <p>Notifs</p>
       </div>
+
+      {/* only visible to admins */}
+      {user?.isAdmin && (
+        <div
+          className={`${styles.iconWrapper} ${pathname.startsWith('/admin') ? styles.active : ''}`}
+          onClick={handleAdminClick}
+        >
+          <FaShieldAlt className={styles.icon} />
+          <p>Admin</p>
+        </div>
+      )}
 
       {isCreatePostModalOpen &&
         createPortal(
