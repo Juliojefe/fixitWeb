@@ -11,7 +11,7 @@ import ReportMenu from '../ReportMenu/ReportMenu';
 
 interface UserCardProps {
   followingAuthor: boolean;
-  authorId: number | null;
+  authorId: number | null;  // null if the user has been deleted
   createdBy: string;
   createdByProfilePicUrl: string;
   authorIsMechanic: boolean;
@@ -19,6 +19,8 @@ interface UserCardProps {
   showBottomBorder?: boolean;
   reportEntityType?: 'POST';
   reportEntityId?: number;
+  /** Controls where the Report popup appears (passed to ReportMenu) */
+  popupPosition?: 'comment-pos' | 'post-pos' | 'post-modal-pos';
 }
 
 export default function UserCard({
@@ -31,15 +33,21 @@ export default function UserCard({
   showBottomBorder = true,
   reportEntityType,
   reportEntityId,
+  popupPosition = 'post-pos',   // default for post
 }: UserCardProps) {
 
+  // basic needs
   const router = useRouter();
   const { user } = useUser();
 
+  // rendering needs
   const deletedAuthor = authorId == null;
   const ownsPost = user?.userId === authorId;
 
+  // used for modal rendition
   const [showLoginModal, setShowLoginModal] = useState(false);
+
+  // used to prevent double-clicking during request
   const [isLoading, setIsLoading] = useState(false);
 
   async function handleGoToProfile() {
@@ -95,7 +103,6 @@ export default function UserCard({
           src={deletedAuthor ? "/images/deletedUserPfp.png" : createdByProfilePicUrl}
           alt="profile picture"
         />
-
         <div className={styles.nameContainer}>
           <p className={styles.userName}>
             {deletedAuthor ? "Deleted User" : createdBy}
@@ -103,7 +110,6 @@ export default function UserCard({
           {authorIsMechanic && <img className={styles.mechanicBadge} src="/icons/wrench.png" alt="mechanic badge" />}
         </div>
 
-        {/* Right-side actions wrapper */}
         <div className={styles.headerActions}>
           {!ownsPost && (
             <button
@@ -118,13 +124,11 @@ export default function UserCard({
             </button>
           )}
 
-          {reportEntityType === 'POST' &&
-           reportEntityId !== undefined &&
-           !ownsPost &&
-           !deletedAuthor && (
+          {reportEntityType === 'POST' && reportEntityId !== undefined && !ownsPost && !deletedAuthor && (
             <ReportMenu
               entityType="POST"
               entityId={reportEntityId}
+              popupPosition={popupPosition}
               className={styles.reportMenu}
             />
           )}

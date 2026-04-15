@@ -18,11 +18,9 @@ interface PostProps {
 }
 
 export default function Post({ postData = null }: PostProps) {
-  // basic needs
   const router = useRouter();
   const { user } = useUser();
 
-  // post specific features
   const [hasLiked, setHasLiked] = useState(postData?.hasLiked);
   const [hasSaved, setHasSaved] = useState(postData?.hasSaved);
   const [likeCount, setLikeCount] = useState<number>(postData?.likeCount ?? 0);
@@ -30,18 +28,14 @@ export default function Post({ postData = null }: PostProps) {
   const [currImageIndex, setCurrImageIndex] = useState(0);
   const [followingAuthor, setFollowingAuthor] = useState(postData?.followingAuthor || false);
 
-  // used for modal rendition
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showPostModal, setShowPostModal] = useState(false);
   const [showWhoLikedModal, setShowWhoLikedModal] = useState(false);
 
-  // used to prevent double-clicking during request
   const [likeLoading, setLikeLoading] = useState(false);
   const [saveLoading, setSaveLoading] = useState(false);
 
-  if (!postData) {
-    return null;
-  }
+  if (!postData) return null;
 
   function handleShowNextImage() {
     if (postData?.imageUrls && currImageIndex < postData?.imageUrls.length - 1) {
@@ -70,18 +64,10 @@ export default function Post({ postData = null }: PostProps) {
     try {
       if (!hasSaved) {
         setHasSaved(true);
-        await axios.post(
-          endpoint,
-          {},
-          {
-            headers: { Authorization: `Bearer ${user.accessToken}` },
-          }
-        );
+        await axios.post(endpoint, {}, { headers: { Authorization: `Bearer ${user.accessToken}` } });
       } else {
         setHasSaved(false);
-        await axios.delete(endpoint, {
-          headers: { Authorization: `Bearer ${user.accessToken}` },
-        });
+        await axios.delete(endpoint, { headers: { Authorization: `Bearer ${user.accessToken}` } });
       }
     } catch (err) {
       console.error("Unexpected error in handleSave", err);
@@ -93,7 +79,6 @@ export default function Post({ postData = null }: PostProps) {
 
   async function handleLike() {
     if (likeLoading) return;
-
     if (!user?.accessToken) {
       setShowLoginModal(true);
       return;
@@ -101,24 +86,15 @@ export default function Post({ postData = null }: PostProps) {
 
     const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/post/${postData?.postId}/like`;
     setLikeLoading(true);
-
     try {
       if (!hasLiked) {
         setHasLiked(true);
         setLikeCount((prev) => prev + 1);
-
-        await axios.post(
-          endpoint,
-          {},
-          { headers: { Authorization: `Bearer ${user.accessToken}` } }
-        );
+        await axios.post(endpoint, {}, { headers: { Authorization: `Bearer ${user.accessToken}` } });
       } else {
         setHasLiked(false);
         setLikeCount((prev) => Math.max(0, prev - 1));
-
-        await axios.delete(endpoint, {
-          headers: { Authorization: `Bearer ${user.accessToken}` },
-        });
+        await axios.delete(endpoint, { headers: { Authorization: `Bearer ${user.accessToken}` } });
       }
     } catch (err) {
       console.error("Failed to toggle like", err);
@@ -129,7 +105,7 @@ export default function Post({ postData = null }: PostProps) {
     }
   }
 
-  // used for header
+  // used for header in post
   const userCard = (
     <UserCard
       followingAuthor={followingAuthor}
@@ -140,6 +116,22 @@ export default function Post({ postData = null }: PostProps) {
       onFollowChange={handleFollowChange}
       reportEntityType="POST"
       reportEntityId={postData.postId}
+      popupPosition="post-pos"
+    />
+  );
+
+  //  pasted to post modal
+  const userCard2 = (
+    <UserCard
+      followingAuthor={followingAuthor}
+      authorId={postData?.authorId || null}
+      createdBy={postData?.createdBy || "Deleted User"}
+      createdByProfilePicUrl={postData?.createdByProfilePicUrl || "/images/deletedUserPfp.png"}
+      authorIsMechanic={postData?.authorIsMechanic || false}
+      onFollowChange={handleFollowChange}
+      reportEntityType="POST"
+      reportEntityId={postData.postId}
+      popupPosition="post-modal-pos"  //  differnt positioning eveything else the same
     />
   );
 
@@ -158,7 +150,7 @@ export default function Post({ postData = null }: PostProps) {
             onNextImage={handleShowNextImage}
             onPrevImage={handleShowPrevImage}
             onClose={() => setShowPostModal(false)}
-            header={userCard}
+            header={userCard2}
           />,
           document.body
         )}
@@ -170,11 +162,9 @@ export default function Post({ postData = null }: PostProps) {
         )}
 
       <div className={styles.postContainer}>
-        {/* header section */}
         {userCard}
 
-        {/* Image Section */}
-        {hasImage ? (
+        {hasImage && (
           <div className={styles.imageSection}>
             {postData.imageUrls?.[0] && (
               <img
@@ -194,48 +184,30 @@ export default function Post({ postData = null }: PostProps) {
               </button>
             )}
           </div>
-        ) : null}
+        )}
 
-        {/* description section + timestamp */}
         <p className={styles.postDescription}>{postData.description || ""}</p>
         <p className={styles.postTime}>
           {formatDistanceToNow(new Date(postData.createdAt), { addSuffix: true })}
         </p>
 
-        {/* like count */}
         <p onClick={() => setShowWhoLikedModal(true)} className={styles.likeCount}>
           {likeCount || 0} likes
         </p>
 
-        {/* like comment save icons */}
         <div className={styles.actionIcons}>
           {hasLiked ? (
-            <FaHeart
-              className={styles.likeIconActive}
-              onClick={handleLike}
-            />
+            <FaHeart className={styles.likeIconActive} onClick={handleLike} />
           ) : (
-            <FaRegHeart
-              className={styles.icon}
-              onClick={handleLike}
-            />
+            <FaRegHeart className={styles.icon} onClick={handleLike} />
           )}
 
-          <FaRegComment
-            className={styles.icon}
-            onClick={() => setShowPostModal(true)}
-          />
+          <FaRegComment className={styles.icon} onClick={() => setShowPostModal(true)} />
 
           {hasSaved ? (
-            <FaBookmark
-              className={styles.icon}
-              onClick={handleSave}
-            />
+            <FaBookmark className={styles.icon} onClick={handleSave} />
           ) : (
-            <FaRegBookmark
-              className={styles.icon}
-              onClick={handleSave}
-            />
+            <FaRegBookmark className={styles.icon} onClick={handleSave} />
           )}
         </div>
       </div>

@@ -12,8 +12,10 @@ interface ReportMenuProps {
   entityType: 'USER' | 'POST' | 'COMMENT' | 'REVIEW' | 'MESSAGE' | 'MESSAGE_IMAGE' | 'REVIEW_RESPONSE';
   /** The primary key of the entity being reported */
   entityId: number;
-  /** Optional extra class for positioning (e.g. absolute top-right) */
+  /** Optional extra class for the container */
   className?: string;
+  /** Controls where the popup appears relative to the three dots */
+  popupPosition?: 'comment-pos' | 'post-pos' | 'post-modal-pos';
   /** Callback that will open the real Report modal (we'll build it next) */
   onReportClick?: (entityType: string, entityId: number) => void;
 }
@@ -22,6 +24,7 @@ export default function ReportMenu({
   entityType,
   entityId,
   className = '',
+  popupPosition = 'post-pos',   // default = what you currently like in the modal
   onReportClick,
 }: ReportMenuProps) {
   const { user } = useUser();
@@ -41,7 +44,7 @@ export default function ReportMenu({
   }, []);
 
   const handleDotsClick = (e: React.MouseEvent) => {
-    e.stopPropagation(); // important – prevents opening post modal, chat actions, etc.
+    e.stopPropagation();
     setShowMenu((prev) => !prev);
   };
 
@@ -54,15 +57,12 @@ export default function ReportMenu({
       return;
     }
 
-    // This is the hook for the future ReportModal
-    // For now it just logs – we'll replace the console with the modal open later
     console.log(`[ReportMenu] User wants to report ${entityType} #${entityId}`);
     onReportClick?.(entityType, entityId);
   };
 
   return (
     <>
-      {/* Login modal for guests */}
       {showLoginModal &&
         createPortal(
           <MustLoginModal
@@ -83,7 +83,7 @@ export default function ReportMenu({
         </button>
 
         {showMenu && (
-          <div className={styles.dropdown}>
+          <div className={`${styles.menuPopup} ${styles[popupPosition]}`}>
             <button
               onClick={handleReportClick}
               className={styles.reportOption}
