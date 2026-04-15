@@ -2,6 +2,7 @@
 
 import { useParams } from 'next/navigation';
 import { useEffect } from 'react';
+import styles from './page.module.css';
 
 export default function ReportsListPage() {
   const params = useParams();
@@ -13,9 +14,9 @@ export default function ReportsListPage() {
   }, [entityType]);
 
   return (
-    <div style={{ padding: '40px', fontFamily: 'DM Sans, sans-serif' }}>
-      <h1>Reports for: <strong>{entityType}</strong></h1>
-      <p style={{ fontSize: '1.1rem', color: '#555' }}>
+    <div className={styles.container}>
+      <h1 className={styles.title}>Reports for: <strong>{entityType}</strong></h1>
+      <p className={styles.subtitle}>
         This page will list all reports for the selected entity type.<br />
         (Currently just logging the choice — full list coming next)
       </p>
