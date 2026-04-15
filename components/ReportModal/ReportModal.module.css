@@ -1,0 +1,61 @@
+.checklistGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 24px;
+  margin-bottom: 1.5rem;
+  max-height: 320px;
+  overflow-y: auto;
+  padding-right: 8px;
+}
+
+.checklistItem {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-size: 0.92rem;
+  cursor: pointer;
+  line-height: 1.4;
+}
+
+.checklistItem input[type="checkbox"] {
+  margin-top: 3px;
+  accent-color: #526fae;
+}
+
+.label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+}
+
+.required {
+  color: #e11d48;
+}
+
+.input {
+  background: #fafaf8;
+  color: #111;
+  font-family: 'DM Sans', sans-serif;
+  width: 100%;
+  padding: 0.85rem 1rem;
+  border: 1.5px solid rgba(0,0,0,0.14);
+  border-radius: 12px;
+  font-size: 0.95rem;
+  outline: none;
+  resize: vertical;
+  min-height: 110px;
+}
+
+.input:focus {
+  border-color: #526fae;
+  box-shadow: 0 0 0 4px rgba(82,111,174,0.15);
+  background: #fff;
+}
+
+.loading {
+  text-align: center;
+  color: #666;
+  font-size: 1rem;
+  padding: 40px 0;
+}
