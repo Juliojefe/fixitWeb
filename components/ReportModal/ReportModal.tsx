@@ -19,13 +19,16 @@ export default function ReportModal({ entityType, entityId, onClose }: ReportMod
   const [reasons, setReasons] = useState<{ code: string; description: string }[]>([]);
   const [selectedCodes, setSelectedCodes] = useState<Set<string>>(new Set());
   const [explanation, setExplanation] = useState('');
+  const [existingReportId, setExistingReportId] = useState<number | null>(null);
+  const [isReadOnly, setIsReadOnly] = useState(false);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [statusMessage, setStatusMessage] = useState('');
 
-  // Fetch all report reasons WITH auth token
+  // 1. Fetch all reasons + check if user already reported this entity
   useEffect(() => {
-    const fetchReasons = async () => {
+    const loadData = async () => {
       if (!user?.accessToken) {
         setError('You must be logged in to report content.');
         setLoading(false);
@@ -33,38 +36,59 @@ export default function ReportModal({ entityType, entityId, onClose }: ReportMod
       }
 
       try {
-        const res = await axios.get(
+        // Fetch reasons
+        const reasonsRes = await axios.get(
           `${process.env.NEXT_PUBLIC_API_URL}/api/report/reasons`,
-          {
-            headers: {
-              Authorization: `Bearer ${user.accessToken}`,
-            },
-          }
+          { headers: { Authorization: `Bearer ${user.accessToken}` } }
         );
-        setReasons(res.data);
+        setReasons(reasonsRes.data);
+
+        // Check if user already has a report for this entity
+        const reportRes = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/report/entity/${entityType}/${entityId}`,
+          { headers: { Authorization: `Bearer ${user.accessToken}` } }
+        );
+
+        if (reportRes.data) {
+          const report = reportRes.data;
+          setExistingReportId(report.reportId);
+
+          // Pre-fill form
+          setSelectedCodes(new Set(report.reasons.map((r: any) => r.code)));
+          setExplanation(report.explanation || '');
+
+          // Check if editable
+          if (report.status !== 'PENDING') {
+            setIsReadOnly(true);
+            setStatusMessage('Review underway — you can no longer edit this report.');
+          }
+        }
       } catch (err: any) {
-        console.error(err);
-        setError(err.response?.data?.message || 'Failed to load report reasons');
+        if (err.response?.status === 404) {
+          // No existing report → new report (normal flow)
+        } else {
+          console.error(err);
+          setError('Failed to load report data');
+        }
       } finally {
         setLoading(false);
       }
     };
 
-    fetchReasons();
-  }, [user?.accessToken]);
+    loadData();
+  }, [user?.accessToken, entityType, entityId]);
 
   const toggleReason = (code: string) => {
+    if (isReadOnly) return;
     const newSet = new Set(selectedCodes);
-    if (newSet.has(code)) {
-      newSet.delete(code);
-    } else {
-      newSet.add(code);
-    }
+    if (newSet.has(code)) newSet.delete(code);
+    else newSet.add(code);
     setSelectedCodes(newSet);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isReadOnly) return;
     if (selectedCodes.size === 0) {
       setError('Please select at least one reason');
       return;
@@ -85,9 +109,21 @@ export default function ReportModal({ entityType, entityId, onClose }: ReportMod
         explanation: explanation.trim(),
       };
 
-      await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/report`, payload, {
-        headers: { Authorization: `Bearer ${user?.accessToken}` },
-      });
+      if (existingReportId) {
+        // Update existing report
+        await axios.put(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/report/${existingReportId}`,
+          payload,
+          { headers: { Authorization: `Bearer ${user?.accessToken}` } }
+        );
+      } else {
+        // Create new report
+        await axios.post(
+          `${process.env.NEXT_PUBLIC_API_URL}/api/report`,
+          payload,
+          { headers: { Authorization: `Bearer ${user?.accessToken}` } }
+        );
+      }
 
       alert('Report submitted successfully!');
       onClose();
@@ -105,13 +141,14 @@ export default function ReportModal({ entityType, entityId, onClose }: ReportMod
         onClick={(e) => e.stopPropagation()}
         style={{ maxWidth: '520px', width: '100%' }}
       >
-        <h2 className={commonStyles.formHeader}>Report {entityType}</h2>
+        <h2 className={commonStyles.formHeader}>Submit a Report</h2>
+
+        {statusMessage && <p className={styles.statusMessage}>{statusMessage}</p>}
 
         {loading ? (
-          <p className={styles.loading}>Loading reasons...</p>
+          <p className={styles.loading}>Loading...</p>
         ) : (
           <form onSubmit={handleSubmit}>
-            {/* Two-column checklist */}
             <div className={styles.checklistGrid}>
               {reasons.map((reason) => (
                 <label key={reason.code} className={styles.checklistItem}>
@@ -119,13 +156,13 @@ export default function ReportModal({ entityType, entityId, onClose }: ReportMod
                     type="checkbox"
                     checked={selectedCodes.has(reason.code)}
                     onChange={() => toggleReason(reason.code)}
+                    disabled={isReadOnly}
                   />
                   <span>{reason.description}</span>
                 </label>
               ))}
             </div>
 
-            {/* Explanation */}
             <div className={styles.field}>
               <label className={styles.label}>
                 Explanation <span className={styles.required}>*</span>
@@ -137,29 +174,32 @@ export default function ReportModal({ entityType, entityId, onClose }: ReportMod
                 onChange={(e) => setExplanation(e.target.value)}
                 placeholder="Please explain why you are reporting this..."
                 required
+                disabled={isReadOnly}
               />
             </div>
 
             {error && <p className={commonStyles.error}>{error}</p>}
 
-            <button
-              type="submit"
-              className={commonStyles.primaryBtn}
-              disabled={submitting}
-            >
-              {submitting ? (
-                <>Submitting<span className={commonStyles.dots}></span></>
-              ) : (
-                'Submit Report'
-              )}
-            </button>
+            {!isReadOnly && (
+              <button
+                type="submit"
+                className={commonStyles.primaryBtn}
+                disabled={submitting}
+              >
+                {submitting ? (
+                  <>Submitting<span className={commonStyles.dots}></span></>
+                ) : (
+                  'Submit Report'
+                )}
+              </button>
+            )}
 
             <button
               type="button"
               onClick={onClose}
               className={commonStyles.secondaryBtn}
             >
-              Cancel
+              Close
             </button>
           </form>
         )}
