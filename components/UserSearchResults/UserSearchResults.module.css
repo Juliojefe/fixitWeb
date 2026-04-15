@@ -1,5 +1,5 @@
 .userResultsContainer {
-  width: 100%;
+  width: 80%;
 }
 
 .userGrid {
@@ -80,4 +80,13 @@
   color: #666;
   margin: 100px 0;
   font-style: italic;
+}
+
+.userCard .headerActions {
+  gap: 8px;
+}
+
+.userCard .reportMenu {
+  display: flex;
+  align-items: center;
 }

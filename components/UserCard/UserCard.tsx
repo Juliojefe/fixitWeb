@@ -11,13 +11,15 @@ import ReportMenu from '../ReportMenu/ReportMenu';
 
 interface UserCardProps {
   followingAuthor: boolean;
-  authorId: number | null;  // null if the user has been deleted
+  authorId: number | null;
   createdBy: string;
   createdByProfilePicUrl: string;
   authorIsMechanic: boolean;
   onFollowChange?: (newFollowing: boolean) => void;
   showBottomBorder?: boolean;
-  reportEntityType?: 'POST';
+
+  // reporting POST or USER
+  reportEntityType?: 'POST' | 'USER';
   reportEntityId?: number;
   /** Controls where the Report popup appears (passed to ReportMenu) */
   popupPosition?: 'comment-pos' | 'post-pos' | 'post-modal-pos';
@@ -36,18 +38,13 @@ export default function UserCard({
   popupPosition = 'post-pos',   // default for post
 }: UserCardProps) {
 
-  // basic needs
   const router = useRouter();
   const { user } = useUser();
 
-  // rendering needs
   const deletedAuthor = authorId == null;
-  const ownsPost = user?.userId === authorId;
+  const ownsThisUser = user?.userId === authorId;
 
-  // used for modal rendition
   const [showLoginModal, setShowLoginModal] = useState(false);
-
-  // used to prevent double-clicking during request
   const [isLoading, setIsLoading] = useState(false);
 
   async function handleGoToProfile() {
@@ -111,7 +108,7 @@ export default function UserCard({
         </div>
 
         <div className={styles.headerActions}>
-          {!ownsPost && (
+          {!ownsThisUser && (
             <button
               className={`${styles.followButton} ${followingAuthor ? styles.following : ""} ${isLoading ? styles.loading : ""}`}
               onClick={(e) => {
@@ -124,9 +121,9 @@ export default function UserCard({
             </button>
           )}
 
-          {reportEntityType === 'POST' && reportEntityId !== undefined && !ownsPost && !deletedAuthor && (
+          {reportEntityType && reportEntityId !== undefined && !ownsThisUser && !deletedAuthor && (
             <ReportMenu
-              entityType="POST"
+              entityType={reportEntityType}
               entityId={reportEntityId}
               popupPosition={popupPosition}
               className={styles.reportMenu}
