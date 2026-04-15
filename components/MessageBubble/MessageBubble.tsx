@@ -2,14 +2,15 @@
 
 import { useState } from 'react';
 import styles from './MessageBubble.module.css';
+import ReportMenu from '../ReportMenu/ReportMenu';
 
 interface MessageBubbleProps {
   message: {
     messageId?: number | string;
     content: string;
     userId: number;
-    senderName?: string;          // ← from your updated backend DTO
-    createdAt: string | number;   // ← can be string or number (epoch ms)
+    senderName?: string;
+    createdAt: string | number;
     imageUrls: string[];
     failed?: boolean;
     tempId?: string;
@@ -24,12 +25,14 @@ export default function MessageBubble({ message, isMine, onRetry }: MessageBubbl
   const hasImages = message.imageUrls && message.imageUrls.length > 0;
   const largeImage = hasImages ? message.imageUrls[currentIndex] : null;
 
-  // Robust date parsing - handles both epoch number and ISO string
+  // Determine report type
+  const isImageOnly = !message.content || message.content.trim() === '';
+  const entityType = isImageOnly ? 'MESSAGE_IMAGE' : 'MESSAGE';
+
+  // date parsing
   const getDisplayTime = () => {
     const date = new Date(message.createdAt);
-    if (isNaN(date.getTime())) {
-      return '??:??'; // fallback if parsing fails
-    }
+    if (isNaN(date.getTime())) return '??:??';
     return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
@@ -39,9 +42,15 @@ export default function MessageBubble({ message, isMine, onRetry }: MessageBubbl
   return (
     <div className={`${styles.messageRow} ${isMine ? styles.mine : styles.theirs}`}>
       <div className={styles.bubble}>
-        {/* Sender name - only for other people's messages */}
         {!isMine && message.senderName && (
-          <div className={styles.senderName}>{message.senderName}</div>
+          <div className={styles.messageHeader}>
+            <div className={styles.senderName}>{message.senderName}</div>
+            <ReportMenu
+              entityType={entityType}
+              entityId={Number(message.messageId)}
+              popupPosition="comment-pos"
+            />
+          </div>
         )}
 
         {message.content && <p className={styles.messageText}>{message.content}</p>}

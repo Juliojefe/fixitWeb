@@ -17,7 +17,7 @@
   justify-content: flex-start;
   height: 100%;
   align-items: center;
-  gap: 20px;
+  gap: 45px;
   padding-top: 20px;
   padding-bottom: 20px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.353);
@@ -39,7 +39,8 @@
 }
 
 .searchSection {
-  max-width: 50%;
+  /* max-width: 700%; */
+  width: 950px;
   margin: 20px auto 20px;
   padding: 0 20px;
 }
@@ -56,7 +57,7 @@
 
 .searchInput {
   flex: 1;
-  padding: 16px 24px;
+  padding: 16px 20px;
   font-size: 1.1rem;
   border: none;
   outline: none;
@@ -75,13 +76,13 @@
 .searchBtn {
   color: white;
   border: none;
-  width: 70px;
   font-size: 1.4rem;
   cursor: pointer;
+  margin-right: 20px;
   transition: background 0.2s;
 }
 
-.searchBtn:hover { background: #3d5a96; }
+.searchBtn:hover { background: #3d5b9672; }
 
 .tabs {
   display: flex;
@@ -119,10 +120,10 @@
 .postContentContainer {
   background: rgba(255, 255, 255, 0.9);
   border: 2px solid black;
-  max-width: 700px;
+  max-width: 900px;
   margin: 0 auto;
   min-height: 70vh;
-  padding: 30px 20px;
+  padding: 50px 20px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.15);
   border-radius: 16px;
   overflow-y: auto;

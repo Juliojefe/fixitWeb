@@ -9,6 +9,7 @@ import { comment } from "@/types/comment";
 import { formatDistanceToNow } from "date-fns";
 import styles from "./PostModal.module.css";
 import axios from 'axios';
+import ReportMenu from '../ReportMenu/ReportMenu';
 
 interface PostProps {
   postData?: DisplayPostType | null;
@@ -38,14 +39,11 @@ export default function PostModal({
   header
 }: PostProps) {
 
-  // basic needs
   const router = useRouter();
   const { user } = useUser();
 
-  // post specific
   const hasImage = (postData?.imageUrls?.length ?? 0) > 0;
 
-  // comments section 
   const [loadingComments, setLoadingComments] = useState(true);
   const [comments, setComments] = useState<comment[]>([]);
   const [last, setLast] = useState(false);
@@ -53,17 +51,12 @@ export default function PostModal({
   const PAGE_SIZE = 10;
   const isFetching = useRef(false);
 
-  // for adding comment
   const [commentContent, setCommentContent] = useState('');
   const [selectedImages, setSelectedImages] = useState<File[]>([]);
   const [postingComment, setPostingComment] = useState(false);
-
-  // for enlarging image
   const [enlargedImage, setEnlargedImage] = useState<string | null>(null);
 
-  if (!postData) {
-    return null;
-  }
+  if (!postData) return null;
 
   if (loadingComments && !isFetching.current) {
     isFetching.current = true;
@@ -71,9 +64,7 @@ export default function PostModal({
   }
 
   async function onGoToCommentorProfile(authorId: number) {
-    if (authorId === null) {
-      return; // deleted author do nothing
-    }
+    if (authorId === null) return;
     router.push(`/profile/${authorId}`);
   }
 
@@ -154,9 +145,7 @@ export default function PostModal({
   }
 
   function handleImageChange(e: React.ChangeEvent<HTMLInputElement>) {
-    if (e.target.files) {
-      setSelectedImages(Array.from(e.target.files));
-    }
+    if (e.target.files) setSelectedImages(Array.from(e.target.files));
   }
 
   function handleEnlargeImage(url: string) {
@@ -167,14 +156,10 @@ export default function PostModal({
     <div className={styles.modalBackdrop} onClick={onClose}>
       <div className={styles.postModalContainer} onClick={(e) => e.stopPropagation()}>
         {/* Image Section */}
-        {hasImage ? (
+        {hasImage && (
           <div className={styles.postModalImageSection}>
             {postData?.imageUrls?.[0] && (
-              <img
-                className={styles.postImage}
-                src={postData.imageUrls[currImageIndex]}
-                alt="post"
-              />
+              <img className={styles.postImage} src={postData.imageUrls[currImageIndex]} alt="post" />
             )}
             {postData.imageUrls.length > 1 && currImageIndex > 0 && (
               <button className={styles.prevImageButton} onClick={onPrevImage}>
@@ -187,14 +172,13 @@ export default function PostModal({
               </button>
             )}
           </div>
-        ) : null}
+        )}
 
         {/* comments section */}
         <div className={styles.commentsSection}>
-          {/* header section */}
           {header}
 
-          {/* description section + timestamp */}
+          {/* description + timestamp */}
           <div className={styles.postDescriptionWrapper}>
             <p className={styles.postDescription}>{postData.description || ""}</p>
             <p className={styles.postTime}>
@@ -207,28 +191,36 @@ export default function PostModal({
             {comments.length === 0 && !loadingComments ? (
               <p className={styles.noComments}>No comments yet. Be the first!</p>
             ) : (
-              comments.map((comment) => (
-                <div key={comment.commentId} className={styles.commentItem}>
+              comments.map((c) => (
+                <div key={c.commentId} className={styles.commentItem}>
                   <img
                     className={styles.commentProfilePic}
-                    src={comment.createdByProfilePicUrl}
+                    src={c.createdByProfilePicUrl}
                     alt="comment author"
-                    onClick={() => onGoToCommentorProfile(comment.authorId)}
+                    onClick={() => onGoToCommentorProfile(c.authorId)}
                   />
                   <div className={styles.commentContent}>
                     <div className={styles.commentHeader}>
-                      <p className={styles.commentAuthor} onClick={() => onGoToCommentorProfile(comment.authorId)}>
-                        {comment.createdBy}
+                      <p className={styles.commentAuthor} onClick={() => onGoToCommentorProfile(c.authorId)}>
+                        {c.createdBy}
                       </p>
                       <p className={styles.commentTime}>
-                        {formatDistanceToNow(new Date(comment.createdAt), { addSuffix: true })}
+                        {formatDistanceToNow(new Date(c.createdAt), { addSuffix: true })}
                       </p>
-                    </div>
-                    <p className={styles.commentText}>{comment.content}</p>
 
-                    {comment.imageUrls.length > 0 && (
+                      {/* Report comment */}
+                      <ReportMenu
+                        entityType="COMMENT"
+                        entityId={c.commentId}
+                        popupPosition="comment-pos"
+                      />
+                    </div>
+
+                    <p className={styles.commentText}>{c.content}</p>
+
+                    {c.imageUrls.length > 0 && (
                       <div className={styles.commentImages}>
-                        {comment.imageUrls.map((url, idx) => (
+                        {c.imageUrls.map((url, idx) => (
                           <img
                             key={idx}
                             src={url}
@@ -257,34 +249,19 @@ export default function PostModal({
             )}
           </div>
 
-          {/* auth user extras */}
           {user && (
             <>
               <div className={styles.actionIcons}>
-                {hasLiked ? (
-                  <FaHeart className={styles.likeIconActive} onClick={onLike} />
-                ) : (
-                  <FaRegHeart className={styles.icon} onClick={onLike} />
-                )}
+                {hasLiked ? <FaHeart className={styles.likeIconActive} onClick={onLike} /> : <FaRegHeart className={styles.icon} onClick={onLike} />}
                 <FaRegComment className={styles.icon} />
-                {hasSaved ? (
-                  <FaBookmark className={styles.icon} onClick={onSave} />
-                ) : (
-                  <FaRegBookmark className={styles.icon} onClick={onSave} />
-                )}
+                {hasSaved ? <FaBookmark className={styles.icon} onClick={onSave} /> : <FaRegBookmark className={styles.icon} onClick={onSave} />}
               </div>
 
               <div className={styles.addComment}>
                 <div className={styles.inputRow}>
                   <label className={styles.uploadIcon}>
                     <FaCamera />
-                    <input
-                      type="file"
-                      multiple
-                      accept="image/*"
-                      onChange={handleImageChange}
-                      className={styles.imageUpload}
-                    />
+                    <input type="file" multiple accept="image/*" onChange={handleImageChange} className={styles.imageUpload} />
                   </label>
                   <textarea
                     value={commentContent}
@@ -293,11 +270,7 @@ export default function PostModal({
                     className={styles.commentInput}
                     rows={1}
                   />
-                  <button
-                    onClick={handlePostComment}
-                    disabled={postingComment || !commentContent.trim()}
-                    className={styles.postButton}
-                  >
+                  <button onClick={handlePostComment} disabled={postingComment || !commentContent.trim()} className={styles.postButton}>
                     <FaPaperPlane />
                   </button>
                 </div>
@@ -305,12 +278,7 @@ export default function PostModal({
                 {selectedImages.length > 0 && (
                   <div className={styles.previewImages}>
                     {selectedImages.map((file, idx) => (
-                      <img
-                        key={idx}
-                        src={URL.createObjectURL(file)}
-                        alt="preview"
-                        className={styles.smallImage}
-                      />
+                      <img key={idx} src={URL.createObjectURL(file)} alt="preview" className={styles.smallImage} />
                     ))}
                   </div>
                 )}

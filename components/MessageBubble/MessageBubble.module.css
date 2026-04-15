@@ -29,13 +29,26 @@
   border-color: #3d5a96;
 }
 
+.messageHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+
+.senderName {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #526fae;
+  opacity: 0.9;
+}
+
 .messageText {
   margin: 0 0 12px 0;
   font-size: 1.05rem;
   line-height: 1.4;
 }
 
-/* Image container */
 .imageContainer {
   display: flex;
   flex-direction: column;
@@ -93,7 +106,6 @@
   box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.15);
 }
 
-/* Small thumbnails below */
 .thumbnailStrip {
   display: flex;
   gap: 8px;
@@ -118,7 +130,6 @@
   transform: scale(1.1);
 }
 
-/* Timestamp */
 .timestamp {
   font-size: 0.75rem;
   opacity: 0.7;
@@ -141,12 +152,3 @@
 .failedIndicator:hover {
   transform: scale(1.2);
 }
-
-.senderName {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: #526fae;
-  margin-bottom: 4px;
-  opacity: 0.9;
-}
-

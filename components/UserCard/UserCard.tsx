@@ -7,15 +7,22 @@ import MustLoginModal from "../MustLoginModal/MustLoginModal";
 import { createPortal } from 'react-dom';
 import axios from 'axios';
 import { useState } from 'react';
+import ReportMenu from '../ReportMenu/ReportMenu';
 
 interface UserCardProps {
   followingAuthor: boolean;
-  authorId: number | null;  // null if the user has been deleted
+  authorId: number | null;
   createdBy: string;
   createdByProfilePicUrl: string;
   authorIsMechanic: boolean;
   onFollowChange?: (newFollowing: boolean) => void;
   showBottomBorder?: boolean;
+
+  // reporting POST or USER
+  reportEntityType?: 'POST' | 'USER';
+  reportEntityId?: number;
+  /** Controls where the Report popup appears (passed to ReportMenu) */
+  popupPosition?: 'comment-pos' | 'post-pos' | 'post-modal-pos';
 }
 
 export default function UserCard({
@@ -26,26 +33,22 @@ export default function UserCard({
   authorIsMechanic,
   onFollowChange,
   showBottomBorder = true,
+  reportEntityType,
+  reportEntityId,
+  popupPosition = 'post-pos',   // default for post
 }: UserCardProps) {
 
-  // basic needs
   const router = useRouter();
   const { user } = useUser();
 
-  // rendering needs
-  const deletedAuthor = authorId == null; // true if the user has been deleted
-  const ownsPost = user?.userId === authorId; // true if the current user is the author of the post
+  const deletedAuthor = authorId == null;
+  const ownsThisUser = user?.userId === authorId;
 
-  // used for modal rendition
   const [showLoginModal, setShowLoginModal] = useState(false);
-
-  // used to prevent double-clicking during request
   const [isLoading, setIsLoading] = useState(false);
 
   async function handleGoToProfile() {
-    if (deletedAuthor) {
-      return;
-    }
+    if (deletedAuthor) return;
     if (user?.userId === authorId) {
       router.push("/myProfile");
       return;
@@ -54,9 +57,7 @@ export default function UserCard({
   }
 
   async function handleFollowToggle() {
-    if (deletedAuthor || isLoading) {
-      return;
-    }
+    if (deletedAuthor || isLoading) return;
     if (!user) {
       setShowLoginModal(true);
       return;
@@ -64,37 +65,24 @@ export default function UserCard({
 
     setIsLoading(true);
     const newFollowing = !followingAuthor;
-    onFollowChange?.(newFollowing); // let the parent component know about the change in follow status
+    onFollowChange?.(newFollowing);
+
     const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/follow/${authorId}`;
     try {
       if (followingAuthor) {
-        // currently following, so unfollow
-        await axios.delete(
-          endpoint,
-          {
-            headers: { Authorization: `Bearer ${user.accessToken}` },
-          }
-        );
+        await axios.delete(endpoint, { headers: { Authorization: `Bearer ${user.accessToken}` } });
       } else {
-        // currently not following, so follow
-        await axios.post(
-          endpoint,
-          {},
-          {
-            headers: { Authorization: `Bearer ${user.accessToken}` },
-          }
-        );
+        await axios.post(endpoint, {}, { headers: { Authorization: `Bearer ${user.accessToken}` } });
       }
     } catch (error) {
       console.error("Error toggling follow status:", error);
-      // undo follow status change in case of error
-      onFollowChange?.(followingAuthor); // revert to previous state
+      onFollowChange?.(followingAuthor);
     } finally {
       setIsLoading(false);
     }
   }
 
-return (
+  return (
     <>
       {showLoginModal &&
         createPortal(
@@ -104,40 +92,44 @@ return (
 
       <div
         className={`${styles.headerSection} ${!showBottomBorder ? styles.noBottomBorder : ''}`}
-        onClick={
-          deletedAuthor
-            ? undefined
-            : () => handleGoToProfile()
-        }
+        onClick={deletedAuthor ? undefined : () => handleGoToProfile()}
         style={deletedAuthor ? { cursor: "default" } : undefined}
       >
         <img
           className={styles.profilePic}
-          src={
-            deletedAuthor
-              ? "/images/deletedUserPfp.png"
-              : createdByProfilePicUrl
-          }
+          src={deletedAuthor ? "/images/deletedUserPfp.png" : createdByProfilePicUrl}
           alt="profile picture"
         />
         <div className={styles.nameContainer}>
           <p className={styles.userName}>
             {deletedAuthor ? "Deleted User" : createdBy}
           </p>
-          {authorIsMechanic && <img className={styles.mechanicBadge} src="/icons/wrench.png" />}
+          {authorIsMechanic && <img className={styles.mechanicBadge} src="/icons/wrench.png" alt="mechanic badge" />}
         </div>
-        {!ownsPost ? (
-          <button
-            className={`${styles.followButton} ${followingAuthor ? styles.following : ""} ${isLoading ? styles.loading : ""}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleFollowToggle();
-            }}
-            disabled={isLoading}
-          >
-            {isLoading ? "Loading..." : (followingAuthor ? "Following" : "Follow")}
-          </button>
-        ) : null}
+
+        <div className={styles.headerActions}>
+          {!ownsThisUser && (
+            <button
+              className={`${styles.followButton} ${followingAuthor ? styles.following : ""} ${isLoading ? styles.loading : ""}`}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleFollowToggle();
+              }}
+              disabled={isLoading}
+            >
+              {isLoading ? "Loading..." : followingAuthor ? "Following" : "Follow"}
+            </button>
+          )}
+
+          {reportEntityType && reportEntityId !== undefined && !ownsThisUser && !deletedAuthor && (
+            <ReportMenu
+              entityType={reportEntityType}
+              entityId={reportEntityId}
+              popupPosition={popupPosition}
+              className={styles.reportMenu}
+            />
+          )}
+        </div>
       </div>
     </>
   );
