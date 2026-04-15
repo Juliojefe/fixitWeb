@@ -1,50 +1,50 @@
 .reportContainer {
   position: relative;
-  display: inline-block;
+  display: flex;
+  align-items: center;
 }
 
 .dotsButton {
   background: none;
   border: none;
   cursor: pointer;
-  padding: 4px 8px;
-  font-size: 1.35rem;
-  color: #555;
+  padding: 4px;
+  color: black;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: color 0.2s;
+  line-height: 1;
 }
 
 .dotsButton:hover {
-  color: #111;
+  color: #484848;
 }
 
 .dropdown {
   position: absolute;
-  top: 100%;
-  right: 0;
+  top: 0;
+  left: calc(100% + 10px);
+  transform: translateY(-60%);
   background: white;
-  border: 3px solid black;
+  border: 2px solid black;
   border-radius: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   z-index: 1000;
-  min-width: 140px;
+  min-width: 120px;
   overflow: hidden;
-  margin-top: 4px;
 }
 
 .reportOption {
   width: 100%;
   text-align: left;
-  padding: 12px 16px;
+  padding: 12px 12px;
   background: none;
   border: none;
-  font-size: 1.05rem;
+  font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  color: #111;
-  transition: background 0.15s;
+  color: #e11d48;
+  white-space: nowrap;
 }
 
 .reportOption:hover {

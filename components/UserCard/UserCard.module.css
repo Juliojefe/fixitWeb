@@ -2,35 +2,55 @@
   height: 50px;
   width: 100%;
   display: flex;
-  flex-direction: row;
   align-items: center;
   gap: 10px;
   border-bottom: 0.5px solid black;
-}
-
-.userName {
-  font-size: medium;
-  margin:0;
+  padding: 0 10px;
+  box-sizing: border-box;
 }
 
 .profilePic {
   width: 30px;
   height: 30px;
-  border-radius: 90;
-  margin-left: 10px;
+  border-radius: 50%;
   border: 0.5px solid black;
+  flex-shrink: 0;
+}
+
+.nameContainer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.userName {
+  font-size: medium;
+  margin: 0;
+}
+
+.mechanicBadge {
+  width: 20px;
+  height: 20px;
+  display: block;
+}
+
+.headerActions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-shrink: 0;
 }
 
 .followButton {
-  margin-left: auto;
-  margin-right: -10px;
   padding: 5px 10px;
   background-color: #007bff;
   color: white;
   cursor: pointer;
   font-size: small;
   border: solid 0.5px gray;
-  border-radius: 15%;
+  border-radius: 6px;
 }
 
 .following {
@@ -42,25 +62,11 @@
   cursor: not-allowed;
 }
 
-.mechanicBadge {
-  width: 20px;
-  height: 20px;
-  display: block;
-  margin-bottom: 2px;
-}
-
-.nameContainer {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
 .noBottomBorder {
   border-bottom: none !important;
 }
 
-/* Report three-dots positioning */
 .reportMenu {
-  margin-left: -5px;
-  margin-right: 0px;
+  display: flex;
+  align-items: center;
 }
