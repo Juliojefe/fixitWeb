@@ -138,6 +138,8 @@ export default function Post({ postData = null }: PostProps) {
       createdByProfilePicUrl={postData?.createdByProfilePicUrl || "/images/deletedUserPfp.png"}
       authorIsMechanic={postData?.authorIsMechanic || false}
       onFollowChange={handleFollowChange}
+      reportEntityType="POST"
+      reportEntityId={postData.postId}
     />
   );
 
@@ -170,6 +172,7 @@ export default function Post({ postData = null }: PostProps) {
       <div className={styles.postContainer}>
         {/* header section */}
         {userCard}
+
         {/* Image Section */}
         {hasImage ? (
           <div className={styles.imageSection}>

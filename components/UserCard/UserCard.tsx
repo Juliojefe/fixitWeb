@@ -7,6 +7,7 @@ import MustLoginModal from "../MustLoginModal/MustLoginModal";
 import { createPortal } from 'react-dom';
 import axios from 'axios';
 import { useState } from 'react';
+import ReportMenu from '../ReportMenu/ReportMenu';
 
 interface UserCardProps {
   followingAuthor: boolean;
@@ -16,6 +17,8 @@ interface UserCardProps {
   authorIsMechanic: boolean;
   onFollowChange?: (newFollowing: boolean) => void;
   showBottomBorder?: boolean;
+  reportEntityType?: 'POST';
+  reportEntityId?: number;
 }
 
 export default function UserCard({
@@ -26,6 +29,8 @@ export default function UserCard({
   authorIsMechanic,
   onFollowChange,
   showBottomBorder = true,
+  reportEntityType,
+  reportEntityId,
 }: UserCardProps) {
 
   // basic needs
@@ -94,7 +99,7 @@ export default function UserCard({
     }
   }
 
-return (
+  return (
     <>
       {showLoginModal &&
         createPortal(
@@ -126,6 +131,7 @@ return (
           </p>
           {authorIsMechanic && <img className={styles.mechanicBadge} src="/icons/wrench.png" />}
         </div>
+        {/* Follow button */}
         {!ownsPost ? (
           <button
             className={`${styles.followButton} ${followingAuthor ? styles.following : ""} ${isLoading ? styles.loading : ""}`}
@@ -138,6 +144,18 @@ return (
             {isLoading ? "Loading..." : (followingAuthor ? "Following" : "Follow")}
           </button>
         ) : null}
+
+        {/* Report Post */}
+        {reportEntityType === 'POST' && 
+         reportEntityId !== undefined && 
+         !ownsPost && 
+         !deletedAuthor && (
+          <ReportMenu
+            entityType="POST"
+            entityId={reportEntityId}
+            className={styles.reportMenu}   // optional styling hook
+          />
+        )}
       </div>
     </>
   );
