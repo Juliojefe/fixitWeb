@@ -25,6 +25,7 @@ export default function ReportModal({ entityType, entityId, onClose }: ReportMod
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
+  const [statusDetail, setStatusDetail] = useState(''); // NEW: richer explanation
 
   // Success state
   const [successfulSubmit, setSuccessfulSubmit] = useState(false);
@@ -61,18 +62,45 @@ export default function ReportModal({ entityType, entityId, onClose }: ReportMod
 
         if (reportRes.data) {
           const report = reportRes.data;
+          console.log('Existing report:', report);
+
           setExistingReportId(report.reportId);
           setSelectedCodes(new Set(report.reasons.map((r: any) => r.code)));
           setExplanation(report.explanation || '');
 
           if (report.status !== 'PENDING') {
             setIsReadOnly(true);
-            setStatusMessage('Review underway — you can no longer edit this report.');
+
+            // === NEW: Rich, user-friendly messages based on status ===
+            let mainMsg = '';
+            let detailMsg = '';
+
+            switch (report.status) {
+              case 'IN_REVIEW':
+                mainMsg = 'This report is currently under review.';
+                detailMsg = 'Return later for an update.';
+                break;
+              case 'RESOLVED':
+              case 'DISMISSED':
+                mainMsg = `This report has been ${report.status.toLowerCase()}.`;
+                detailMsg = 'Nothing further will happen.';
+                break;
+              case 'CLOSED':
+                mainMsg = 'This report has been closed.';
+                detailMsg = 'This entity will be taken down in the future.';
+                break;
+              default:
+                mainMsg = `This report has been ${report.status.toLowerCase()}.`;
+                detailMsg = 'You can no longer edit it.';
+            }
+
+            setStatusMessage(mainMsg);
+            setStatusDetail(detailMsg);
           }
         }
       } catch (err: any) {
         if (err.response?.status === 404) {
-          // No existing report - normal new report
+          // No existing report – normal new report flow
         } else {
           console.error(err);
           setError('Failed to load report data');
@@ -150,7 +178,18 @@ export default function ReportModal({ entityType, entityId, onClose }: ReportMod
         >
           <h2 className={commonStyles.formHeader}>Submit a Report</h2>
 
-          {statusMessage && <p className={styles.statusMessage}>{statusMessage}</p>}
+          {/* === NEW: Status banner when report can no longer be edited === */}
+          {isReadOnly && statusMessage && (
+            <div className={styles.statusBanner}>
+              <strong>{statusMessage}</strong>
+              <p>{statusDetail}</p>
+              <div className={styles.statusPill}>
+                Status: <span className={styles[statusMessage.toLowerCase().includes('review') ? 'in_review' : 'reviewed']}>
+                  {existingReportId ? 'REVIEWED' : ''}
+                </span>
+              </div>
+            </div>
+          )}
 
           {loading ? (
             <p className={styles.loading}>Loading...</p>

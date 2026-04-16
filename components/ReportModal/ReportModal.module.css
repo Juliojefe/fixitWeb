@@ -1,11 +1,21 @@
+/* ================ REPORT MODAL STYLES ================ */
+
+/* Checklist grid - responsive (1 column on mobile) */
 .checklistGrid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px 24px;
   margin-bottom: 1.5rem;
-  max-height: 320px;
+  max-height: 280px;           /* reduced height to fit smaller screens */
   overflow-y: auto;
   padding-right: 8px;
+}
+
+@media (max-width: 600px) {
+  .checklistGrid {
+    grid-template-columns: 1fr;   /* single column on phones */
+    gap: 10px;
+  }
 }
 
 .checklistItem {
@@ -22,6 +32,7 @@
   accent-color: #526fae;
 }
 
+/* Form labels and inputs - more compact */
 .label {
   font-size: 0.9rem;
   font-weight: 600;
@@ -53,6 +64,7 @@
   background: #fff;
 }
 
+/* Loading and success states */
 .loading {
   text-align: center;
   color: #666;
@@ -61,9 +73,53 @@
 }
 
 .successMessage {
-  color: green;
+  color: #16a34a;
   font-weight: bold;
   text-align: center;
-  font-size: large;
-  margin: 10px 0;
+  font-size: 1.1rem;
+  margin: 20px 0;
+}
+
+/* ================ READ-ONLY STATUS BANNER ================ */
+.statusBanner {
+  background: #f8f8f8;
+  border: 2px solid #111;
+  border-radius: 12px;
+  padding: 16px 18px;          /* slightly reduced padding */
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.statusBanner strong {
+  display: block;
+  font-size: 1.05rem;          /* slightly smaller */
+  margin-bottom: 6px;
+  color: #111;
+}
+
+.statusBanner p {
+  margin: 0 0 12px 0;
+  color: #555;
+  font-size: 0.93rem;
+  line-height: 1.4;
+}
+
+.statusPill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #111;
+  color: #fff;
+  padding: 6px 14px;
+  border-radius: 9999px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.statusPill .in_review {
+  color: #2563eb;
+}
+
+.statusPill .reviewed {
+  color: #64748b;
 }
