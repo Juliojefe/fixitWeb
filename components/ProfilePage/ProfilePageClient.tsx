@@ -86,7 +86,7 @@ export default function ProfilePageClient({ routeMode, profileUserId }: ProfileP
     const [ownedPosts, setOwnedPosts] = useState<DisplayPostType[]>([]);
     const [likedPosts, setLikedPosts] = useState<DisplayPostType[]>([]);
     const [savedPosts, setSavedPosts] = useState<DisplayPostType[]>([]);
-    const [tabLoading, setTabLoading] = useState(false);
+    const [loadingTab, setLoadingTab] = useState<ProfileTabKey | null>(null);
     const [tabError, setTabError] = useState<string | null>(null);
 
     const [followers, setFollowers] = useState<UserNameAndPfp[]>([]);
@@ -122,9 +122,12 @@ export default function ProfilePageClient({ routeMode, profileUserId }: ProfileP
     const businessAutocompleteAbortRef = useRef<AbortController | null>(null);
     const businessAutocompleteDebounceRef = useRef<number | null>(null);
     const businessSearchBlockRef = useRef<HTMLDivElement | null>(null);
+    const postLoaderRef = useRef<HTMLDivElement | null>(null);
 
     const postCacheRef = useRef<Map<number, DisplayPostType>>(new Map());
     const userMiniCacheRef = useRef<Map<number, UserNameAndPfp>>(new Map());
+    const [tabPage, setTabPage] = useState<Record<ProfileTabKey, number>>({ posts: 0, liked: 0, saved: 0 });
+    const [tabLast, setTabLast] = useState<Record<ProfileTabKey, boolean>>({ posts: false, liked: false, saved: false });
 
     const effectiveName = profile?.name ?? (isOwnProfile ? user?.name ?? 'Your profile' : 'Profile');
     const effectiveBio = profile?.biography?.trim?.() || (isOwnProfile ? user?.biography?.trim?.() || '' : '');
@@ -146,12 +149,14 @@ export default function ProfilePageClient({ routeMode, profileUserId }: ProfileP
 
     const followerCount = profile?.followerCount ?? followerIds.length;
     const followingCount = profile?.followingCount ?? followingIds.length;
-    const canViewFullProfile = isOwnProfile || Boolean((profile as ProfilePublic | null)?.viewerCanViewFullProfile);
     const isFollowing = Boolean((profile as ProfilePublic | null)?.viewerFollowsUser);
     const shouldShowFollowButton = !isOwnProfile && Boolean(user && targetUserId && user.userId !== targetUserId);
 
-    const maxPostsPerTab = 25;
+    const pageSize = 5;
     const miniListLimit = 10;
+    const tabLoading = loadingTab === activeTab;
+    const currentTabLast = tabLast[activeTab];
+    const currentTabTotalCount = activeTab === 'posts' ? ownedIds.length : activeTab === 'liked' ? likedIds.length : savedIds.length;
 
     function resetLoadedData() {
         setProfile(null);
@@ -161,6 +166,9 @@ export default function ProfilePageClient({ routeMode, profileUserId }: ProfileP
         setLikedPosts([]);
         setSavedPosts([]);
         setTabError(null);
+        setLoadingTab(null);
+        setTabPage({ posts: 0, liked: 0, saved: 0 });
+        setTabLast({ posts: false, liked: false, saved: false });
     }
 
     async function fetchProfile(userId: number) {
@@ -213,7 +221,7 @@ export default function ProfilePageClient({ routeMode, profileUserId }: ProfileP
     }
 
     async function loadMiniLists(expandFollowers: boolean, expandFollowing: boolean) {
-        if (!profile || !canViewFullProfile) {
+        if (!profile) {
             setFollowers([]);
             setFollowing([]);
             return;
@@ -252,8 +260,20 @@ export default function ProfilePageClient({ routeMode, profileUserId }: ProfileP
         }
     }
 
-    async function loadPostsForTab(tab: ProfileTabKey) {
-        if (!profile || !canViewFullProfile) {
+    function setPostsForTab(tab: ProfileTabKey, nextPosts: DisplayPostType[]) {
+        if (tab === 'posts') setOwnedPosts(nextPosts);
+        if (tab === 'liked') setLikedPosts(nextPosts);
+        if (tab === 'saved') setSavedPosts(nextPosts);
+    }
+
+    function getIdsForTab(tab: ProfileTabKey) {
+        if (tab === 'posts') return ownedIds;
+        if (tab === 'liked') return likedIds;
+        return savedIds;
+    }
+
+    async function loadPostsForTab(tab: ProfileTabKey, options?: { reset?: boolean }) {
+        if (!profile) {
             setOwnedPosts([]);
             setLikedPosts([]);
             setSavedPosts([]);
@@ -261,15 +281,33 @@ export default function ProfilePageClient({ routeMode, profileUserId }: ProfileP
             return;
         }
 
-        setTabLoading(true);
+        if (loadingTab) return;
+
+        const reset = options?.reset ?? false;
+        const allIds = Array.from(new Set(getIdsForTab(tab)));
+        if (allIds.length === 0) {
+            setPostsForTab(tab, []);
+            setTabLast((prev) => ({ ...prev, [tab]: true }));
+            setTabPage((prev) => ({ ...prev, [tab]: 0 }));
+            setTabError(null);
+            return;
+        }
+
+        const nextPage = reset ? 0 : tabPage[tab];
+        if (!reset && tabLast[tab]) return;
+
+        const batchIds = allIds.slice(nextPage * pageSize, (nextPage + 1) * pageSize);
+        if (batchIds.length === 0) {
+            setTabLast((prev) => ({ ...prev, [tab]: true }));
+            return;
+        }
+
+        setLoadingTab(tab);
         setTabError(null);
 
         try {
-            const ids = tab === 'posts' ? ownedIds : tab === 'liked' ? likedIds : savedIds;
-            const uniqueIds = Array.from(new Set(ids)).slice(0, maxPostsPerTab);
-
             const results = await Promise.all(
-                uniqueIds.map(async (id) => {
+                batchIds.map(async (id) => {
                     const post = await fetchPostSummary(id);
                     const isPlaceholder =
                         typeof post?.description === 'string' &&
@@ -283,15 +321,27 @@ export default function ProfilePageClient({ routeMode, profileUserId }: ProfileP
             );
 
             results.sort((a, b) => (Date.parse(b.createdAt || '') || 0) - (Date.parse(a.createdAt || '') || 0));
-
-            if (tab === 'posts') setOwnedPosts(results);
-            if (tab === 'liked') setLikedPosts(results);
-            if (tab === 'saved') setSavedPosts(results);
+            setPostsForTab(
+                tab,
+                reset
+                    ? results
+                    : [
+                          ...(tab === 'posts' ? ownedPosts : tab === 'liked' ? likedPosts : savedPosts),
+                          ...results.filter((post) => {
+                              const existingIds = new Set(
+                                  (tab === 'posts' ? ownedPosts : tab === 'liked' ? likedPosts : savedPosts).map((current) => current.postId)
+                              );
+                              return !existingIds.has(post.postId);
+                          }),
+                      ]
+            );
+            setTabPage((prev) => ({ ...prev, [tab]: nextPage + 1 }));
+            setTabLast((prev) => ({ ...prev, [tab]: (nextPage + 1) * pageSize >= allIds.length }));
         } catch (err) {
             console.error(err);
             setTabError('Failed to load posts for this tab.');
         } finally {
-            setTabLoading(false);
+            setLoadingTab((current) => (current === tab ? null : current));
         }
     }
 
@@ -534,7 +584,6 @@ export default function ProfilePageClient({ routeMode, profileUserId }: ProfileP
 
             setPhotoFile(null);
             await fetchProfile(targetUserId);
-            await loadPostsForTab(activeTab);
         } catch (err: any) {
             console.error(err);
             setPhotoError(err?.response?.status ? `Upload failed (${err.response.status})` : 'Upload failed.');
@@ -564,12 +613,37 @@ export default function ProfilePageClient({ routeMode, profileUserId }: ProfileP
     }, [profile]);
 
     useEffect(() => {
-        void loadMiniLists(followersExpanded, followingExpanded);
-    }, [profile, followersExpanded, followingExpanded, canViewFullProfile]);
+        setOwnedPosts([]);
+        setLikedPosts([]);
+        setSavedPosts([]);
+        setLoadingTab(null);
+        setTabError(null);
+        setTabPage({ posts: 0, liked: 0, saved: 0 });
+        setTabLast({ posts: false, liked: false, saved: false });
+    }, [profile]);
 
     useEffect(() => {
-        void loadPostsForTab(activeTab);
-    }, [activeTab, profile, canViewFullProfile]);
+        void loadMiniLists(followersExpanded, followingExpanded);
+    }, [profile, followersExpanded, followingExpanded]);
+
+    useEffect(() => {
+        if (!profile) return;
+        if (tabPage[activeTab] > 0 || tabLast[activeTab]) return;
+        void loadPostsForTab(activeTab, { reset: true });
+    }, [activeTab, profile, tabPage, tabLast]);
+
+    useEffect(() => {
+        if (!postLoaderRef.current || !profile) return;
+
+        const observer = new IntersectionObserver((entries) => {
+            if (!entries[0].isIntersecting) return;
+            if (loadingTab || tabLast[activeTab]) return;
+            void loadPostsForTab(activeTab);
+        });
+
+        observer.observe(postLoaderRef.current);
+        return () => observer.disconnect();
+    }, [activeTab, profile, loadingTab, tabLast]);
 
     useEffect(() => {
         if (showEditBio) {
@@ -691,14 +765,22 @@ export default function ProfilePageClient({ routeMode, profileUserId }: ProfileP
                     setActiveTab(tab);
                 }}
                 currentPosts={displayedPosts}
+                currentTabTotalCount={currentTabTotalCount}
                 tabLoading={tabLoading}
                 tabError={tabError}
+                postLoadMoreSlot={
+                    displayedPosts.length > 0 && !currentTabLast ? (
+                        <div ref={postLoaderRef} className={styles.muted} style={{ paddingTop: 12, textAlign: 'center' }}>
+                            Loading...
+                        </div>
+                    ) : undefined
+                }
                 showComposer={isOwnProfile}
                 onOpenCreatePost={isOwnProfile ? () => setShowCreateModal(true) : undefined}
                 onEditBio={isOwnProfile ? () => setShowEditBio(true) : undefined}
                 onEditPhoto={isOwnProfile ? () => setShowEditPhoto(true) : undefined}
                 businessLocation={businessLocation}
-                showBusinessLocationCard={canViewFullProfile && (isOwnProfile ? canManageBusinessLocation : Boolean(businessLocation))}
+                showBusinessLocationCard={isOwnProfile ? canManageBusinessLocation : Boolean(businessLocation)}
                 canEditBusinessLocation={canManageBusinessLocation}
                 onEditAddress={canManageBusinessLocation ? () => setShowEditAddress(true) : undefined}
                 followers={followers}
@@ -710,8 +792,6 @@ export default function ProfilePageClient({ routeMode, profileUserId }: ProfileP
                 hasMoreFollowing={followingIds.length > miniListLimit}
                 followingExpanded={followingExpanded}
                 onToggleFollowingExpanded={() => setFollowingExpanded((value) => !value)}
-                canViewFullProfile={canViewFullProfile}
-                hiddenContentMessage="Follow this user to view their posts and follower lists."
                 followButtonLabel={shouldShowFollowButton ? (isFollowing ? 'Following' : 'Follow') : null}
                 onFollowButtonClick={shouldShowFollowButton ? () => void handleFollowToggle() : undefined}
                 followButtonDisabled={followActionLoading}

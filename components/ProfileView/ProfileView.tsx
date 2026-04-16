@@ -1,5 +1,6 @@
 'use client';
 
+import type { ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -41,8 +42,10 @@ type ProfileViewProps = {
     activeTab: ProfileTabKey;
     onTabChange: (tab: ProfileTabKey) => void;
     currentPosts: DisplayPostType[];
+    currentTabTotalCount: number;
     tabLoading: boolean;
     tabError: string | null;
+    postLoadMoreSlot?: ReactNode;
     showComposer: boolean;
     onOpenCreatePost?: () => void;
     onEditBio?: () => void;
@@ -60,8 +63,6 @@ type ProfileViewProps = {
     hasMoreFollowing: boolean;
     followingExpanded: boolean;
     onToggleFollowingExpanded?: () => void;
-    canViewFullProfile?: boolean;
-    hiddenContentMessage?: string;
     followButtonLabel?: string | null;
     onFollowButtonClick?: () => void;
     followButtonDisabled?: boolean;
@@ -81,8 +82,10 @@ export default function ProfileView({
     activeTab,
     onTabChange,
     currentPosts,
+    currentTabTotalCount,
     tabLoading,
     tabError,
+    postLoadMoreSlot,
     showComposer,
     onOpenCreatePost,
     onEditBio,
@@ -100,8 +103,6 @@ export default function ProfileView({
     hasMoreFollowing,
     followingExpanded,
     onToggleFollowingExpanded,
-    canViewFullProfile = true,
-    hiddenContentMessage,
     followButtonLabel,
     onFollowButtonClick,
     followButtonDisabled = false,
@@ -210,7 +211,7 @@ export default function ProfileView({
 
                     <div className={styles.grid}>
                         <section className={styles.mainCol}>
-                            {canViewFullProfile && showComposer && onOpenCreatePost && (
+                            {showComposer && onOpenCreatePost && (
                                 <div className={`${styles.composerCard} ${styles.sectionOutline}`}>
                                     <img
                                         className={styles.composerAvatar}
@@ -226,47 +227,37 @@ export default function ProfileView({
                                 </div>
                             )}
 
-                            {canViewFullProfile ? (
-                                <>
-                                    <div className={`${styles.tabsCard} ${styles.sectionOutline}`}>
-                                        {visibleTabs.map((tab) => (
-                                            <button
-                                                key={tab.key}
-                                                className={`${styles.tabBtn} ${activeTab === tab.key ? styles.tabActive : ''}`}
-                                                onClick={() => onTabChange(tab.key)}
-                                                type="button"
-                                            >
-                                                {tab.label} <span className={styles.tabCount}>{tab.count}</span>
-                                            </button>
-                                        ))}
-                                    </div>
+                            <div className={`${styles.tabsCard} ${styles.sectionOutline}`}>
+                                {visibleTabs.map((tab) => (
+                                    <button
+                                        key={tab.key}
+                                        className={`${styles.tabBtn} ${activeTab === tab.key ? styles.tabActive : ''}`}
+                                        onClick={() => onTabChange(tab.key)}
+                                        type="button"
+                                    >
+                                        {tab.label} <span className={styles.tabCount}>{tab.count}</span>
+                                    </button>
+                                ))}
+                            </div>
 
-                                    <div className={`${styles.feedCard} ${styles.sectionOutline}`}>
-                                        {tabLoading && <p className={styles.muted}>Loading {activeTab}...</p>}
-                                        {tabError && <p className={styles.error}>{tabError}</p>}
+                            <div className={`${styles.feedCard} ${styles.sectionOutline}`}>
+                                {tabLoading && <p className={styles.muted}>Loading {activeTab}...</p>}
+                                {tabError && <p className={styles.error}>{tabError}</p>}
 
-                                        {!tabLoading && !tabError && currentPosts.length === 0 && (
-                                            <div className={styles.emptyState}>
-                                                <p className={styles.emptyTitle}>Nothing here yet</p>
-                                                <p className={styles.muted}>{renderEmptyStateMessage(activeTab)}</p>
-                                            </div>
-                                        )}
-
-                                        <PostList postDataArray={currentPosts} />
-                                    </div>
-                                </>
-                            ) : (
-                                <div className={`${styles.feedCard} ${styles.sectionOutline}`}>
+                                {!tabLoading && !tabError && currentPosts.length === 0 && currentTabTotalCount === 0 && (
                                     <div className={styles.emptyState}>
-                                        <p className={styles.emptyTitle}>Private Profile</p>
-                                        <p className={styles.muted}>{hiddenContentMessage ?? 'Follow this user to view their posts and connections.'}</p>
+                                        <p className={styles.emptyTitle}>Nothing here yet</p>
+                                        <p className={styles.muted}>{renderEmptyStateMessage(activeTab)}</p>
                                     </div>
-                                </div>
-                            )}
+                                )}
+
+                                <PostList postDataArray={currentPosts} />
+                                {postLoadMoreSlot}
+                            </div>
                         </section>
 
                         <aside className={styles.sideCol}>
-                            {canViewFullProfile && showBusinessLocationCard && (
+                            {showBusinessLocationCard && (
                                 <div className={`${styles.sideCard} ${styles.sectionOutline} ${styles.businessLocationCard}`}>
                                     <section className={styles.businessMapSection}>
                                         <div className={styles.businessMapCard}>
@@ -324,7 +315,7 @@ export default function ProfileView({
                                                                 }}
                                                                 aria-label="Edit address"
                                                             >
-                                                                ⚙️
+                                                                Edit
                                                             </button>
                                                         )}
                                                     </div>
@@ -350,83 +341,79 @@ export default function ProfileView({
                                 </div>
                             )}
 
-                            {canViewFullProfile && (
-                                <>
-                                    <div className={`${styles.sideCard} ${styles.sectionOutline}`}>
-                                        <div className={styles.sideHeader}>
-                                            <h3 className={styles.h3}>Followers</h3>
-                                            <span className={styles.sideCount}>{followerCount}</span>
-                                        </div>
+                            <div className={`${styles.sideCard} ${styles.sectionOutline}`}>
+                                <div className={styles.sideHeader}>
+                                    <h3 className={styles.h3}>Followers</h3>
+                                    <span className={styles.sideCount}>{followerCount}</span>
+                                </div>
 
-                                        {followLoading && <p className={styles.muted}>Loading...</p>}
-                                        {!followLoading && followers.length === 0 && <p className={styles.muted}>No followers to show.</p>}
+                                {followLoading && <p className={styles.muted}>Loading...</p>}
+                                {!followLoading && followers.length === 0 && <p className={styles.muted}>No followers to show.</p>}
 
-                                        <div className={styles.userList}>
-                                            {followers.map((u) => (
-                                                <button
-                                                    key={u.userId}
-                                                    className={`${styles.userRow} ${styles.userRowButton}`}
-                                                    type="button"
-                                                    onClick={() => goToUserProfile(u.userId)}
-                                                >
-                                                    <img
-                                                        className={styles.userAvatar}
-                                                        src={u.profilePic || '/images/deletedUserPfp.png'}
-                                                        alt=""
-                                                        onError={(e) => {
-                                                            (e.currentTarget as HTMLImageElement).src = '/images/deletedUserPfp.png';
-                                                        }}
-                                                    />
-                                                    <span className={styles.userName}>{u.name}</span>
-                                                </button>
-                                            ))}
-                                        </div>
+                                <div className={styles.userList}>
+                                    {followers.map((u) => (
+                                        <button
+                                            key={u.userId}
+                                            className={`${styles.userRow} ${styles.userRowButton}`}
+                                            type="button"
+                                            onClick={() => goToUserProfile(u.userId)}
+                                        >
+                                            <img
+                                                className={styles.userAvatar}
+                                                src={u.profilePic || '/images/deletedUserPfp.png'}
+                                                alt=""
+                                                onError={(e) => {
+                                                    (e.currentTarget as HTMLImageElement).src = '/images/deletedUserPfp.png';
+                                                }}
+                                            />
+                                            <span className={styles.userName}>{u.name}</span>
+                                        </button>
+                                    ))}
+                                </div>
 
-                                        {hasMoreFollowers && onToggleFollowersExpanded && (
-                                            <button className={styles.linkBtn} type="button" onClick={onToggleFollowersExpanded}>
-                                                {followersExpanded ? 'Show less' : 'Show all'}
-                                            </button>
-                                        )}
-                                    </div>
+                                {hasMoreFollowers && onToggleFollowersExpanded && (
+                                    <button className={styles.linkBtn} type="button" onClick={onToggleFollowersExpanded}>
+                                        {followersExpanded ? 'Show less' : 'Show all'}
+                                    </button>
+                                )}
+                            </div>
 
-                                    <div className={`${styles.sideCard} ${styles.sectionOutline}`}>
-                                        <div className={styles.sideHeader}>
-                                            <h3 className={styles.h3}>Following</h3>
-                                            <span className={styles.sideCount}>{followingCount}</span>
-                                        </div>
+                            <div className={`${styles.sideCard} ${styles.sectionOutline}`}>
+                                <div className={styles.sideHeader}>
+                                    <h3 className={styles.h3}>Following</h3>
+                                    <span className={styles.sideCount}>{followingCount}</span>
+                                </div>
 
-                                        {followLoading && <p className={styles.muted}>Loading...</p>}
-                                        {!followLoading && following.length === 0 && <p className={styles.muted}>Not following anyone yet.</p>}
+                                {followLoading && <p className={styles.muted}>Loading...</p>}
+                                {!followLoading && following.length === 0 && <p className={styles.muted}>Not following anyone yet.</p>}
 
-                                        <div className={styles.userList}>
-                                            {following.map((u) => (
-                                                <button
-                                                    key={u.userId}
-                                                    className={`${styles.userRow} ${styles.userRowButton}`}
-                                                    type="button"
-                                                    onClick={() => goToUserProfile(u.userId)}
-                                                >
-                                                    <img
-                                                        className={styles.userAvatar}
-                                                        src={u.profilePic || '/images/deletedUserPfp.png'}
-                                                        alt=""
-                                                        onError={(e) => {
-                                                            (e.currentTarget as HTMLImageElement).src = '/images/deletedUserPfp.png';
-                                                        }}
-                                                    />
-                                                    <span className={styles.userName}>{u.name}</span>
-                                                </button>
-                                            ))}
-                                        </div>
+                                <div className={styles.userList}>
+                                    {following.map((u) => (
+                                        <button
+                                            key={u.userId}
+                                            className={`${styles.userRow} ${styles.userRowButton}`}
+                                            type="button"
+                                            onClick={() => goToUserProfile(u.userId)}
+                                        >
+                                            <img
+                                                className={styles.userAvatar}
+                                                src={u.profilePic || '/images/deletedUserPfp.png'}
+                                                alt=""
+                                                onError={(e) => {
+                                                    (e.currentTarget as HTMLImageElement).src = '/images/deletedUserPfp.png';
+                                                }}
+                                            />
+                                            <span className={styles.userName}>{u.name}</span>
+                                        </button>
+                                    ))}
+                                </div>
 
-                                        {hasMoreFollowing && onToggleFollowingExpanded && (
-                                            <button className={styles.linkBtn} type="button" onClick={onToggleFollowingExpanded}>
-                                                {followingExpanded ? 'Show less' : 'Show all'}
-                                            </button>
-                                        )}
-                                    </div>
-                                </>
-                            )}
+                                {hasMoreFollowing && onToggleFollowingExpanded && (
+                                    <button className={styles.linkBtn} type="button" onClick={onToggleFollowingExpanded}>
+                                        {followingExpanded ? 'Show less' : 'Show all'}
+                                    </button>
+                                )}
+                            </div>
                         </aside>
                     </div>
                 </div>
