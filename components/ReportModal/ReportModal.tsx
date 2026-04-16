@@ -25,7 +25,7 @@ export default function ReportModal({ entityType, entityId, onClose }: ReportMod
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
-  const [statusDetail, setStatusDetail] = useState(''); // NEW: richer explanation
+  const [statusDetail, setStatusDetail] = useState('');
 
   // Success state
   const [successfulSubmit, setSuccessfulSubmit] = useState(false);
@@ -71,7 +71,6 @@ export default function ReportModal({ entityType, entityId, onClose }: ReportMod
           if (report.status !== 'PENDING') {
             setIsReadOnly(true);
 
-            // === NEW: Rich, user-friendly messages based on status ===
             let mainMsg = '';
             let detailMsg = '';
 
@@ -178,77 +177,78 @@ export default function ReportModal({ entityType, entityId, onClose }: ReportMod
         >
           <h2 className={commonStyles.formHeader}>Submit a Report</h2>
 
-          {/* === NEW: Status banner when report can no longer be edited === */}
-          {isReadOnly && statusMessage && (
-            <div className={styles.statusBanner}>
-              <strong>{statusMessage}</strong>
-              <p>{statusDetail}</p>
-              <div className={styles.statusPill}>
-                Status: <span className={styles[statusMessage.toLowerCase().includes('review') ? 'in_review' : 'reviewed']}>
-                  {existingReportId ? 'REVIEWED' : ''}
-                </span>
+          <div className={styles.modalContent}>
+            {isReadOnly && statusMessage && (
+              <div className={styles.statusBanner}>
+                <strong>{statusMessage}</strong>
+                <p>{statusDetail}</p>
+                <div className={styles.statusPill}>
+                  Status: <span className={styles[statusMessage.toLowerCase().includes('review') ? 'in_review' : 'reviewed']}>
+                    REVIEWED
+                  </span>
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {loading ? (
-            <p className={styles.loading}>Loading...</p>
-          ) : (
-            <form onSubmit={handleSubmit}>
-              <div className={styles.checklistGrid}>
-                {reasons.map((reason) => (
-                  <label key={reason.code} className={styles.checklistItem}>
-                    <input
-                      type="checkbox"
-                      checked={selectedCodes.has(reason.code)}
-                      onChange={() => toggleReason(reason.code)}
-                      disabled={isReadOnly}
-                    />
-                    <span>{reason.description}</span>
+            {loading ? (
+              <p className={styles.loading}>Loading...</p>
+            ) : (
+              <form onSubmit={handleSubmit}>
+                <div className={styles.checklistGrid}>
+                  {reasons.map((reason) => (
+                    <label key={reason.code} className={styles.checklistItem}>
+                      <input
+                        type="checkbox"
+                        checked={selectedCodes.has(reason.code)}
+                        onChange={() => toggleReason(reason.code)}
+                        disabled={isReadOnly}
+                      />
+                      <span>{reason.description}</span>
+                    </label>
+                  ))}
+                </div>
+
+                <div className={styles.field}>
+                  <label className={styles.label}>
+                    Explanation <span className={styles.required}>*</span>
                   </label>
-                ))}
-              </div>
+                  <textarea
+                    className={styles.input}
+                    rows={4}
+                    value={explanation}
+                    onChange={(e) => setExplanation(e.target.value)}
+                    placeholder="Please explain why you are reporting this..."
+                    required
+                    disabled={isReadOnly}
+                  />
+                </div>
 
-              <div className={styles.field}>
-                <label className={styles.label}>
-                  Explanation <span className={styles.required}>*</span>
-                </label>
-                <textarea
-                  className={styles.input}
-                  rows={4}
-                  value={explanation}
-                  onChange={(e) => setExplanation(e.target.value)}
-                  placeholder="Please explain why you are reporting this..."
-                  required
-                  disabled={isReadOnly}
-                />
-              </div>
+                {error && <p className={commonStyles.error}>{error}</p>}
 
-              {error && <p className={commonStyles.error}>{error}</p>}
+                {!isReadOnly && (
+                  <button
+                    type="submit"
+                    className={commonStyles.primaryBtn}
+                    disabled={submitting}
+                  >
+                    {submitting ? (
+                      <>Submitting<span className={commonStyles.dots}></span></>
+                    ) : (
+                      'Submit Report'
+                    )}
+                  </button>
+                )}
 
-              {!isReadOnly && (
                 <button
-                  type="submit"
-                  className={commonStyles.primaryBtn}
-                  disabled={submitting}
+                  type="button"
+                  onClick={onClose}
+                  className={commonStyles.secondaryBtn}
                 >
-                  {submitting ? (
-                    <>Submitting<span className={commonStyles.dots}></span></>
-                  ) : (
-                    'Submit Report'
-                  )}
+                  Close
                 </button>
-              )}
-
-              <button
-                type="button"
-                onClick={onClose}
-                className={commonStyles.secondaryBtn}
-              >
-                Close
-              </button>
-            </form>
-          )}
+              </form>
+            )}
+          </div>
         </div>
       )}
     </div>,
