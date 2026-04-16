@@ -19,18 +19,15 @@ export default function SingleReportPage() {
   const [error, setError] = useState<string | null>(null);
   const [reportExists, setReportExists] = useState(true);
 
+  if (!user?.isAdmin) {
+    return (
+      <div className={styles.container}>
+        <h1 className={styles.title}>Access Denied</h1>
+        <p>Only admins can see this page.</p>
+      </div>
+    );
+  }
   const fetchReport = async () => {
-
-    if (!user?.isAdmin) {
-      setLoading(false);
-      return (
-        <div className={styles.container}>
-          <h1 className={styles.title}>Access Denied</h1>
-          <p>Only admins can see this page.</p>
-        </div>
-      );
-    }
-  
     if (!entityType || !reportId) return;
 
     setLoading(true);
@@ -65,7 +62,6 @@ export default function SingleReportPage() {
     fetchReport();
   }, [entityType, reportId, user?.accessToken]);
 
-  // This is passed to ReportDetail so the component can submit reviews
   const handleSubmitReview = async (newStatus: string, newExplanation: string) => {
     if (!user?.isAdmin || !reportId) return;
 
@@ -116,7 +112,7 @@ export default function SingleReportPage() {
       </div>
     );
   }
-
+  
   return (
     <div className={styles.container}>
       <ReportDetail 
