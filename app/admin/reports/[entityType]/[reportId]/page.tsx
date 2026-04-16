@@ -39,6 +39,7 @@ export default function SingleReportPage() {
 
         if (!cancelled) {
           setReport(res.data);
+          console.log(res.data);
           setReportExists(true);
         }
       } catch (err: any) {
