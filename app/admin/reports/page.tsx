@@ -10,8 +10,6 @@ const entityTypes = [
   { type: 'COMMENT', label: 'Comments', description: 'Reports about comments under posts' },
   { type: 'REVIEW', label: 'Reviews', description: 'Reports about mechanic reviews' },
   { type: 'MESSAGE', label: 'Messages', description: 'Reports about chat messages' },
-  { type: 'MESSAGE_IMAGE', label: 'Message Images', description: 'Reports about images sent in chats' },
-  { type: 'REVIEW_RESPONSE', label: 'Review Responses', description: 'Reports about responses to reviews' },
 ];
 
 export default function ReportsSelectorPage() {
