@@ -1,13 +1,43 @@
 'use client';
 
+import { useState } from 'react';
 import styles from './ReportDetail.module.css';
 
 interface ReportDetailProps {
   report: any;
+  user: any;
+  onReviewSubmitted: (newStatus: string, newExplanation: string) => Promise<void>;
 }
 
-export default function ReportDetail({ report }: ReportDetailProps) {
+export default function ReportDetail({ report, user, onReviewSubmitted }: ReportDetailProps) {
   const entityType = report.entityType;
+  const isAdmin = user?.isAdmin;
+  const currentUserId = user?.userId;
+
+  // Form state for admin review
+  const [selectedStatus, setSelectedStatus] = useState(report.status || "PENDING");
+  const [adminExplanation, setAdminExplanation] = useState(report.adminExplanation || "");
+  const [submitting, setSubmitting] = useState(false);
+
+  const VALID_STATUSES = ["PENDING", "IN_REVIEW", "RESOLVED", "CLOSED", "DISMISSED"] as const;
+
+  // Determine if the admin review section should be editable
+  const hasReview = !!report.adminExplanation;
+  const isPending = report.status === "PENDING";
+  const isInReview = report.status === "IN_REVIEW";
+  const isReviewer = report.reviewedBy === currentUserId;
+
+  const canEditReview = 
+    isAdmin && 
+    (!hasReview || isPending || (isInReview && isReviewer));
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!canEditReview) return;
+    setSubmitting(true);
+    await onReviewSubmitted(selectedStatus, adminExplanation);
+    setSubmitting(false);
+  };
 
   return (
     <div className={styles.container}>
@@ -53,19 +83,66 @@ export default function ReportDetail({ report }: ReportDetailProps) {
 
       {/* Explanation */}
       <div className={styles.section}>
-        <h3>Explanation</h3>
+        <h3>User Explanation For Reporting</h3>
         <p className={styles.explanation}>{report.explanation}</p>
       </div>
 
-      {/* Admin Review (if exists) */}
-      {report.adminExplanation && (
-        <div className={styles.section}>
-          <h3>Admin Review</h3>
-          <p className={styles.adminNote}>{report.adminExplanation}</p>
-        </div>
-      )}
+      <div className={styles.section}>
+        <h3>Admin Provided Review</h3>
 
-      {/* Reported Entity — dynamic per type */}
+        {canEditReview ? (
+          /* Editable form */
+          <form onSubmit={handleSubmit} className={styles.adminReviewForm}>
+            {(!hasReview) && (
+              <p className={styles.noReviewYet}>No review yet — add yours here.</p>
+            )}
+
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Status</label>
+              <select
+                value={selectedStatus}
+                onChange={(e) => setSelectedStatus(e.target.value)}
+                className={styles.formSelect}
+                required
+              >
+                {VALID_STATUSES.map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className={styles.formGroup}>
+              <label className={styles.formLabel}>Explanation</label>
+              <textarea
+                value={adminExplanation}
+                onChange={(e) => setAdminExplanation(e.target.value)}
+                rows={4}
+                placeholder="Explain your decision..."
+                className={styles.formTextarea}
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={submitting}
+              className={styles.submitButton}
+            >
+              {submitting ? "Submitting..." : "Submit Review"}
+            </button>
+          </form>
+        ) : (
+          /* Read-only view */
+          hasReview ? (
+            <p className={styles.adminNote}>{report.adminExplanation}</p>
+          ) : (
+            <p className={styles.noReviewYet}>No admin review yet.</p>
+          )
+        )}
+      </div>
+
+      {/* Reported Entity — dynamic per type (unchanged) */}
       <div className={styles.section}>
         <h3>Reported Content</h3>
 
@@ -214,6 +291,6 @@ export default function ReportDetail({ report }: ReportDetailProps) {
           </div>
         )}
       </div>
-    </div >
+    </div>
   );
 }
