@@ -213,31 +213,6 @@ export default function ReportDetail({ report }: ReportDetailProps) {
             <p className={styles.entityId}>Message #{report.messageId}</p>
           </div>
         )}
-
-        {/* MESSAGE_IMAGE */}
-        {entityType === 'MESSAGE_IMAGE' && (
-          <div className={styles.entityCard}>
-            <div className={styles.reportedPerson}>
-              <div>
-                <p className={styles.name}>{report.authorName}</p>
-                <p className={styles.email}>{report.authorEmail}</p>
-              </div>
-              {report.authorProfilePic && (
-                <img src={report.authorProfilePic} alt="author" className={styles.profilePic} />
-              )}
-            </div>
-
-            {report.imageUrls?.length > 0 && (
-              <div className={styles.imageStrip}>
-                {report.imageUrls.map((url: string, i: number) => (
-                  <img key={i} src={url} alt="message image" className={styles.largeImage} />
-                ))}
-              </div>
-            )}
-
-            <p className={styles.entityId}>Message Image #{report.messageImageId}</p>
-          </div>
-        )}
       </div>
     </div >
   );
