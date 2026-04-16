@@ -19,49 +19,75 @@ export default function SingleReportPage() {
   const [error, setError] = useState<string | null>(null);
   const [reportExists, setReportExists] = useState(true);
 
-  useEffect(() => {
+  if (!user?.isAdmin) {
+    return (
+      <div className={styles.container}>
+        <h1 className={styles.title}>Access Denied</h1>
+        <p>Only admins can see this page.</p>
+      </div>
+    );
+  }
+  const fetchReport = async () => {
     if (!entityType || !reportId) return;
 
-    let cancelled = false;
+    setLoading(true);
+    setError(null);
 
-    async function fetchReport() {
-      setLoading(true);
-      setError(null);
+    const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/report/${entityType}/${reportId}`;
 
-      const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/report/${entityType}/${reportId}`;
+    try {
+      const res = await axios.get(endpoint, {
+        headers: {
+          Authorization: `Bearer ${user?.accessToken}`,
+        },
+      });
 
-      try {
-        const res = await axios.get(endpoint, {
-          headers: {
-            Authorization: `Bearer ${user?.accessToken}`,
-          },
-        });
-
-        if (!cancelled) {
-          setReport(res.data);
-          console.log(res.data);
-          setReportExists(true);
-        }
-      } catch (err: any) {
-        console.error(err);
-        if (!cancelled) {
-          if (err.response?.status === 404) {
-            setReportExists(false);
-          } else {
-            setError("Failed to load report.");
-          }
-        }
-      } finally {
-        if (!cancelled) setLoading(false);
+      const data = res.data;
+      setReport(data);
+      console.log("✅ Report loaded:", data);
+      setReportExists(true);
+    } catch (err: any) {
+      console.error(err);
+      if (err.response?.status === 404) {
+        setReportExists(false);
+      } else {
+        setError("Failed to load report.");
       }
+    } finally {
+      setLoading(false);
     }
+  };
 
+  useEffect(() => {
     fetchReport();
-
-    return () => {
-      cancelled = true;
-    };
   }, [entityType, reportId, user?.accessToken]);
+
+  const handleSubmitReview = async (newStatus: string, newExplanation: string) => {
+    if (!user?.isAdmin || !reportId) return;
+
+    try {
+      const endpoint = `${process.env.NEXT_PUBLIC_API_URL}/api/report/${reportId}/review`;
+
+      await axios.patch(
+        endpoint,
+        {
+          status: newStatus,
+          adminExplanation: newExplanation.trim() || null,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${user.accessToken}`,
+          },
+        }
+      );
+
+      console.log("✅ Review submitted successfully");
+      await fetchReport(); // refresh everything
+    } catch (err: any) {
+      console.error("Review submission failed:", err);
+      alert(err.response?.data?.message || "Failed to submit review. Please try again.");
+    }
+  };
 
   if (loading) {
     return (
@@ -86,10 +112,14 @@ export default function SingleReportPage() {
       </div>
     );
   }
-
+  
   return (
     <div className={styles.container}>
-      <ReportDetail report={report} />
+      <ReportDetail 
+        report={report} 
+        user={user} 
+        onReviewSubmitted={handleSubmitReview} 
+      />
     </div>
   );
 }

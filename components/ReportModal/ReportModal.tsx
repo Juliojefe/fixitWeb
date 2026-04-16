@@ -25,6 +25,7 @@ export default function ReportModal({ entityType, entityId, onClose }: ReportMod
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
+  const [statusDetail, setStatusDetail] = useState('');
 
   // Success state
   const [successfulSubmit, setSuccessfulSubmit] = useState(false);
@@ -61,18 +62,44 @@ export default function ReportModal({ entityType, entityId, onClose }: ReportMod
 
         if (reportRes.data) {
           const report = reportRes.data;
+          console.log('Existing report:', report);
+
           setExistingReportId(report.reportId);
           setSelectedCodes(new Set(report.reasons.map((r: any) => r.code)));
           setExplanation(report.explanation || '');
 
           if (report.status !== 'PENDING') {
             setIsReadOnly(true);
-            setStatusMessage('Review underway — you can no longer edit this report.');
+
+            let mainMsg = '';
+            let detailMsg = '';
+
+            switch (report.status) {
+              case 'IN_REVIEW':
+                mainMsg = 'This report is currently under review.';
+                detailMsg = 'Return later for an update.';
+                break;
+              case 'RESOLVED':
+              case 'DISMISSED':
+                mainMsg = `This report has been ${report.status.toLowerCase()}.`;
+                detailMsg = 'Nothing further will happen.';
+                break;
+              case 'CLOSED':
+                mainMsg = 'This report has been closed.';
+                detailMsg = 'This entity will be taken down in the future.';
+                break;
+              default:
+                mainMsg = `This report has been ${report.status.toLowerCase()}.`;
+                detailMsg = 'You can no longer edit it.';
+            }
+
+            setStatusMessage(mainMsg);
+            setStatusDetail(detailMsg);
           }
         }
       } catch (err: any) {
         if (err.response?.status === 404) {
-          // No existing report - normal new report
+          // No existing report – normal new report flow
         } else {
           console.error(err);
           setError('Failed to load report data');
@@ -150,66 +177,78 @@ export default function ReportModal({ entityType, entityId, onClose }: ReportMod
         >
           <h2 className={commonStyles.formHeader}>Submit a Report</h2>
 
-          {statusMessage && <p className={styles.statusMessage}>{statusMessage}</p>}
+          <div className={styles.modalContent}>
+            {isReadOnly && statusMessage && (
+              <div className={styles.statusBanner}>
+                <strong>{statusMessage}</strong>
+                <p>{statusDetail}</p>
+                <div className={styles.statusPill}>
+                  Status: <span className={styles[statusMessage.toLowerCase().includes('review') ? 'in_review' : 'reviewed']}>
+                    REVIEWED
+                  </span>
+                </div>
+              </div>
+            )}
 
-          {loading ? (
-            <p className={styles.loading}>Loading...</p>
-          ) : (
-            <form onSubmit={handleSubmit}>
-              <div className={styles.checklistGrid}>
-                {reasons.map((reason) => (
-                  <label key={reason.code} className={styles.checklistItem}>
-                    <input
-                      type="checkbox"
-                      checked={selectedCodes.has(reason.code)}
-                      onChange={() => toggleReason(reason.code)}
-                      disabled={isReadOnly}
-                    />
-                    <span>{reason.description}</span>
+            {loading ? (
+              <p className={styles.loading}>Loading...</p>
+            ) : (
+              <form onSubmit={handleSubmit}>
+                <div className={styles.checklistGrid}>
+                  {reasons.map((reason) => (
+                    <label key={reason.code} className={styles.checklistItem}>
+                      <input
+                        type="checkbox"
+                        checked={selectedCodes.has(reason.code)}
+                        onChange={() => toggleReason(reason.code)}
+                        disabled={isReadOnly}
+                      />
+                      <span>{reason.description}</span>
+                    </label>
+                  ))}
+                </div>
+
+                <div className={styles.field}>
+                  <label className={styles.label}>
+                    Explanation <span className={styles.required}>*</span>
                   </label>
-                ))}
-              </div>
+                  <textarea
+                    className={styles.input}
+                    rows={4}
+                    value={explanation}
+                    onChange={(e) => setExplanation(e.target.value)}
+                    placeholder="Please explain why you are reporting this..."
+                    required
+                    disabled={isReadOnly}
+                  />
+                </div>
 
-              <div className={styles.field}>
-                <label className={styles.label}>
-                  Explanation <span className={styles.required}>*</span>
-                </label>
-                <textarea
-                  className={styles.input}
-                  rows={4}
-                  value={explanation}
-                  onChange={(e) => setExplanation(e.target.value)}
-                  placeholder="Please explain why you are reporting this..."
-                  required
-                  disabled={isReadOnly}
-                />
-              </div>
+                {error && <p className={commonStyles.error}>{error}</p>}
 
-              {error && <p className={commonStyles.error}>{error}</p>}
+                {!isReadOnly && (
+                  <button
+                    type="submit"
+                    className={commonStyles.primaryBtn}
+                    disabled={submitting}
+                  >
+                    {submitting ? (
+                      <>Submitting<span className={commonStyles.dots}></span></>
+                    ) : (
+                      'Submit Report'
+                    )}
+                  </button>
+                )}
 
-              {!isReadOnly && (
                 <button
-                  type="submit"
-                  className={commonStyles.primaryBtn}
-                  disabled={submitting}
+                  type="button"
+                  onClick={onClose}
+                  className={commonStyles.secondaryBtn}
                 >
-                  {submitting ? (
-                    <>Submitting<span className={commonStyles.dots}></span></>
-                  ) : (
-                    'Submit Report'
-                  )}
+                  Close
                 </button>
-              )}
-
-              <button
-                type="button"
-                onClick={onClose}
-                className={commonStyles.secondaryBtn}
-              >
-                Close
-              </button>
-            </form>
-          )}
+              </form>
+            )}
+          </div>
         </div>
       )}
     </div>,
