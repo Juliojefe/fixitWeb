@@ -1,6 +1,6 @@
 'use client';
 
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 import { MapContainer, Marker, Popup, TileLayer } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -10,6 +10,7 @@ import markerIcon from 'leaflet/dist/images/marker-icon.png';
 import markerShadow from 'leaflet/dist/images/marker-shadow.png';
 
 import { useUser } from '@/app/providers/UserProvider';
+import FollowListModal from '@/components/FollowListModal/FollowListModal';
 import PostList from '@/components/PostList/PostList';
 import { DisplayPostType } from '@/types/displayPost';
 import { ProfileTabKey, ProfileViewTab, SavedBusinessLocation, UserNameAndPfp } from '@/types/profile';
@@ -58,11 +59,9 @@ type ProfileViewProps = {
     following: UserNameAndPfp[];
     followLoading: boolean;
     hasMoreFollowers: boolean;
-    followersExpanded: boolean;
-    onToggleFollowersExpanded?: () => void;
+    onOpenFollowersModal?: () => void;
     hasMoreFollowing: boolean;
-    followingExpanded: boolean;
-    onToggleFollowingExpanded?: () => void;
+    onOpenFollowingModal?: () => void;
     followButtonLabel?: string | null;
     onFollowButtonClick?: () => void;
     followButtonDisabled?: boolean;
@@ -98,17 +97,20 @@ export default function ProfileView({
     following,
     followLoading,
     hasMoreFollowers,
-    followersExpanded,
-    onToggleFollowersExpanded,
+    onOpenFollowersModal,
     hasMoreFollowing,
-    followingExpanded,
-    onToggleFollowingExpanded,
+    onOpenFollowingModal,
     followButtonLabel,
     onFollowButtonClick,
     followButtonDisabled = false,
 }: ProfileViewProps) {
     const router = useRouter();
     const { user } = useUser();
+    const [followModalTab, setFollowModalTab] = useState<'followers' | 'following' | null>(null);
+    const followPreviewLimit = 5;
+    const previewFollowers = followers.slice(0, followPreviewLimit);
+    const previewFollowing = following.slice(0, followPreviewLimit);
+    const isFollowModalOpen = followModalTab !== null;
 
     function openBusinessLocationInGoogleMaps() {
         if (!businessLocation) return;
@@ -133,6 +135,24 @@ export default function ProfileView({
         }
 
         router.push(`/profile/${targetUserId}`);
+    }
+
+    function openFollowModal(tab: 'followers' | 'following') {
+        setFollowModalTab(tab);
+        if (tab === 'followers') {
+            onOpenFollowersModal?.();
+            return;
+        }
+        onOpenFollowingModal?.();
+    }
+
+    function closeFollowModal() {
+        setFollowModalTab(null);
+    }
+
+    function handleFollowModalProfileClick(targetUserId: number) {
+        closeFollowModal();
+        goToUserProfile(targetUserId);
     }
 
     return (
@@ -165,14 +185,14 @@ export default function ProfileView({
                                 </p>
 
                                 <div className={styles.statsRow}>
-                                    <div className={styles.stat}>
+                                    <button className={`${styles.stat} ${styles.statButton}`} type="button" onClick={() => openFollowModal('followers')}>
                                         <span className={styles.statNumber}>{followerCount}</span>
                                         <span className={styles.statLabel}>Followers</span>
-                                    </div>
-                                    <div className={styles.stat}>
+                                    </button>
+                                    <button className={`${styles.stat} ${styles.statButton}`} type="button" onClick={() => openFollowModal('following')}>
                                         <span className={styles.statNumber}>{followingCount}</span>
                                         <span className={styles.statLabel}>Following</span>
-                                    </div>
+                                    </button>
                                 </div>
 
                                 {(onEditBio || onEditPhoto) && (
@@ -351,7 +371,7 @@ export default function ProfileView({
                                 {!followLoading && followers.length === 0 && <p className={styles.muted}>No followers to show.</p>}
 
                                 <div className={styles.userList}>
-                                    {followers.map((u) => (
+                                    {previewFollowers.map((u) => (
                                         <button
                                             key={u.userId}
                                             className={`${styles.userRow} ${styles.userRowButton}`}
@@ -371,9 +391,9 @@ export default function ProfileView({
                                     ))}
                                 </div>
 
-                                {hasMoreFollowers && onToggleFollowersExpanded && (
-                                    <button className={styles.linkBtn} type="button" onClick={onToggleFollowersExpanded}>
-                                        {followersExpanded ? 'Show less' : 'Show all'}
+                                {hasMoreFollowers && onOpenFollowersModal && (
+                                    <button className={styles.linkBtn} type="button" onClick={() => openFollowModal('followers')}>
+                                        Show all
                                     </button>
                                 )}
                             </div>
@@ -388,7 +408,7 @@ export default function ProfileView({
                                 {!followLoading && following.length === 0 && <p className={styles.muted}>Not following anyone yet.</p>}
 
                                 <div className={styles.userList}>
-                                    {following.map((u) => (
+                                    {previewFollowing.map((u) => (
                                         <button
                                             key={u.userId}
                                             className={`${styles.userRow} ${styles.userRowButton}`}
@@ -408,9 +428,9 @@ export default function ProfileView({
                                     ))}
                                 </div>
 
-                                {hasMoreFollowing && onToggleFollowingExpanded && (
-                                    <button className={styles.linkBtn} type="button" onClick={onToggleFollowingExpanded}>
-                                        {followingExpanded ? 'Show less' : 'Show all'}
+                                {hasMoreFollowing && onOpenFollowingModal && (
+                                    <button className={styles.linkBtn} type="button" onClick={() => openFollowModal('following')}>
+                                        Show all
                                     </button>
                                 )}
                             </div>
@@ -418,6 +438,18 @@ export default function ProfileView({
                     </div>
                 </div>
             </div>
+
+            <FollowListModal
+                isOpen={isFollowModalOpen}
+                defaultTab={followModalTab ?? 'followers'}
+                followers={followers}
+                following={following}
+                followLoading={followLoading}
+                onClose={closeFollowModal}
+                onOpenFollowersTab={onOpenFollowersModal}
+                onOpenFollowingTab={onOpenFollowingModal}
+                onSelectUser={handleFollowModalProfileClick}
+            />
         </div>
     );
 }

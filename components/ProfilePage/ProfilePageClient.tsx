@@ -92,8 +92,7 @@ export default function ProfilePageClient({ routeMode, profileUserId }: ProfileP
     const [followers, setFollowers] = useState<UserNameAndPfp[]>([]);
     const [following, setFollowing] = useState<UserNameAndPfp[]>([]);
     const [followLoading, setFollowLoading] = useState(false);
-    const [followersExpanded, setFollowersExpanded] = useState(false);
-    const [followingExpanded, setFollowingExpanded] = useState(false);
+    const [loadFullFollowLists, setLoadFullFollowLists] = useState(false);
     const [followActionLoading, setFollowActionLoading] = useState(false);
 
     const [showCreateModal, setShowCreateModal] = useState(false);
@@ -153,7 +152,7 @@ export default function ProfilePageClient({ routeMode, profileUserId }: ProfileP
     const shouldShowFollowButton = !isOwnProfile && Boolean(user && targetUserId && user.userId !== targetUserId);
 
     const pageSize = 5;
-    const miniListLimit = 10;
+    const miniListLimit = 5;
     const tabLoading = loadingTab === activeTab;
     const currentTabLast = tabLast[activeTab];
     const currentTabTotalCount = activeTab === 'posts' ? ownedIds.length : activeTab === 'liked' ? likedIds.length : savedIds.length;
@@ -165,6 +164,7 @@ export default function ProfilePageClient({ routeMode, profileUserId }: ProfileP
         setOwnedPosts([]);
         setLikedPosts([]);
         setSavedPosts([]);
+        setLoadFullFollowLists(false);
         setTabError(null);
         setLoadingTab(null);
         setTabPage({ posts: 0, liked: 0, saved: 0 });
@@ -220,7 +220,7 @@ export default function ProfilePageClient({ routeMode, profileUserId }: ProfileP
         }
     }
 
-    async function loadMiniLists(expandFollowers: boolean, expandFollowing: boolean) {
+    async function loadMiniLists(loadFullLists: boolean) {
         if (!profile) {
             setFollowers([]);
             setFollowing([]);
@@ -229,8 +229,8 @@ export default function ProfilePageClient({ routeMode, profileUserId }: ProfileP
 
         setFollowLoading(true);
         try {
-            const followerSlice = expandFollowers ? followerIds : followerIds.slice(0, miniListLimit);
-            const followingSlice = expandFollowing ? followingIds : followingIds.slice(0, miniListLimit);
+            const followerSlice = loadFullLists ? followerIds : followerIds.slice(0, miniListLimit);
+            const followingSlice = loadFullLists ? followingIds : followingIds.slice(0, miniListLimit);
 
             const [followerMinis, followingMinis] = await Promise.all([
                 Promise.all(followerSlice.map((id) => fetchUserMini(id))),
@@ -364,9 +364,6 @@ export default function ProfilePageClient({ routeMode, profileUserId }: ProfileP
                     }
                 );
             }
-
-            setFollowersExpanded(false);
-            setFollowingExpanded(false);
             await fetchProfile(targetUserId);
         } catch (err) {
             console.error(err);
@@ -616,6 +613,7 @@ export default function ProfilePageClient({ routeMode, profileUserId }: ProfileP
         setOwnedPosts([]);
         setLikedPosts([]);
         setSavedPosts([]);
+        setLoadFullFollowLists(false);
         setLoadingTab(null);
         setTabError(null);
         setTabPage({ posts: 0, liked: 0, saved: 0 });
@@ -623,8 +621,8 @@ export default function ProfilePageClient({ routeMode, profileUserId }: ProfileP
     }, [profile]);
 
     useEffect(() => {
-        void loadMiniLists(followersExpanded, followingExpanded);
-    }, [profile, followersExpanded, followingExpanded]);
+        void loadMiniLists(loadFullFollowLists);
+    }, [profile, loadFullFollowLists]);
 
     useEffect(() => {
         if (!profile) return;
@@ -787,11 +785,9 @@ export default function ProfilePageClient({ routeMode, profileUserId }: ProfileP
                 following={following}
                 followLoading={followLoading}
                 hasMoreFollowers={followerIds.length > miniListLimit}
-                followersExpanded={followersExpanded}
-                onToggleFollowersExpanded={() => setFollowersExpanded((value) => !value)}
+                onOpenFollowersModal={() => setLoadFullFollowLists(true)}
                 hasMoreFollowing={followingIds.length > miniListLimit}
-                followingExpanded={followingExpanded}
-                onToggleFollowingExpanded={() => setFollowingExpanded((value) => !value)}
+                onOpenFollowingModal={() => setLoadFullFollowLists(true)}
                 followButtonLabel={shouldShowFollowButton ? (isFollowing ? 'Following' : 'Follow') : null}
                 onFollowButtonClick={shouldShowFollowButton ? () => void handleFollowToggle() : undefined}
                 followButtonDisabled={followActionLoading}
