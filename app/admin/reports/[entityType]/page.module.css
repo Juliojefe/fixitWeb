@@ -6,14 +6,38 @@
 }
 
 .title {
-  font-size: 2.2rem;
+  font-size: 2rem;
   font-weight: 700;
-  color: #111;
-  margin-bottom: 8px;
+  margin-bottom: 20px;
 }
 
-.subtitle {
-  font-size: 1.1rem;
-  color: #666;
-  margin-bottom: 40px;
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border: 2px solid #111;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.table th,
+.table td {
+  padding: 14px 16px;
+  text-align: left;
+  border-bottom: 1px solid #ddd;
+}
+
+.table th {
+  background: #f8f8f8;
+  font-weight: 600;
+}
+
+.viewLink {
+  color: #526fae;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.viewLink:hover {
+  text-decoration: underline;
 }
