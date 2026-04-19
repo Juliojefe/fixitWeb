@@ -41,3 +41,25 @@
 .viewLink:hover {
   text-decoration: underline;
 }
+
+.loadMoreBtn {
+  background: #526fae;
+  color: white;
+  border: 2px solid #111;
+  border-radius: 8px;
+  padding: 12px 28px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.loadMoreBtn:hover:not(:disabled) {
+  background: #1244b1;
+  transform: translateY(-2px);
+}
+
+.loadMoreBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
