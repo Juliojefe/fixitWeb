@@ -6,10 +6,10 @@ import { useUser } from '@/app/providers/UserProvider';
 import MustLoginModal from '../MustLoginModal/MustLoginModal';
 import { createPortal } from 'react-dom';
 import styles from './ReportMenu.module.css';
-import ReportModal from '../ReportModal/ReportModal';   // ← NEW
+import ReportModal from '../ReportModal/ReportModal';
 
 interface ReportMenuProps {
-  entityType: 'USER' | 'POST' | 'COMMENT' | 'REVIEW' | 'MESSAGE' | 'MESSAGE_IMAGE' | 'REVIEW_RESPONSE';
+  entityType: 'USER' | 'POST' | 'COMMENT' | 'REVIEW' | 'MESSAGE' | 'REVIEW_RESPONSE';
   entityId: number;
   className?: string;
   popupPosition?: 'comment-pos' | 'post-pos' | 'post-modal-pos';
