@@ -1,9 +1,24 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { useUser } from '@/app/providers/UserProvider';
+import AuthLoading from '@/components/AuthLoading/AuthLoading';
 
 export default function LandingPage() {
+  const { user } = useUser();
+  const router = useRouter();
+  const [isChecking, setIsChecking] = useState(true);
+
+  useEffect(() => {
+    if (user) {
+      router.push('/explore');
+    } else {
+      setIsChecking(false);
+    }
+  }, [user, router]);
+
   // Smooth scroll to sections
   useEffect(() => {
     const handleHash = () => {
@@ -31,6 +46,11 @@ export default function LandingPage() {
       );
     }
   };
+
+  // Show loading spinner while checking auth
+  if (isChecking) {
+    return <AuthLoading message="Loading R3vly..." />;
+  }
 
   return (
     <div className="min-h-screen bg-[#d2def9] text-black font-sans">
@@ -71,7 +91,7 @@ export default function LandingPage() {
             >
               For Mechanics
             </a>
-           <a
+            <a
               href="#explore"
               onClick={(e) => handleNavClick(e, 'explore')}
               className="hover:text-[#526fae] transition-colors"
@@ -267,8 +287,8 @@ export default function LandingPage() {
       </div>
 
       {/* ==================== what is r3vly? ==================== */}
-        <section id="community" className="scroll-mt-24 max-w-screen-2xl mx-auto px-8 py-20 border-b-4 border-black">
-          <div className="text-center mb-12">
+      <section id="community" className="scroll-mt-24 max-w-screen-2xl mx-auto px-8 py-20 border-b-4 border-black">
+        <div className="text-center mb-12">
           <h2 className="text-5xl font-bold tracking-tighter">A car community built for real conversation</h2>
           <p className="mt-6 text-2xl max-w-2xl mx-auto text-gray-700">
             R3vly combines community discussion, car knowledge sharing, and mechanic discovery in one platform.
@@ -383,8 +403,8 @@ export default function LandingPage() {
       </section>
 
       {/* ==================== for mechanics ==================== */}
-        <section id="for-mechanics" className="scroll-mt-24 max-w-screen-2xl mx-auto px-8 py-20 bg-white border-b-4 border-black">
-          <div className="grid md:grid-cols-12 gap-16 items-center">
+      <section id="for-mechanics" className="scroll-mt-24 max-w-screen-2xl mx-auto px-8 py-20 bg-white border-b-4 border-black">
+        <div className="grid md:grid-cols-12 gap-16 items-center">
           <div className="md:col-span-5">
             <h2 className="text-5xl font-bold tracking-tighter mb-6">Build trust. Show your work. Grow your clientele.</h2>
             <ul className="space-y-6 text-xl">
