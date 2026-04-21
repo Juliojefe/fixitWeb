@@ -18,6 +18,20 @@ export default function LandingPage() {
     return () => window.removeEventListener('load', handleHash);
   }, []);
 
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, sectionId: string) => {
+    e.preventDefault();
+
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+      window.history.replaceState(
+        null,
+        '',
+        `#${sectionId}`
+      );
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#d2def9] text-black font-sans">
       {/* ==================== 1. TOP NAVIGATION ==================== */}
@@ -36,10 +50,34 @@ export default function LandingPage() {
 
           {/* Nav Links */}
           <div className="hidden md:flex items-center gap-x-10 text-lg font-semibold">
-            <a href="#how-it-works" className="hover:text-[#526fae] transition-colors">How It Works</a>
-            <a href="#for-mechanics" className="hover:text-[#526fae] transition-colors">For Mechanics</a>
-            <a href="#community" className="hover:text-[#526fae] transition-colors">Community</a>
-            <a href="#reviews" className="hover:text-[#526fae] transition-colors">Reviews</a>
+            <a
+              href="#community"
+              onClick={(e) => handleNavClick(e, 'community')}
+              className="hover:text-[#526fae] transition-colors"
+            >
+              Community
+            </a>
+            <a
+              href="#how-it-works"
+              onClick={(e) => handleNavClick(e, 'how-it-works')}
+              className="hover:text-[#526fae] transition-colors"
+            >
+              How It Works
+            </a>
+            <a
+              href="#for-mechanics"
+              onClick={(e) => handleNavClick(e, 'for-mechanics')}
+              className="hover:text-[#526fae] transition-colors"
+            >
+              For Mechanics
+            </a>
+            <a
+              href="#reviews"
+              onClick={(e) => handleNavClick(e, 'reviews')}
+              className="hover:text-[#526fae] transition-colors"
+            >
+              Reviews
+            </a>
           </div>
 
           {/* Auth Buttons */}
@@ -370,11 +408,11 @@ export default function LandingPage() {
                   <div>
                     <div className="flex items-center gap-x-2">
                       <span className="text-2xl font-semibold">Garcia Auto Repair</span>
-                      <img 
-                        src="/icons/wrench.png" 
-                        alt="Verified Mechanic" 
-                        width={32} 
-                        height={32} 
+                      <img
+                        src="/icons/wrench.png"
+                        alt="Verified Mechanic"
+                        width={32}
+                        height={32}
                         className="drop-shadow-sm"
                       />
                     </div>
@@ -391,7 +429,7 @@ export default function LandingPage() {
                 <div className="text-center mb-8">
                   <p className="font-semibold text-xl">Past work gallery</p>
                 </div>
-                
+
                 {/* Real work example images - larger and nicely spaced */}
                 <div className="flex gap-6 justify-center">
                   <img
@@ -545,7 +583,7 @@ export default function LandingPage() {
               />
               <div>
                 <div className="font-semibold">Marcus Torres</div>
-                <div className="text-sm">Miata enthusiast • 4 years on R3vly</div>
+                <div className="text-sm">Miata enthusiast • Long time member</div>
               </div>
             </div>
           </div>
