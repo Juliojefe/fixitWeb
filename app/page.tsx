@@ -24,13 +24,13 @@ export default function LandingPage() {
       <nav className="bg-white border-b-4 border-black sticky top-0 z-50">
         <div className="max-w-screen-2xl mx-auto px-8 py-5 flex items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center gap-x-3">
+          <div className="flex items-center gap-x-2">
             <img
               src="favicon.ico"
               alt="R3vly"
               width={500}
               height={500}
-              className="h-12 w-auto drop-shadow-md"
+              className="h-14 w-auto drop-shadow-md"
             />
           </div>
 
@@ -153,7 +153,7 @@ export default function LandingPage() {
                 {/* Fake image */}
                 <div className="bg-gray-100 border-2 border-black rounded-2xl h-64 flex items-center justify-center overflow-hidden mb-4">
                   <img
-                    src="https://picsum.photos/id/1016/600/400"
+                    src="/images/tacoma.jpg"
                     alt="Truck suspension repair"
                     width={520}
                     height={260}
@@ -325,7 +325,15 @@ export default function LandingPage() {
                 <div className="flex items-center gap-x-2 mb-4">
                   <span className="font-semibold">Car meet this weekend</span>
                 </div>
-                <div className="h-40 bg-gray-200 border border-black rounded-2xl mb-4 flex items-center justify-center text-6xl">🏎️</div>
+                <div className="h-40 bg-gray-200 border border-black rounded-2xl mb-4 flex items-center justify-center text-6xl">
+                  <img
+                    src="/images/meetUp.jpg"
+                    alt="Truck suspension repair"
+                    width={520}
+                    height={260}
+                    className="object-cover w-full h-full"
+                  />
+                </div>
                 <p className="text-sm">Who’s coming to the Bay Area cruise? Bring your best mods</p>
               </div>
             </div>
@@ -353,29 +361,58 @@ export default function LandingPage() {
             <div className="bg-white border-2 border-black rounded-3xl p-6">
               <div className="flex justify-between items-start">
                 <div className="flex items-center gap-x-4">
-                  <div className="w-16 h-16 bg-gray-200 border-2 border-black rounded-2xl"></div>
+                  {/* Real mechanic profile photo */}
+                  <img
+                    src="/images/mechanicGuy.jpg"
+                    alt="Garcia Auto Repair"
+                    className="w-16 h-16 border-2 border-black rounded-2xl object-cover flex-shrink-0"
+                  />
                   <div>
                     <div className="flex items-center gap-x-2">
                       <span className="text-2xl font-semibold">Garcia Auto Repair</span>
-                      <img src="/icons/wrench.png" alt="Verified Mechanic" width={32} height={32} />
+                      <img 
+                        src="/icons/wrench.png" 
+                        alt="Verified Mechanic" 
+                        width={32} 
+                        height={32} 
+                        className="drop-shadow-sm"
+                      />
                     </div>
                     <p className="text-[#526fae]">4.98 • 142 reviews</p>
                   </div>
                 </div>
-                <button className="bg-[#526fae] text-white px-8 py-3 rounded-3xl text-sm font-semibold border-2 border-black">Message</button>
+                <button className="bg-[#526fae] text-white px-8 py-3 rounded-3xl text-sm font-semibold border-2 border-black hover:bg-[#3d5a96] transition-colors">
+                  Message
+                </button>
               </div>
 
-              <div className="mt-8 h-56 bg-gray-100 border-2 border-black rounded-2xl flex items-center justify-center relative">
-                <div className="text-center">
-                  <p className="font-semibold text-lg">Past work gallery</p>
-                  <div className="flex gap-3 mt-6">
-                    <div className="w-20 h-20 bg-orange-200 border border-black rounded-2xl"></div>
-                    <div className="w-20 h-20 bg-blue-200 border border-black rounded-2xl"></div>
-                    <div className="w-20 h-20 bg-green-200 border border-black rounded-2xl"></div>
-                  </div>
+              {/* Past work gallery - improved for larger images */}
+              <div className="mt-8 border-2 border-black rounded-2xl bg-gray-100 p-8 relative h-80 overflow-hidden">
+                <div className="text-center mb-8">
+                  <p className="font-semibold text-xl">Past work gallery</p>
                 </div>
-                {/* Fake map overlay */}
-                <div className="absolute bottom-4 right-4 bg-white border-2 border-black text-xs px-4 py-2 rounded-2xl flex items-center gap-x-2">
+                
+                {/* Real work example images - larger and nicely spaced */}
+                <div className="flex gap-6 justify-center">
+                  <img
+                    src="/images/workEx1.jpeg"
+                    alt="Work example 1"
+                    className="w-40 h-40 border border-black rounded-2xl object-cover shadow-md"
+                  />
+                  <img
+                    src="/images/workEx2.jpeg"
+                    alt="Work example 2"
+                    className="w-40 h-40 border border-black rounded-2xl object-cover shadow-md"
+                  />
+                  <img
+                    src="/images/workEx3.jpg"
+                    alt="Work example 3"
+                    className="w-40 h-40 border border-black rounded-2xl object-cover shadow-md"
+                  />
+                </div>
+
+                {/* Map overlay - repositioned and cleaner */}
+                <div className="absolute bottom-8 right-8 bg-white border-2 border-black text-xs px-5 py-3 rounded-3xl flex items-center gap-x-2 shadow-lg">
                   📍 Watsonville, CA
                 </div>
               </div>
@@ -481,11 +518,15 @@ export default function LandingPage() {
         <h2 className="text-5xl font-bold tracking-tighter text-center mb-16">Why people use R3vly</h2>
 
         <div className="grid md:grid-cols-3 gap-8">
-          {/* Testimonial 1 - Owner */}
+          {/* Testimonial 1 - Sarah Chen (Owner) */}
           <div className="bg-[#d2def9] border-4 border-black rounded-3xl p-8">
             <p className="italic text-xl leading-tight">"I got a second opinion before paying for a $1,800 repair. Saved me $1,200 thanks to a verified mechanic who replied in the comments."</p>
             <div className="mt-12 flex items-center gap-x-4">
-              <div className="w-12 h-12 bg-gray-300 border-2 border-black rounded-2xl"></div>
+              <img
+                src="/images/subaru.png"
+                alt="Sarah Chen"
+                className="w-12 h-12 border-2 border-black rounded-2xl object-cover flex-shrink-0"
+              />
               <div>
                 <div className="font-semibold">Sarah Chen</div>
                 <div className="text-sm">2022 Subaru Outback owner • San Francisco</div>
@@ -493,11 +534,15 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Testimonial 2 - Enthusiast */}
+          {/* Testimonial 2 - Marcus Torres (Enthusiast) */}
           <div className="bg-[#d2def9] border-4 border-black rounded-3xl p-8">
             <p className="italic text-xl leading-tight">"Finally a place where I can share my weekend builds AND get legit technical advice. The community here is gold."</p>
             <div className="mt-12 flex items-center gap-x-4">
-              <div className="w-12 h-12 bg-gray-300 border-2 border-black rounded-2xl"></div>
+              <img
+                src="/images/miata.jpg"
+                alt="Marcus Torres"
+                className="w-12 h-12 border-2 border-black rounded-2xl object-cover flex-shrink-0"
+              />
               <div>
                 <div className="font-semibold">Marcus Torres</div>
                 <div className="text-sm">Miata enthusiast • 4 years on R3vly</div>
@@ -505,13 +550,17 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Testimonial 3 - Mechanic */}
+          {/* Testimonial 3 - Robert (Mechanic) */}
           <div className="bg-[#d2def9] border-4 border-black rounded-3xl p-8">
             <p className="italic text-xl leading-tight">"My wrench badge and public reviews have brought me 11 new customers this month. People trust the platform and trust me because of it."</p>
             <div className="mt-12 flex items-center gap-x-4">
-              <div className="w-12 h-12 bg-gray-300 border-2 border-black rounded-2xl"></div>
+              <img
+                src="/images/robert.jpg"
+                alt="Robert Garcia"
+                className="w-12 h-12 border-2 border-black rounded-2xl object-cover flex-shrink-0"
+              />
               <div>
-                <div className="font-semibold">Elena Vargas • Garcia Auto Repair</div>
+                <div className="font-semibold">Robert Garcia</div>
                 <div className="text-sm text-[#526fae]">Verified Mechanic • 87 reviews</div>
               </div>
             </div>
@@ -541,7 +590,7 @@ export default function LandingPage() {
         <div className="max-w-screen-2xl mx-auto px-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-y-8">
             <div className="flex items-center gap-x-3">
-              <img src="/images/r3vly-logo.png" alt="R3vly" width={140} height={50} />
+              <img src="favicon.ico" alt="R3vly" width={50} height={50} />
               <span className="text-xs font-medium tracking-widest">CAR • COMMUNITY • CONNECT</span>
             </div>
             <p className="text-sm text-gray-500">© 2026 R3vly — built for car owners, mechanics, and enthusiasts</p>
