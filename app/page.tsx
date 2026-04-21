@@ -634,7 +634,7 @@ export default function LandingPage() {
 
           <div className="flex flex-wrap justify-center gap-6 mt-12">
             <Link
-              href="/signup"
+              href="/signUp"
               className="px-12 py-6 text-3xl font-semibold bg-white text-[#526fae] border-4 border-black rounded-3xl hover:scale-105 transition-transform"
             >
               Sign Up for R3vly
