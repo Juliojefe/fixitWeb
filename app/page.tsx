@@ -34,7 +34,7 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-[#d2def9] text-black font-sans">
-      {/* ==================== 1. TOP NAVIGATION ==================== */}
+      {/* ==================== navigation ==================== */}
       <nav className="bg-white border-b-4 border-black sticky top-0 z-50">
         <div className="max-w-screen-2xl mx-auto px-8 py-5 flex items-center justify-between">
           {/* Logo */}
@@ -48,7 +48,7 @@ export default function LandingPage() {
             />
           </div>
 
-          {/* Nav Links */}
+          {/* nav links */}
           <div className="hidden md:flex items-center gap-x-10 text-lg font-semibold">
             <a
               href="#community"
@@ -71,6 +71,13 @@ export default function LandingPage() {
             >
               For Mechanics
             </a>
+           <a
+              href="#explore"
+              onClick={(e) => handleNavClick(e, 'explore')}
+              className="hover:text-[#526fae] transition-colors"
+            >
+              Search
+            </a>
             <a
               href="#reviews"
               onClick={(e) => handleNavClick(e, 'reviews')}
@@ -80,7 +87,7 @@ export default function LandingPage() {
             </a>
           </div>
 
-          {/* Auth Buttons */}
+          {/* auth buttons */}
           <div className="flex items-center gap-x-4">
             <Link
               href="/login"
@@ -98,7 +105,7 @@ export default function LandingPage() {
         </div>
       </nav>
 
-      {/* ==================== 2. HERO SECTION ==================== */}
+      {/* ==================== hero section ==================== */}
       <header className="max-w-screen-2xl mx-auto px-8 pt-16 pb-20 grid md:grid-cols-2 gap-16 items-center">
         {/* Left Text */}
         <div className="space-y-8">
@@ -115,7 +122,7 @@ export default function LandingPage() {
           </h1>
 
           <p className="text-2xl text-gray-700 max-w-lg">
-            R3vly is a web platform for car owners, enthusiasts, and verified mechanics to share advice, solve problems, and build real connections through conversation.
+            R3vly is a platform for car owners, enthusiasts, and mechanics to share advice, solve problems, and build real connections through conversation.
           </p>
 
           <div className="flex flex-wrap gap-4">
@@ -127,7 +134,7 @@ export default function LandingPage() {
             </Link>
 
             <Link
-              href="#explore"
+              href="/explore"
               className="px-10 py-5 bg-white border-4 border-black text-2xl font-semibold rounded-3xl hover:bg-[#d2def9] transition-all flex items-center gap-x-3"
             >
               Explore as a guest
@@ -152,10 +159,10 @@ export default function LandingPage() {
           </p>
         </div>
 
-        {/* Right: Desktop Mockup of R3vly Feed */}
+        {/* mockup of R3vly feed */}
         <div className="relative mx-auto max-w-[520px] w-full">
           <div className="bg-white border-4 border-black rounded-3xl overflow-hidden shadow-2xl">
-            {/* Fake browser header */}
+            {/* fake browser header */}
             <div className="h-11 bg-[#d2def9] border-b-4 border-black flex items-center px-4 gap-x-2">
               <div className="flex gap-x-1.5">
                 <div className="w-3 h-3 bg-red-400 rounded-full"></div>
@@ -165,11 +172,11 @@ export default function LandingPage() {
               <div className="flex-1 text-center text-xs font-mono bg-white/70 mx-8 py-px rounded">r3vly.com/explore</div>
             </div>
 
-            {/* Fake feed content */}
+            {/* fake feed content */}
             <div className="p-4 space-y-6 bg-[#d2def9]/30">
-              {/* Fake Post 1 - Repair question */}
+              {/* fake Post 1 - Repair question */}
               <div className="bg-white border-2 border-black rounded-2xl p-4 shadow-inner">
-                {/* Header (UserCard style) */}
+                {/* header (UserCard style) */}
                 <div className="flex items-center gap-x-3 mb-4">
                   <div className="w-9 h-9 bg-gray-200 border-2 border-black rounded-full overflow-hidden">
                     <img src="https://picsum.photos/id/1015/128/128" alt="" width={36} height={36} />
@@ -188,7 +195,6 @@ export default function LandingPage() {
                   2018 Tacoma is making a loud clunk when I go over bumps in the front right. Anyone had this before? Shop quote is $1200 😭
                 </p>
 
-                {/* Fake image */}
                 <div className="bg-gray-100 border-2 border-black rounded-2xl h-64 flex items-center justify-center overflow-hidden mb-4">
                   <img
                     src="/images/tacoma.jpg"
@@ -215,7 +221,7 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {/* Fake comment preview */}
+              {/* fake comment */}
               <div className="bg-white border-2 border-black rounded-2xl p-4 text-sm">
                 <div className="flex gap-x-3">
                   <div className="text-[#526fae] font-bold">Mike the Mechanic</div>
@@ -226,7 +232,7 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Subtle floating badge */}
+          {/* subtle floating badge */}
           <div className="absolute -top-4 -right-4 bg-white border-4 border-black text-[#526fae] font-bold text-xs px-6 py-2 rounded-3xl rotate-12 shadow-2xl flex items-center gap-x-2">
             <img src="/icons/wrench.png" alt="" width={24} height={24} />
             VERIFIED
@@ -234,7 +240,7 @@ export default function LandingPage() {
         </div>
       </header>
 
-      {/* ==================== 3. QUICK VALUE STRIP ==================== */}
+      {/* ==================== value strip ==================== */}
       <div className="bg-white border-t-4 border-b-4 border-black py-8">
         <div className="max-w-screen-2xl mx-auto px-8 grid grid-cols-2 md:grid-cols-5 gap-6 text-center">
           <div className="flex flex-col items-center gap-y-2">
@@ -260,9 +266,9 @@ export default function LandingPage() {
         </div>
       </div>
 
-      {/* ==================== 4. WHAT IS R3VLY? ==================== */}
-      <section id="community" className="max-w-screen-2xl mx-auto px-8 py-20 border-b-4 border-black">
-        <div className="text-center mb-12">
+      {/* ==================== what is r3vly? ==================== */}
+        <section id="community" className="scroll-mt-24 max-w-screen-2xl mx-auto px-8 py-20 border-b-4 border-black">
+          <div className="text-center mb-12">
           <h2 className="text-5xl font-bold tracking-tighter">A car community built for real conversation</h2>
           <p className="mt-6 text-2xl max-w-2xl mx-auto text-gray-700">
             R3vly combines community discussion, car knowledge sharing, and mechanic discovery in one platform.
@@ -271,29 +277,28 @@ export default function LandingPage() {
 
         <div className="grid md:grid-cols-3 gap-8">
           <div className="bg-white border-4 border-black rounded-3xl p-8">
-            <div className="h-12 w-12 bg-[#526fae] text-white rounded-2xl flex items-center justify-center text-3xl mb-6">👤</div>
+            <div className="h-12 w-12 bg-white border-2 border-black rounded-2xl flex items-center justify-center text-3xl mb-6 text-black shadow-sm">👤</div>
             <h3 className="text-3xl font-semibold mb-3">Built for owners who need help</h3>
             <p className="text-gray-600">Second opinions before expensive repairs. Real experiences from people who own the same car.</p>
           </div>
           <div className="bg-white border-4 border-black rounded-3xl p-8">
-            <div className="h-12 w-12 bg-[#526fae] text-white rounded-2xl flex items-center justify-center text-3xl mb-6">🏎️</div>
+            <div className="h-12 w-12 bg-white border-2 border-black rounded-2xl flex items-center justify-center text-3xl mb-6 text-black shadow-sm">🏎️</div>
             <h3 className="text-3xl font-semibold mb-3">Built for enthusiasts who want to share</h3>
             <p className="text-gray-600">Tips, builds, memes, and deep technical knowledge. The car culture you actually want to be part of.</p>
           </div>
           <div className="bg-white border-4 border-black rounded-3xl p-8">
-            <div className="h-12 w-12 bg-[#526fae] text-white rounded-2xl flex items-center justify-center text-3xl mb-6">🔧</div>
+            <div className="h-12 w-12 bg-white border-2 border-black rounded-2xl flex items-center justify-center text-3xl mb-6 text-black shadow-sm">🔧</div>
             <h3 className="text-3xl font-semibold mb-3">Built for mechanics who want to grow</h3>
             <p className="text-gray-600">Build trust publicly, show your work, and turn conversations into customers.</p>
           </div>
         </div>
       </section>
 
-      {/* ==================== 5. HOW IT WORKS ==================== */}
-      <section id="how-it-works" className="max-w-screen-2xl mx-auto px-8 py-20 bg-white border-b-4 border-black">
+      {/* ==================== how it works ==================== */}
+      <section id="how-it-works" className="scroll-mt-24 max-w-screen-2xl mx-auto px-8 py-20 bg-white border-b-4 border-black">
         <h2 className="text-5xl font-bold tracking-tighter text-center mb-16">How R3vly works</h2>
 
         <div className="grid md:grid-cols-3 gap-10">
-          {/* Column 1 */}
           <div className="text-center">
             <div className="mx-auto w-20 h-20 bg-[#d2def9] border-4 border-black rounded-3xl flex items-center justify-center text-5xl mb-6">1️⃣</div>
             <h3 className="text-3xl font-semibold mb-4">Post</h3>
@@ -304,7 +309,6 @@ export default function LandingPage() {
             </ul>
           </div>
 
-          {/* Column 2 */}
           <div className="text-center">
             <div className="mx-auto w-20 h-20 bg-[#d2def9] border-4 border-black rounded-3xl flex items-center justify-center text-5xl mb-6">2️⃣</div>
             <h3 className="text-3xl font-semibold mb-4">Engage</h3>
@@ -315,7 +319,6 @@ export default function LandingPage() {
             </ul>
           </div>
 
-          {/* Column 3 */}
           <div className="text-center">
             <div className="mx-auto w-20 h-20 bg-[#d2def9] border-4 border-black rounded-3xl flex items-center justify-center text-5xl mb-6">3️⃣</div>
             <h3 className="text-3xl font-semibold mb-4">Take Action</h3>
@@ -328,7 +331,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ==================== 6. FOR CAR OWNERS &amp; ENTHUSIASTS ==================== */}
+      {/* ==================== for car owners and enthusiasts ==================== */}
       <section className="max-w-screen-2xl mx-auto px-8 py-20 border-b-4 border-black">
         <div className="grid md:grid-cols-12 gap-16 items-center">
           <div className="md:col-span-5">
@@ -342,10 +345,10 @@ export default function LandingPage() {
             </ul>
           </div>
 
-          {/* Mock feed visual */}
+          {/* mock feed visual */}
           <div className="md:col-span-7 bg-white border-4 border-black rounded-3xl p-6 shadow-2xl">
             <div className="flex gap-4 overflow-x-auto pb-4 snap-x">
-              {/* Fake post card 1 */}
+              {/* fake post card 1 */}
               <div className="bg-[#d2def9] border-2 border-black rounded-3xl w-80 flex-shrink-0 p-4 snap-center">
                 <div className="flex items-center justify-between mb-4">
                   <span className="font-semibold">Brake job gone wrong?</span>
@@ -358,7 +361,7 @@ export default function LandingPage() {
                 </div>
               </div>
 
-              {/* Fake post card 2 */}
+              {/* fake post card 2 */}
               <div className="bg-white border-2 border-black rounded-3xl w-80 flex-shrink-0 p-4 snap-center">
                 <div className="flex items-center gap-x-2 mb-4">
                   <span className="font-semibold">Car meet this weekend</span>
@@ -379,9 +382,9 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ==================== 7. FOR MECHANICS ==================== */}
-      <section id="for-mechanics" className="max-w-screen-2xl mx-auto px-8 py-20 bg-white border-b-4 border-black">
-        <div className="grid md:grid-cols-12 gap-16 items-center">
+      {/* ==================== for mechanics ==================== */}
+        <section id="for-mechanics" className="scroll-mt-24 max-w-screen-2xl mx-auto px-8 py-20 bg-white border-b-4 border-black">
+          <div className="grid md:grid-cols-12 gap-16 items-center">
           <div className="md:col-span-5">
             <h2 className="text-5xl font-bold tracking-tighter mb-6">Build trust. Show your work. Grow your clientele.</h2>
             <ul className="space-y-6 text-xl">
@@ -394,12 +397,11 @@ export default function LandingPage() {
             </ul>
           </div>
 
-          {/* Mechanic profile mock */}
+          {/* mechanic profile mock */}
           <div className="md:col-span-7 bg-[#d2def9] border-4 border-black rounded-3xl p-8">
             <div className="bg-white border-2 border-black rounded-3xl p-6">
               <div className="flex justify-between items-start">
                 <div className="flex items-center gap-x-4">
-                  {/* Real mechanic profile photo */}
                   <img
                     src="/images/mechanicGuy.jpg"
                     alt="Garcia Auto Repair"
@@ -424,13 +426,12 @@ export default function LandingPage() {
                 </button>
               </div>
 
-              {/* Past work gallery - improved for larger images */}
+              {/* mock past work gallery */}
               <div className="mt-8 border-2 border-black rounded-2xl bg-gray-100 p-8 relative h-80 overflow-hidden">
                 <div className="text-center mb-8">
                   <p className="font-semibold text-xl">Past work gallery</p>
                 </div>
 
-                {/* Real work example images - larger and nicely spaced */}
                 <div className="flex gap-6 justify-center">
                   <img
                     src="/images/workEx1.jpeg"
@@ -449,7 +450,6 @@ export default function LandingPage() {
                   />
                 </div>
 
-                {/* Map overlay - repositioned and cleaner */}
                 <div className="absolute bottom-8 right-8 bg-white border-2 border-black text-xs px-5 py-3 rounded-3xl flex items-center gap-x-2 shadow-lg">
                   📍 Watsonville, CA
                 </div>
@@ -459,7 +459,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ==================== 8. TRUST &amp; CREDIBILITY ==================== */}
+      {/* ==================== trust and credability ==================== */}
       <section className="max-w-screen-2xl mx-auto px-8 py-20 border-b-4 border-black">
         <h2 className="text-5xl font-bold tracking-tighter text-center mb-16">Built to help people make better decisions</h2>
         <div className="grid md:grid-cols-4 gap-8">
@@ -482,7 +482,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ==================== 9. MESSAGING SECTION ==================== */}
+      {/* ==================== messaging section ==================== */}
       <section className="max-w-screen-2xl mx-auto px-8 py-20 bg-white border-b-4 border-black">
         <div className="grid md:grid-cols-2 gap-16 items-center">
           <div>
@@ -526,8 +526,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ==================== 10. SEARCH &amp; DISCOVERY ==================== */}
-      <section id="explore" className="max-w-screen-2xl mx-auto px-8 py-20 border-b-4 border-black">
+      {/* ==================== search ==================== */}
+      <section id="explore" className="scroll-mt-24 max-w-screen-2xl mx-auto px-8 py-20 border-b-4 border-black">
         <h2 className="text-5xl font-bold tracking-tighter text-center mb-6">Search for what matters to you</h2>
         <p className="text-center text-2xl max-w-xl mx-auto mb-16">Find posts on repairs, upgrades, maintenance, and more. Discover useful content without digging through unrelated noise.</p>
 
@@ -545,18 +545,18 @@ export default function LandingPage() {
             <span className="bg-[#d2def9] border border-black text-sm font-medium px-5 py-2 rounded-3xl">#brakes</span>
             <span className="bg-[#d2def9] border border-black text-sm font-medium px-5 py-2 rounded-3xl">#suspension</span>
             <span className="bg-[#d2def9] border border-black text-sm font-medium px-5 py-2 rounded-3xl">#DIY</span>
-            <span className="bg-[#d2def9] border border-black text-sm font-medium px-5 py-2 rounded-3xl">#Tacoma</span>
+            <span className="bg-[#d2def9] border border-black text-sm font-medium px-5 py-2 rounded-3xl">#tacoma</span>
             <span className="bg-[#d2def9] border border-black text-sm font-medium px-5 py-2 rounded-3xl">#mechanic</span>
           </div>
         </div>
       </section>
 
-      {/* ==================== 11. SOCIAL PROOF / TESTIMONIALS ==================== */}
-      <section id="reviews" className="max-w-screen-2xl mx-auto px-8 py-20 bg-white border-b-4 border-black">
+      {/* ==================== mock social proof testimonials  ==================== */}
+      <section id="reviews" className="scroll-mt-24 max-w-screen-2xl mx-auto px-8 py-20 bg-white border-b-4 border-black">
         <h2 className="text-5xl font-bold tracking-tighter text-center mb-16">Why people use R3vly</h2>
 
         <div className="grid md:grid-cols-3 gap-8">
-          {/* Testimonial 1 - Sarah Chen (Owner) */}
+          {/* testimonial 1 - Sarah Chen (Owner) */}
           <div className="bg-[#d2def9] border-4 border-black rounded-3xl p-8">
             <p className="italic text-xl leading-tight">"I got a second opinion before paying for a $1,800 repair. Saved me $1,200 thanks to a verified mechanic who replied in the comments."</p>
             <div className="mt-12 flex items-center gap-x-4">
@@ -572,7 +572,7 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Testimonial 2 - Marcus Torres (Enthusiast) */}
+          {/* testimonial 2 - Marcus Torres (Enthusiast) */}
           <div className="bg-[#d2def9] border-4 border-black rounded-3xl p-8">
             <p className="italic text-xl leading-tight">"Finally a place where I can share my weekend builds AND get legit technical advice. The community here is gold."</p>
             <div className="mt-12 flex items-center gap-x-4">
@@ -588,7 +588,7 @@ export default function LandingPage() {
             </div>
           </div>
 
-          {/* Testimonial 3 - Robert (Mechanic) */}
+          {/* testimonial 3 - Robert (Mechanic) */}
           <div className="bg-[#d2def9] border-4 border-black rounded-3xl p-8">
             <p className="italic text-xl leading-tight">"My wrench badge and public reviews have brought me 11 new customers this month. People trust the platform and trust me because of it."</p>
             <div className="mt-12 flex items-center gap-x-4">
@@ -606,7 +606,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ==================== 12. FINAL CTA ==================== */}
+      {/* ==================== join now ==================== */}
       <section className="bg-[#526fae] text-white py-24 border-t-4 border-b-4 border-black">
         <div className="max-w-screen-2xl mx-auto px-8 text-center">
           <h2 className="text-6xl font-bold tracking-tighter">Join the conversation that moves car culture forward</h2>
@@ -623,7 +623,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ==================== 13. FOOTER ==================== */}
+      {/* ==================== footer ==================== */}
       <footer className="bg-white border-t-4 border-black py-12">
         <div className="max-w-screen-2xl mx-auto px-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-y-8">
