@@ -25,11 +25,8 @@ export default function MessageBubble({ message, isMine, onRetry }: MessageBubbl
   const hasImages = message.imageUrls && message.imageUrls.length > 0;
   const largeImage = hasImages ? message.imageUrls[currentIndex] : null;
 
-  // Determine report type
-  const isImageOnly = !message.content || message.content.trim() === '';
-  const entityType = isImageOnly ? 'MESSAGE_IMAGE' : 'MESSAGE';
+  const entityType = 'MESSAGE';
 
-  // date parsing
   const getDisplayTime = () => {
     const date = new Date(message.createdAt);
     if (isNaN(date.getTime())) return '??:??';
@@ -90,7 +87,6 @@ export default function MessageBubble({ message, isMine, onRetry }: MessageBubbl
           {getDisplayTime()}
         </span>
 
-        {/* Failed indicator */}
         {message.failed && onRetry && (
           <div
             className={styles.failedIndicator}
