@@ -175,7 +175,7 @@ export default function ProfileView({
                                 <div className={styles.nameRow}>
                                     <h1 className={styles.name}>{title}</h1>
                                     <div className={styles.badges}>
-                                        {isAdmin && <span className={styles.badge}>Admin</span>}
+                                        {isAdmin && <span className={styles.badge}>Admin 👑</span>}
                                         {isMechanic && <span className={styles.badge}>Mechanic</span>}
                                     </div>
                                 </div>
@@ -229,8 +229,8 @@ export default function ProfileView({
                         </div>
                     </section>
 
-                    <div className={styles.grid}>
-                        <section className={styles.mainCol}>
+                    {(showComposer || showBusinessLocationCard) && (
+                        <div className={styles.preGridStack}>
                             {showComposer && onOpenCreatePost && (
                                 <div className={`${styles.composerCard} ${styles.sectionOutline}`}>
                                     <img
@@ -247,36 +247,6 @@ export default function ProfileView({
                                 </div>
                             )}
 
-                            <div className={`${styles.tabsCard} ${styles.sectionOutline}`}>
-                                {visibleTabs.map((tab) => (
-                                    <button
-                                        key={tab.key}
-                                        className={`${styles.tabBtn} ${activeTab === tab.key ? styles.tabActive : ''}`}
-                                        onClick={() => onTabChange(tab.key)}
-                                        type="button"
-                                    >
-                                        {tab.label} <span className={styles.tabCount}>{tab.count}</span>
-                                    </button>
-                                ))}
-                            </div>
-
-                            <div className={`${styles.feedCard} ${styles.sectionOutline}`}>
-                                {tabLoading && <p className={styles.muted}>Loading {activeTab}...</p>}
-                                {tabError && <p className={styles.error}>{tabError}</p>}
-
-                                {!tabLoading && !tabError && currentPosts.length === 0 && currentTabTotalCount === 0 && (
-                                    <div className={styles.emptyState}>
-                                        <p className={styles.emptyTitle}>Nothing here yet</p>
-                                        <p className={styles.muted}>{renderEmptyStateMessage(activeTab)}</p>
-                                    </div>
-                                )}
-
-                                <PostList postDataArray={currentPosts} />
-                                {postLoadMoreSlot}
-                            </div>
-                        </section>
-
-                        <aside className={styles.sideCol}>
                             {showBusinessLocationCard && (
                                 <div className={`${styles.sideCard} ${styles.sectionOutline} ${styles.businessLocationCard}`}>
                                     <section className={styles.businessMapSection}>
@@ -335,7 +305,7 @@ export default function ProfileView({
                                                                 }}
                                                                 aria-label="Edit address"
                                                             >
-                                                                Edit
+                                                                ⚙️
                                                             </button>
                                                         )}
                                                     </div>
@@ -360,7 +330,41 @@ export default function ProfileView({
                                     </section>
                                 </div>
                             )}
+                        </div>
+                    )}
 
+                    <div className={styles.grid}>
+                        <section className={styles.mainCol}>
+                            <div className={`${styles.tabsCard} ${styles.sectionOutline}`}>
+                                {visibleTabs.map((tab) => (
+                                    <button
+                                        key={tab.key}
+                                        className={`${styles.tabBtn} ${activeTab === tab.key ? styles.tabActive : ''}`}
+                                        onClick={() => onTabChange(tab.key)}
+                                        type="button"
+                                    >
+                                        {tab.label} <span className={styles.tabCount}>{tab.count}</span>
+                                    </button>
+                                ))}
+                            </div>
+
+                            <div className={`${styles.feedCard} ${styles.sectionOutline}`}>
+                                {tabLoading && <p className={styles.muted}>Loading {activeTab}...</p>}
+                                {tabError && <p className={styles.error}>{tabError}</p>}
+
+                                {!tabLoading && !tabError && currentPosts.length === 0 && currentTabTotalCount === 0 && (
+                                    <div className={styles.emptyState}>
+                                        <p className={styles.emptyTitle}>Nothing here yet</p>
+                                        <p className={styles.muted}>{renderEmptyStateMessage(activeTab)}</p>
+                                    </div>
+                                )}
+
+                                <PostList postDataArray={currentPosts} />
+                                {postLoadMoreSlot}
+                            </div>
+                        </section>
+
+                        <aside className={styles.sideCol}>
                             <div className={`${styles.sideCard} ${styles.sectionOutline}`}>
                                 <div className={styles.sideHeader}>
                                     <h3 className={styles.h3}>Followers</h3>
