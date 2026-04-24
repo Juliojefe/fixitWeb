@@ -65,6 +65,7 @@ type ProfileViewProps = {
     followButtonLabel?: string | null;
     onFollowButtonClick?: () => void;
     followButtonDisabled?: boolean;
+    preGridSlot?: ReactNode;
 };
 
 export default function ProfileView({
@@ -103,6 +104,7 @@ export default function ProfileView({
     followButtonLabel,
     onFollowButtonClick,
     followButtonDisabled = false,
+    preGridSlot,
 }: ProfileViewProps) {
     const router = useRouter();
     const { user } = useUser();
@@ -229,7 +231,7 @@ export default function ProfileView({
                         </div>
                     </section>
 
-                    {(showComposer || showBusinessLocationCard) && (
+                    {(showComposer || showBusinessLocationCard || preGridSlot) && (
                         <div className={styles.preGridStack}>
                             {showComposer && onOpenCreatePost && (
                                 <div className={`${styles.composerCard} ${styles.sectionOutline}`}>
@@ -330,6 +332,8 @@ export default function ProfileView({
                                     </section>
                                 </div>
                             )}
+
+                            {preGridSlot}
                         </div>
                     )}
 

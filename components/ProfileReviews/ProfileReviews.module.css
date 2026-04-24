@@ -1,0 +1,420 @@
+.card {
+  padding: 16px;
+  border: 1px solid rgba(23, 64, 139, 0.12);
+  border-radius: 14px;
+  background:
+    radial-gradient(circle at top right, rgba(34, 94, 185, 0.1), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(247, 249, 255, 0.94));
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.headerText {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.title {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.subtitle {
+  margin: 0;
+  color: rgba(0, 0, 0, 0.66);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.summary {
+  margin-top: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.summaryStat {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: rgba(0, 0, 0, 0.82);
+}
+
+.summaryValue {
+  font-size: 20px;
+  font-weight: 900;
+}
+
+.stars {
+  letter-spacing: 0.12em;
+  color: #f2a000;
+  font-size: 14px;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.primaryButton,
+.secondaryButton,
+.ghostButton,
+.dangerButton,
+.imageRemoveButton,
+.starButton {
+  border: 1px solid rgba(0, 0, 0, 0.16);
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.primaryButton,
+.secondaryButton,
+.ghostButton,
+.dangerButton {
+  padding: 10px 14px;
+  font-size: 13px;
+}
+
+.primaryButton {
+  background: #17408b;
+  color: white;
+  border-color: rgba(23, 64, 139, 0.22);
+}
+
+.primaryButton:disabled,
+.secondaryButton:disabled,
+.ghostButton:disabled,
+.dangerButton:disabled,
+.starButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.secondaryButton {
+  background: white;
+  color: rgba(0, 0, 0, 0.84);
+}
+
+.ghostButton {
+  background: rgba(0, 0, 0, 0.04);
+  color: rgba(0, 0, 0, 0.78);
+}
+
+.dangerButton {
+  background: rgba(208, 41, 41, 0.08);
+  color: #b42318;
+  border-color: rgba(180, 35, 24, 0.18);
+}
+
+.details {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.38);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 10000;
+}
+
+.modalCard {
+  width: min(920px, 100%);
+  max-height: min(88vh, 900px);
+  overflow-y: auto;
+  border-radius: 20px;
+  border: 1px solid rgba(23, 64, 139, 0.16);
+  background:
+    radial-gradient(circle at top right, rgba(34, 94, 185, 0.1), transparent 34%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.99), rgba(247, 249, 255, 0.97));
+  box-shadow: 0 24px 60px rgba(14, 29, 57, 0.22);
+  padding: 18px;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.closeButton {
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  background: rgba(255, 255, 255, 0.94);
+  color: rgba(0, 0, 0, 0.7);
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.detailsHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.detailsTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.hint {
+  margin: 0;
+  color: rgba(0, 0, 0, 0.64);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.error {
+  margin: 0;
+  color: #b42318;
+  font-size: 13px;
+}
+
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.reviewCard {
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.92);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.reviewHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.reviewerButton {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: none;
+  background: transparent;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.reviewerAvatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  object-fit: cover;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: white;
+}
+
+.reviewerMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.reviewerNameRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.reviewerName {
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.ownBadge {
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 900;
+  background: rgba(23, 64, 139, 0.08);
+  color: #17408b;
+}
+
+.reviewMeta {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  color: rgba(0, 0, 0, 0.62);
+  font-size: 12px;
+}
+
+.reviewContent {
+  margin: 0;
+  color: rgba(0, 0, 0, 0.82);
+  font-size: 14px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+}
+
+.imageGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 10px;
+}
+
+.imageFrame {
+  position: relative;
+}
+
+.image {
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+  display: block;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: rgba(0, 0, 0, 0.04);
+}
+
+.imageRemoveButton {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.96);
+  color: rgba(0, 0, 0, 0.82);
+}
+
+.formCard {
+  border: 1px solid rgba(23, 64, 139, 0.12);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.82);
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.formTitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 800;
+  color: rgba(0, 0, 0, 0.82);
+}
+
+.starRow {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.starButton {
+  min-width: 46px;
+  padding: 10px 12px;
+  background: white;
+  font-size: 13px;
+  color: rgba(0, 0, 0, 0.8);
+}
+
+.starActive {
+  background: rgba(242, 160, 0, 0.1);
+  border-color: rgba(242, 160, 0, 0.3);
+  color: #9a6900;
+}
+
+.textarea,
+.fileInput {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.16);
+  background: white;
+  padding: 10px 12px;
+  font-size: 14px;
+}
+
+.textarea {
+  min-height: 110px;
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.fileHelp {
+  margin: 0;
+  color: rgba(0, 0, 0, 0.62);
+  font-size: 12px;
+}
+
+.loadMoreRow {
+  display: flex;
+  justify-content: center;
+}
+
+.emptyState {
+  padding: 6px 0 2px;
+}
+
+@media (max-width: 720px) {
+  .header,
+  .reviewHeader,
+  .detailsHeader,
+  .modalHeader {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .actions {
+    width: 100%;
+  }
+
+  .primaryButton,
+  .secondaryButton,
+  .ghostButton,
+  .dangerButton {
+    width: 100%;
+  }
+
+  .modalOverlay {
+    padding: 12px;
+  }
+
+  .modalCard {
+    max-height: 92vh;
+    padding: 14px;
+  }
+}

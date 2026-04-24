@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 
 import CreatePostModal from '@/components/CreatePostModal/CreatePostModal';
 import ProfileView from '@/components/ProfileView/ProfileView';
+import ProfileReviews from '@/components/ProfileReviews/ProfileReviews';
 import { useUser } from '@/app/providers/UserProvider';
 import styles from '@/app/(app)/myProfile/myProfile.module.css';
 import { DisplayPostType } from '@/types/displayPost';
@@ -150,6 +151,15 @@ export default function ProfilePageClient({ routeMode, profileUserId }: ProfileP
     const followingCount = profile?.followingCount ?? followingIds.length;
     const isFollowing = Boolean((profile as ProfilePublic | null)?.viewerFollowsUser);
     const shouldShowFollowButton = !isOwnProfile && Boolean(user && targetUserId && user.userId !== targetUserId);
+    const shouldShowReviewsSection = Boolean(targetUserId && (isMechanic || isAdmin));
+    const canCreateReview = Boolean(targetUserId && isMechanic && user?.accessToken && !isOwnProfile);
+    const reviewCreateDisabledReason = isOwnProfile
+        ? 'You cannot review your own profile.'
+        : !user?.accessToken
+          ? 'Log in to create a review.'
+          : !isMechanic
+            ? 'Reviews can only be created for mechanics right now.'
+            : null;
 
     const pageSize = 5;
     const miniListLimit = 5;
@@ -791,6 +801,21 @@ export default function ProfilePageClient({ routeMode, profileUserId }: ProfileP
                 followButtonLabel={shouldShowFollowButton ? (isFollowing ? 'Following' : 'Follow') : null}
                 onFollowButtonClick={shouldShowFollowButton ? () => void handleFollowToggle() : undefined}
                 followButtonDisabled={followActionLoading}
+                preGridSlot={
+                    shouldShowReviewsSection ? (
+                        <ProfileReviews
+                            profileUserId={targetUserId}
+                            profileName={effectiveName}
+                            apiBase={apiBase}
+                            authToken={user?.accessToken ?? null}
+                            viewerUserId={user?.userId ?? null}
+                            showSection={shouldShowReviewsSection}
+                            canCreateReview={canCreateReview}
+                            canViewOwnProfile={isOwnProfile}
+                            createDisabledReason={reviewCreateDisabledReason}
+                        />
+                    ) : undefined
+                }
             />
 
             {isOwnProfile && showCreateModal && (
