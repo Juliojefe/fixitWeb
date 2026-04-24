@@ -18,7 +18,6 @@ export interface ProfilePublic {
   businessAddress?: string;
   businessLat?: number;
   businessLon?: number;
-  viewerCanViewFullProfile?: boolean;
   viewerFollowsUser?: boolean;
 }
 

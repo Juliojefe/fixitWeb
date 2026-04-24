@@ -20,6 +20,13 @@
   padding: 14px;
 }
 
+.preGridStack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
 .sectionOutline {
   border: 1px solid rgba(0, 0, 0, 0.12);
   border-radius: 14px;
@@ -145,6 +152,19 @@
   border: 1px solid rgba(0, 0, 0, 0.12);
 }
 
+.statButton {
+  cursor: pointer;
+}
+
+.statButton:hover {
+  background: rgba(0, 0, 0, 0.07);
+}
+
+.statButton:focus-visible {
+  outline: 2px solid rgba(23, 64, 139, 0.28);
+  outline-offset: 2px;
+}
+
 .statNumber {
   font-weight: 900;
   font-size: 14px;
@@ -187,12 +207,6 @@
   gap: 14px;
 }
 
-@media (max-width: 980px) {
-  .grid {
-    grid-template-columns: 1fr;
-  }
-}
-
 .mainCol {
   display: flex;
   flex-direction: column;
@@ -203,6 +217,12 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+@media (max-width: 980px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* Composer */
@@ -373,7 +393,7 @@
 
 .businessMapWrapper {
   position: relative;
-  height: 292px;
+  height: 360px;
   width: 100%;
   overflow: hidden;
   border-radius: 16px;
