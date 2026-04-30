@@ -29,8 +29,15 @@ export default function MessageBubble({ message, isMine, onRetry }: MessageBubbl
 
   const getDisplayTime = () => {
     const date = new Date(message.createdAt);
-    if (isNaN(date.getTime())) return '??:??';
-    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    if (isNaN(date.getTime())) return '??/??/?? ??:??';
+    
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    const yy = String(date.getFullYear()).slice(-2);
+    
+    const time = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
+    return `${mm}/${dd}/${yy} ${time}`;
   };
 
   const nextImage = () => setCurrentIndex((prev) => (prev + 1) % message.imageUrls.length);
