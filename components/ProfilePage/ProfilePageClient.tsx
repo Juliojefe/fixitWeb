@@ -181,30 +181,41 @@ export default function ProfilePageClient({ routeMode, profileUserId }: ProfileP
         setTabLast({ posts: false, liked: false, saved: false });
     }
 
-    async function fetchProfile(userId: number) {
-        setProfileLoading(true);
-        setProfileError(null);
+async function fetchProfile(userId: number) {
+    setProfileLoading(true);
+    setProfileError(null);
 
-        try {
-            const res = await axios.get(`${apiBase}/api/user/${userId}/profile`, {
-                headers: authHeaders ?? {},
-            });
-            setProfile(res.data as ProfileResponse);
-        } catch (err: any) {
-            const status = err?.response?.status;
-            console.error(err);
-            resetLoadedData();
+    try {
+        const res = await axios.get(`${apiBase}/api/user/${userId}/profile`, {
+            headers: authHeaders ?? {},
+        });
+        setProfile(res.data as ProfileResponse);
+    } catch (err: any) {
+        const status = err?.response?.status;
+        console.error(err);
 
-            if (status === 401) {
-                setProfileError(isOwnProfile ? 'You need to log in to view your profile.' : 'Log in to view this profile.');
-                return;
-            }
-
-            setProfileError(status ? `Profile load failed (${status}).` : 'Profile load failed.');
-        } finally {
-            setProfileLoading(false);
+        if (status === 401) {
+            // Only show login message for own profile (guests can now view others)
+            setProfileError(
+                isOwnProfile
+                    ? 'You need to log in to view your profile.'
+                    : 'This profile could not be loaded.'
+            );
+            return;
         }
+
+        resetLoadedData();
+
+        if (status === 404) {
+            setProfileError('User not found.');
+            return;
+        }
+
+        setProfileError(status ? `Profile load failed (${status}).` : 'Profile load failed.');
+    } finally {
+        setProfileLoading(false);
     }
+}
 
     async function fetchUserMini(userId: number): Promise<UserNameAndPfp> {
         const cached = userMiniCacheRef.current.get(userId);
