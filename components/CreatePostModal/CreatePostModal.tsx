@@ -77,10 +77,6 @@ export default function CreatePostModal({ onClose }: CreatePostModalProps) {
       setImages([]);                    // clear again just in case
       return;
     }
-    if (images.length === 0) {
-      setErrorMessage("Please select at least one image.");
-      return;
-    }
 
     try {
       setUploading(true);
