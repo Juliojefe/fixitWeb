@@ -139,7 +139,8 @@ export default function ProfilePageClient({ routeMode, profileUserId }: ProfileP
 
     const isAdmin = Boolean(profile?.isAdmin ?? profile?.admin ?? (isOwnProfile ? user?.isAdmin : false));
     const isMechanic = Boolean(profile?.isMechanic ?? profile?.mechanic ?? (isOwnProfile ? user?.isMechanic : false));
-    const canManageBusinessLocation = isOwnProfile && (isAdmin || isMechanic);
+
+    const canManageBusinessLocation = isOwnProfile && isMechanic;
 
     const followerIds = useMemo(() => safeNumberArray(profile?.followerIds), [profile]);
     const followingIds = useMemo(() => safeNumberArray(profile?.followingIds), [profile]);
