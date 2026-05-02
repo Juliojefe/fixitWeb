@@ -37,6 +37,13 @@ export default function Post({ postData = null }: PostProps) {
 
   if (!postData) return null;
 
+  const MAX_DESCRIPTION_PREVIEW = 220;
+  const fullDescription = postData.description || "";
+  const isDescriptionLong = fullDescription.length > MAX_DESCRIPTION_PREVIEW;
+  const descriptionPreview = isDescriptionLong 
+    ? fullDescription.substring(0, MAX_DESCRIPTION_PREVIEW) + "..." 
+    : fullDescription;
+
   function handleShowNextImage() {
     if (postData?.imageUrls && currImageIndex < postData?.imageUrls.length - 1) {
       setCurrImageIndex((prev) => prev + 1);
@@ -105,7 +112,6 @@ export default function Post({ postData = null }: PostProps) {
     }
   }
 
-  // used for header in post
   const userCard = (
     <UserCard
       followingAuthor={followingAuthor}
@@ -120,7 +126,6 @@ export default function Post({ postData = null }: PostProps) {
     />
   );
 
-  //  pasted to post modal
   const userCard2 = (
     <UserCard
       followingAuthor={followingAuthor}
@@ -131,7 +136,7 @@ export default function Post({ postData = null }: PostProps) {
       onFollowChange={handleFollowChange}
       reportEntityType="POST"
       reportEntityId={postData.postId}
-      popupPosition="post-modal-pos"  //  differnt positioning eveything else the same
+      popupPosition="post-modal-pos"
     />
   );
 
@@ -186,7 +191,23 @@ export default function Post({ postData = null }: PostProps) {
           </div>
         )}
 
-        <p className={styles.postDescription}>{postData.description || ""}</p>
+        <div className={styles.postDescriptionWrapper}>
+          <p className={styles.postDescription}>
+            {descriptionPreview}
+            {isDescriptionLong && (
+              <span
+                className={styles.readMore}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowPostModal(true);
+                }}
+              >
+                Read more
+              </span>
+            )}
+          </p>
+        </div>
+
         <p className={styles.postTime}>
           {formatDistanceToNow(new Date(postData.createdAt), { addSuffix: true })}
         </p>

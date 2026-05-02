@@ -107,10 +107,30 @@
   color: red;
 }
 
-.postDescription {
-  font-size: medium;
+.postDescriptionWrapper {
   margin-left: 10px;
   margin-top: 10px;
+}
+
+.postDescription {
+  font-size: medium;
+  line-height: 1.5;
+  color: #222;
+  margin: 0;
+  word-break: break-word;
+}
+
+.readMore {
+  color: #526fae;
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: 4px;
+  transition: color 0.2s;
+}
+
+.readMore:hover {
+  color: #3d5a96;
+  text-decoration: underline;
 }
 
 .postTime {

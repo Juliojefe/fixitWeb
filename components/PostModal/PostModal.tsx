@@ -155,7 +155,6 @@ export default function PostModal({
   return (
     <div className={styles.modalBackdrop} onClick={onClose}>
       <div className={styles.postModalContainer} onClick={(e) => e.stopPropagation()}>
-        {/* Image Section */}
         {hasImage && (
           <div className={styles.postModalImageSection}>
             {postData?.imageUrls?.[0] && (
@@ -174,11 +173,9 @@ export default function PostModal({
           </div>
         )}
 
-        {/* comments section */}
         <div className={styles.commentsSection}>
           {header}
 
-          {/* description + timestamp */}
           <div className={styles.postDescriptionWrapper}>
             <p className={styles.postDescription}>{postData.description || ""}</p>
             <p className={styles.postTime}>
@@ -186,10 +183,9 @@ export default function PostModal({
             </p>
           </div>
 
-          {/* comments list */}
           <div className={styles.commentsList}>
             {comments.length === 0 && !loadingComments ? (
-              <p className={styles.noComments}>No comments yet. Be the first!</p>
+              <p className={styles.noComments}>No comments yet.</p>
             ) : (
               comments.map((c) => (
                 <div key={c.commentId} className={styles.commentItem}>
@@ -208,7 +204,6 @@ export default function PostModal({
                         {formatDistanceToNow(new Date(c.createdAt), { addSuffix: true })}
                       </p>
 
-                      {/* Report comment */}
                       <ReportMenu
                         entityType="COMMENT"
                         entityId={c.commentId}
