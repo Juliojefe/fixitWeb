@@ -181,41 +181,40 @@ export default function ProfilePageClient({ routeMode, profileUserId }: ProfileP
         setTabLast({ posts: false, liked: false, saved: false });
     }
 
-async function fetchProfile(userId: number) {
-    setProfileLoading(true);
-    setProfileError(null);
+    async function fetchProfile(userId: number) {
+        setProfileLoading(true);
+        setProfileError(null);
 
-    try {
-        const res = await axios.get(`${apiBase}/api/user/${userId}/profile`, {
-            headers: authHeaders ?? {},
-        });
-        setProfile(res.data as ProfileResponse);
-    } catch (err: any) {
-        const status = err?.response?.status;
-        console.error(err);
+        try {
+            const res = await axios.get(`${apiBase}/api/user/${userId}/profile`, {
+                headers: authHeaders ?? {},
+            });
+            setProfile(res.data as ProfileResponse);
+        } catch (err: any) {
+            const status = err?.response?.status;
+            console.error(err);
 
-        if (status === 401) {
-            // Only show login message for own profile (guests can now view others)
-            setProfileError(
-                isOwnProfile
-                    ? 'You need to log in to view your profile.'
-                    : 'This profile could not be loaded.'
-            );
-            return;
+            if (status === 401) {
+                setProfileError(
+                    isOwnProfile
+                        ? 'You need to log in to view your profile.'
+                        : 'This profile could not be loaded.'
+                );
+                return;
+            }
+
+            resetLoadedData();
+
+            if (status === 404) {
+                setProfileError('User not found.');
+                return;
+            }
+
+            setProfileError(status ? `Profile load failed (${status}).` : 'Profile load failed.');
+        } finally {
+            setProfileLoading(false);
         }
-
-        resetLoadedData();
-
-        if (status === 404) {
-            setProfileError('User not found.');
-            return;
-        }
-
-        setProfileError(status ? `Profile load failed (${status}).` : 'Profile load failed.');
-    } finally {
-        setProfileLoading(false);
     }
-}
 
     async function fetchUserMini(userId: number): Promise<UserNameAndPfp> {
         const cached = userMiniCacheRef.current.get(userId);
@@ -578,14 +577,17 @@ async function fetchProfile(userId: number) {
             formData.append('userId', String(targetUserId));
             formData.append('file', photoFile);
 
-            const res = await axios.post(`${apiBase}/api/user/update-profile-pic/upload`, formData, {
-                headers: {
-                    ...(authHeaders ?? {}),
-                    'Content-Type': 'multipart/form-data',
-                },
-            });
+            const rawResponse = await axios.post(
+                `${apiBase}/api/user/update-profile-pic/upload`,
+                formData,
+                {
+                    headers: {
+                        Authorization: `Bearer ${user?.accessToken}`,
+                    },
+                }
+            );
 
-            const newUrl = res.data as string;
+            const newUrl = rawResponse.data as string;
 
             if (user) {
                 setUser({ ...user, profilePic: newUrl });
@@ -602,9 +604,12 @@ async function fetchProfile(userId: number) {
 
             setPhotoFile(null);
             await fetchProfile(targetUserId);
-        } catch (err: any) {
-            console.error(err);
-            setPhotoError(err?.response?.status ? `Upload failed (${err.response.status})` : 'Upload failed.');
+        } catch (err) {
+            if (axios.isAxiosError(err) && err.response) {
+                setPhotoError(err.response.data.message || "Upload failed");
+            } else {
+                setPhotoError("Network error");
+            }
         } finally {
             setPhotoSaving(false);
         }
@@ -671,6 +676,7 @@ async function fetchProfile(userId: number) {
         }
     }, [showEditBio, effectiveBio]);
 
+    // FIXED: removed photoPreviewUrl from dependencies so it doesn't clear photoFile after selection
     useEffect(() => {
         if (showEditPhoto) {
             setPhotoError(null);
@@ -680,7 +686,7 @@ async function fetchProfile(userId: number) {
                 setPhotoPreviewUrl(null);
             }
         }
-    }, [showEditPhoto, photoPreviewUrl]);
+    }, [showEditPhoto]);
 
     useEffect(() => {
         if (showEditAddress) {
@@ -968,7 +974,7 @@ async function fetchProfile(userId: number) {
                         <input
                             className={styles.input}
                             type="file"
-                            accept="image/*"
+                            accept="image/jpeg,image/jpg,image/png"
                             onChange={(event) => {
                                 const nextFile = event.target.files?.[0] ?? null;
                                 setPhotoFile(nextFile);
