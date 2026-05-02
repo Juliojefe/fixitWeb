@@ -77,10 +77,6 @@ export default function CreatePostModal({ onClose }: CreatePostModalProps) {
       setImages([]);                    // clear again just in case
       return;
     }
-    if (images.length === 0) {
-      setErrorMessage("Please select at least one image.");
-      return;
-    }
 
     try {
       setUploading(true);
@@ -143,15 +139,15 @@ export default function CreatePostModal({ onClose }: CreatePostModalProps) {
               <h2 className={commonStyles.formHeader}>Create New Post</h2>
 
               <textarea
-                placeholder="What’s on your mind? (max 3000 chars)"
+                placeholder="What’s on your mind? (max 20000 chars)"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                maxLength={3000}
+                maxLength={20000}
                 disabled={uploading}
                 className={styles.textarea}
               />
               <div className={styles.charCount}>
-                {description.length} / 3000
+                {description.length} / 20000
               </div>
 
               <div className={styles.section}>
