@@ -151,7 +151,9 @@ export default function ProfilePageClient({ routeMode, profileUserId }: ProfileP
     const followingCount = profile?.followingCount ?? followingIds.length;
     const isFollowing = Boolean((profile as ProfilePublic | null)?.viewerFollowsUser);
     const shouldShowFollowButton = !isOwnProfile && Boolean(user && targetUserId && user.userId !== targetUserId);
-    const shouldShowReviewsSection = Boolean(targetUserId && (isMechanic || isAdmin));
+
+    const shouldShowReviewsSection = Boolean(targetUserId && isMechanic);
+
     const canCreateReview = Boolean(targetUserId && isMechanic && user?.accessToken && !isOwnProfile);
     const reviewCreateDisabledReason = isOwnProfile
         ? 'You cannot review your own profile.'
